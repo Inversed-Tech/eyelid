@@ -3,5 +3,12 @@
 version = 3
 
 [[package]]
+name = "eyelid-match-ops"
+version = "0.1.0"
+
+[[package]]
 name = "eyelid-matcher"
 version = "0.1.0"
+dependencies = [
+ "eyelid-match-ops",
+]

@@ -4,3 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+eyelid-match-ops = { version = "0.1.0", path = "../eyelid-match-ops" }
