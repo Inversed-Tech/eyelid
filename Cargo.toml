@@ -1,3 +1,7 @@
 [workspace]
-members = [ "eyelid-match-ops","eyelid-matcher", "eyelid-test"]
+members = [
+    "eyelid-matcher",
+    "eyelid-match-ops",
+    "eyelid-test",
+]
 resolver = "2"
