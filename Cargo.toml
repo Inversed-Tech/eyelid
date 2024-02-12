@@ -26,3 +26,6 @@ ark-poly = "0.4.2"
 
 # Testing & Benchmarking
 criterion = { version = "0.5.1", default-features = false, features = ["cargo_bench_support", "rayon"] }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"

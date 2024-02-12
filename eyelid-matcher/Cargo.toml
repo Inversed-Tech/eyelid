@@ -13,3 +13,6 @@ eyelid-match-ops.workspace = true
 
 [dev-dependencies]
 eyelid-test.workspace = true
+
+[lints]
+workspace = true
