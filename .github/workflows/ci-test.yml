@@ -1,0 +1,39 @@
+name: 'Rust Tests'
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+
+  pull_request:
+
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Tests
+        run: |
+          cargo test --no-run
+
+      - name: Run Tests
+        run: |
+          cargo test
+
+      # For historical reasons, Rust documentation tests are not run by default.
+      - name: Build Doc Tests
+        run: |
+          cargo test --doc --no-run
+
+      - name: Run Doc Tests
+        run: |
+          cargo test --doc

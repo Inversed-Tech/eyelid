@@ -1,0 +1,32 @@
+name: 'Rust Benchmarks'
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+
+  pull_request:
+
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Benchmarks
+        run: |
+          cargo bench --no-run
+
+      - name: Run Tests
+        run: |
+          echo "Warning: benchmark timings are unreliable in CI due to virtualization"
+          cargo bench
+          echo "Warning: benchmark timings are unreliable in CI due to virtualization"
