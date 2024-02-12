@@ -5,3 +5,11 @@ members = [
     "eyelid-test",
 ]
 resolver = "2"
+
+# Shared configuration
+[workspace.package]
+edition = "2021"
+readme = "README.md"
+publish = true
+repository = "https://github.com/Inversed-Tech/eyelid"
+version = "0.1.0"

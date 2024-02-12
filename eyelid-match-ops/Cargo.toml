@@ -1,7 +1,12 @@
 [package]
 name = "eyelid-match-ops"
-version = "0.1.0"
-edition = "2021"
+
+# Configure in eyelid/Cargo.toml
+edition.workspace = true
+readme.workspace = true
+publish.workspace = true
+repository.workspace = true
+version.workspace = true
 
 [dependencies]
 ark-ff = "0.4.2"

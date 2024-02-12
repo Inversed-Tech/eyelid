@@ -1,7 +1,14 @@
 [package]
 name = "eyelid-test"
-version = "0.1.0"
-edition = "2021"
+
+# Configure in eyelid/Cargo.toml
+edition.workspace = true
+readme.workspace = true
+repository.workspace = true
+version.workspace = true
+
+# Test-only configuration
+publish = false
 
 [dependencies]
 
