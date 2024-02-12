@@ -29,11 +29,7 @@ jobs:
         run: |
           cargo test
 
-      # For historical reasons, Rust documentation tests are not run by default.
-      - name: Build Doc Tests
-        run: |
-          cargo test --doc --no-run
-
+      # For historical reasons, Rust documentation tests are not run by `cargo test`.
       - name: Run Doc Tests
         run: |
           cargo test --doc
