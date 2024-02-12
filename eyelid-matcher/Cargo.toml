@@ -9,7 +9,7 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
-eyelid-match-ops = { version = "0.1.0", path = "../eyelid-match-ops" }
+eyelid-match-ops.workspace = true
 
 [dev-dependencies]
-eyelid-test = { path = "../eyelid-test" }
+eyelid-test.workspace = true
