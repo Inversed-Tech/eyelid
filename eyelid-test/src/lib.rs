@@ -1,7 +1,7 @@
 //! Iris match generic testing functionality.
 
-#[macro_use]
-extern crate static_assertions;
+//#[macro_use]
+//extern crate static_assertions;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right
