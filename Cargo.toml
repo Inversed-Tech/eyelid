@@ -23,6 +23,7 @@ eyelid-test = { version = "0.1.0", path = "eyelid-test" }
 # Production
 ark-ff = "0.4.2"
 ark-poly = "0.4.2"
+bitvec = "1.0.1"
 
 # Testing & Benchmarking
 criterion = { version = "0.5.1", default-features = false, features = ["cargo_bench_support", "rayon"] }
