@@ -6,9 +6,11 @@
 //! matching = (eye_a ^ eye_b) & unmasked
 //! ```
 //!
-//! A successful match has:
+//! A successful match has enough matching unmasked bits to reach the match threshold:
 //! ```text
 //! |matching| / |unmasked| >= IRIS_MATCH_NUMERATOR / IRIS_MATCH_DENOMINATOR
+//! or
+//! |matching| * IRIS_MATCH_DENOMINATOR >= |unmasked| * IRIS_MATCH_NUMERATOR
 //! ```
 //!
 //! This library has 3 core modules:
