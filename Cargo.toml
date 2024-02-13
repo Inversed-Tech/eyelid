@@ -25,6 +25,9 @@ ark-ff = "0.4.2"
 ark-poly = "0.4.2"
 bitvec = "1.0.1"
 
+# Compile-time checks of production code
+static_assertions = "1.1.0"
+
 # Testing & Benchmarking
 criterion = { version = "0.5.1", default-features = false, features = ["cargo_bench_support", "rayon"] }
 

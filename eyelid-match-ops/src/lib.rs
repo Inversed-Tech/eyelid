@@ -17,6 +17,9 @@
 //! [`encrypted`]: the same operations on fully homomorphic encrypted, polynomial-encoded bit
 //!                vectors.
 
+#[macro_use]
+extern crate static_assertions;
+
 pub mod encoded;
 pub mod encrypted;
 pub mod plaintext;
