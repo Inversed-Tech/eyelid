@@ -40,7 +40,7 @@ pub fn is_iris_match(
     // Make sure iris codes and masks are the same size.
     // Performance: static assertions are checked at compile time.
     // TODO: I'm pretty sure the compiler already checks this as part of `&` or `^`,
-    //       but I need to check.
+    //       but I need to make sure.
     const_assert_eq!(bits_of::<IrisCode>(), bits_of::<IrisMask>());
 
     // Make sure there are no unused bits.
@@ -53,13 +53,13 @@ pub fn is_iris_match(
     // - on the heap (using BitBox)
     // - on the heap using scratch memory that is allocated once, then passed to this function
     let unmasked = *mask_a & mask_b;
-    let matching = (*eye_a ^ eye_b) & unmasked;
+    let differences = (*eye_a ^ eye_b) & unmasked;
 
     // A successful match has enough matching unmasked bits to reach the match threshold.
     //
     // Convert to bit counts.
     let unmasked = unmasked.count_ones();
-    let matching = matching.count_ones();
+    let differences = differences.count_ones();
 
     // Make sure the threshold calculation can't overflow.
     // `IRIS_BIT_LENGTH` is the highest possible value of `matching` and `unmasked`.
@@ -67,5 +67,5 @@ pub fn is_iris_match(
     const_assert!(usize::MAX / IRIS_BIT_LENGTH > IRIS_MATCH_NUMERATOR);
 
     // And compare with the threshold.
-    matching * IRIS_MATCH_DENOMINATOR >= unmasked * IRIS_MATCH_NUMERATOR
+    differences * IRIS_MATCH_DENOMINATOR <= unmasked * IRIS_MATCH_NUMERATOR
 }
