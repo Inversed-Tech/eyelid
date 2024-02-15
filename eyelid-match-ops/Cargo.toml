@@ -11,6 +11,8 @@ version.workspace = true
 [dependencies]
 ark-ff.workspace = true
 ark-poly.workspace = true
+bitvec.workspace = true
+static_assertions.workspace = true
 
 [dev-dependencies]
 eyelid-test.workspace = true

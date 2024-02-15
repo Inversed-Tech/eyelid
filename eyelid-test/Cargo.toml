@@ -11,9 +11,11 @@ version.workspace = true
 publish = false
 
 [dependencies]
+static_assertions.workspace = true
 
 [dev-dependencies]
 criterion.workspace = true
+bitvec.workspace = true
 
 [lints]
 workspace = true

@@ -10,6 +10,7 @@ version.workspace = true
 
 [dependencies]
 eyelid-match-ops.workspace = true
+static_assertions.workspace = true
 
 [dev-dependencies]
 eyelid-test.workspace = true
