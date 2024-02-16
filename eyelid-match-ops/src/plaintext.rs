@@ -7,6 +7,9 @@ use super::{
     IRIS_ROTATION_COMPARISONS, IRIS_ROTATION_LIMIT,
 };
 
+#[cfg(test)]
+pub mod test;
+
 /// An iris code: the iris data from an iris scan.
 /// A fixed-length bit array which is long enough to hold at least [`IRIS_BIT_LENGTH`] bits.
 ///
