@@ -17,5 +17,7 @@ static_assertions.workspace = true
 [dev-dependencies]
 eyelid-test.workspace = true
 
+rand.workspace = true
+
 [lints]
 workspace = true
