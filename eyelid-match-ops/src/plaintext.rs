@@ -10,6 +10,8 @@ use super::{
 /// An iris code: the iris data from an iris scan.
 /// A fixed-length bit array which is long enough to hold at least [`IRIS_BIT_LENGTH`] bits.
 ///
+/// The encoding of an iris code is arbitrary, because we just check for matching bits.
+///
 /// The array is rounded up to the next full `usize`, so it might contain some unused bits at the
 /// end.
 ///
@@ -20,12 +22,14 @@ pub type IrisCode = BitArr![for IRIS_BIT_LENGTH];
 /// An iris mask: the occlusion data from an iris scan.
 /// See [`IrisCode`] for details.
 ///
+/// The encoding of an iris mask is `1` for a comparable bit, and `0` for a masked bit.
+///
 /// TODO: turn this into a wrapper struct, so the compiler checks IrisCode and IrisMask are used
 ///       correctly.
 pub type IrisMask = IrisCode;
 
-/// Returns true if `eye_a` and `eye_b` have enough identical bits to meet the threshold,
-/// after masking with `mask_a` and `mask_b`, and rotating from
+/// Returns true if `eye_new` and `eye_store` have enough identical bits to meet the threshold,
+/// after masking with `mask_new` and `mask_store`, and rotating from
 /// [`-IRIS_ROTATION_LIMIT..IRIS_ROTATION_LIMIT`](IRIS_ROTATION_LIMIT).
 ///
 /// # Performance
@@ -74,7 +78,7 @@ pub fn is_iris_match(
         let unmasked = unmasked.count_ones();
         let differences = differences.count_ones();
 
-        // Make sure the threshold calculation can't overflow.
+        // Make sure the threshold calculation can't overflow. Also avoids division by zero.
         // `IRIS_BIT_LENGTH` is the highest possible value of `matching` and `unmasked`.
         const_assert!(usize::MAX / IRIS_BIT_LENGTH > IRIS_MATCH_DENOMINATOR);
         const_assert!(usize::MAX / IRIS_BIT_LENGTH > IRIS_MATCH_NUMERATOR);
