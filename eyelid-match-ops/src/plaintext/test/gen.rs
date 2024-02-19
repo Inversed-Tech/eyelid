@@ -27,7 +27,7 @@ pub fn unset_iris_code() -> IrisCode {
 
 /// Returns an iris code with all bits set.
 pub fn set_iris_code() -> IrisCode {
-    IrisCode::ZERO
+    !IrisCode::ZERO
 }
 
 /// Returns an iris mask that is totally occluded.
@@ -38,5 +38,5 @@ pub fn occluded_iris_mask() -> IrisMask {
 
 /// Returns an iris mask that is fully visible (no occlusions).
 pub fn visible_iris_mask() -> IrisMask {
-    unset_iris_code()
+    set_iris_code()
 }

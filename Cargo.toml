@@ -30,6 +30,7 @@ static_assertions = "1.1.0"
 
 # Testing & Benchmarking
 criterion = { version = "0.5.1", default-features = false, features = ["cargo_bench_support", "rayon"] }
+lazy_static = "1.4.0"
 rand = "0.8.5"
 
 [workspace.lints.rust]
