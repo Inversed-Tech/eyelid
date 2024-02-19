@@ -37,8 +37,8 @@ pub type IrisMask = IrisCode;
 ///
 /// # Performance
 ///
-/// This function takes references to avoid memory copies.
-/// The stored eye is an owned value, so it can be rotated without copying.
+/// This function takes references to avoid memory copies, which would otherwise be silent.
+/// ([`IrisCode`] and [`IrisMask`] are [`Copy`] types.)
 ///
 /// # TODO
 ///
@@ -46,13 +46,15 @@ pub type IrisMask = IrisCode;
 pub fn is_iris_match(
     eye_new: &IrisCode,
     mask_new: &IrisMask,
-    mut eye_store: IrisCode,
-    mut mask_store: IrisMask,
+    eye_store: &IrisCode,
+    mask_store: &IrisMask,
 ) -> bool {
     // Start comparing columns at rotation -IRIS_ROTATION_LIMIT.
     // TODO:
-    // - Avoid the rotations by comparing bit indexes with an offset and modulus.
+    // - Avoid these copies and rotations by comparing bit indexes with an offset and modulus.
     // - If smaller rotations are more likely to exit early, start with them first.
+    let mut eye_store = *eye_store;
+    let mut mask_store = *mask_store;
     eye_store.rotate_left(IRIS_ROTATION_LIMIT * IRIS_COLUMN_LENGTH);
     mask_store.rotate_left(IRIS_ROTATION_LIMIT * IRIS_COLUMN_LENGTH);
 
