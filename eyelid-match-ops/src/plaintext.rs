@@ -7,8 +7,13 @@ use super::{
     IRIS_ROTATION_COMPARISONS, IRIS_ROTATION_LIMIT,
 };
 
+#[cfg(test)]
+pub mod test;
+
 /// An iris code: the iris data from an iris scan.
 /// A fixed-length bit array which is long enough to hold at least [`IRIS_BIT_LENGTH`] bits.
+///
+/// The encoding of an iris code is arbitrary, because we just check for matching bits.
 ///
 /// The array is rounded up to the next full `usize`, so it might contain some unused bits at the
 /// end.
@@ -20,18 +25,20 @@ pub type IrisCode = BitArr![for IRIS_BIT_LENGTH];
 /// An iris mask: the occlusion data from an iris scan.
 /// See [`IrisCode`] for details.
 ///
+/// The encoding of an iris mask is `1` for a comparable bit, and `0` for a masked bit.
+///
 /// TODO: turn this into a wrapper struct, so the compiler checks IrisCode and IrisMask are used
 ///       correctly.
 pub type IrisMask = IrisCode;
 
-/// Returns true if `eye_a` and `eye_b` have enough identical bits to meet the threshold,
-/// after masking with `mask_a` and `mask_b`, and rotating from
+/// Returns true if `eye_new` and `eye_store` have enough identical bits to meet the threshold,
+/// after masking with `mask_new` and `mask_store`, and rotating from
 /// [`-IRIS_ROTATION_LIMIT..IRIS_ROTATION_LIMIT`](IRIS_ROTATION_LIMIT).
 ///
 /// # Performance
 ///
-/// This function takes references to avoid memory copies.
-/// The stored eye is an owned value, so it can be rotated without copying.
+/// This function takes references to avoid memory copies, which would otherwise be silent.
+/// ([`IrisCode`] and [`IrisMask`] are [`Copy`] types.)
 ///
 /// # TODO
 ///
@@ -39,13 +46,15 @@ pub type IrisMask = IrisCode;
 pub fn is_iris_match(
     eye_new: &IrisCode,
     mask_new: &IrisMask,
-    mut eye_store: IrisCode,
-    mut mask_store: IrisMask,
+    eye_store: &IrisCode,
+    mask_store: &IrisMask,
 ) -> bool {
     // Start comparing columns at rotation -IRIS_ROTATION_LIMIT.
     // TODO:
-    // - Avoid the rotations by comparing bit indexes with an offset and modulus.
+    // - Avoid these copies and rotations by comparing bit indexes with an offset and modulus.
     // - If smaller rotations are more likely to exit early, start with them first.
+    let mut eye_store = *eye_store;
+    let mut mask_store = *mask_store;
     eye_store.rotate_left(IRIS_ROTATION_LIMIT * IRIS_COLUMN_LENGTH);
     mask_store.rotate_left(IRIS_ROTATION_LIMIT * IRIS_COLUMN_LENGTH);
 
@@ -74,7 +83,7 @@ pub fn is_iris_match(
         let unmasked = unmasked.count_ones();
         let differences = differences.count_ones();
 
-        // Make sure the threshold calculation can't overflow.
+        // Make sure the threshold calculation can't overflow. Also avoids division by zero.
         // `IRIS_BIT_LENGTH` is the highest possible value of `matching` and `unmasked`.
         const_assert!(usize::MAX / IRIS_BIT_LENGTH > IRIS_MATCH_DENOMINATOR);
         const_assert!(usize::MAX / IRIS_BIT_LENGTH > IRIS_MATCH_NUMERATOR);
