@@ -44,7 +44,7 @@ pub fn is_iris_match(
 ) -> bool {
     // Start comparing columns at rotation -IRIS_ROTATION_LIMIT.
     // TODO:
-    // - Make this initial rotation part of the stored encoding.
+    // - Avoid the rotations by comparing bit indexes with an offset and modulus.
     // - If smaller rotations are more likely to exit early, start with them first.
     eye_store.rotate_left(IRIS_ROTATION_LIMIT * IRIS_COLUMN_LENGTH);
     mask_store.rotate_left(IRIS_ROTATION_LIMIT * IRIS_COLUMN_LENGTH);
