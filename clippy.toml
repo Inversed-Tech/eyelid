@@ -1,0 +1,8 @@
+# This file contains the settings for clippy lints
+# Lints are enabled in .cargo/config.toml
+
+# Keep functions small for performance
+cognitive-complexity-threshold = 20
+
+# Tests can use dbg!()
+allow-dbg-in-tests = true
