@@ -1,0 +1,76 @@
+# This file enabled clippy lints
+# Lint settings are configured in clippy.toml
+
+# Lints that apply to all eyelid crates and configurations
+[target.'cfg(all())']
+rustflags = [
+    # Standard lints for Rust 1.65+
+
+    # High-risk code
+    "-Dunsafe_code",
+    "-Dnon_ascii_idents",
+
+    # Potential bugs
+    #
+    # If we deny these lints, we could be excluded from Crater builds:
+    # https://www.reddit.com/r/rust/comments/f5xpib/psa_denywarnings_is_actively_harmful/
+
+    # Compatibility
+    "-Wrust_2021_compatibility",
+    "-Wrust_2024_compatibility",
+    "-Wnonstandard_style",
+    "-Wfuture_incompatible",
+
+    # Pointers
+    "-Wclippy::cast_ptr_alignment",
+    "-Wclippy::fn_to_numeric_cast_any",
+
+    # Integers
+    "-Wclippy::checked_conversions",
+    "-Wclippy::implicit_saturating_sub",
+    "-Wclippy::invalid_upcast_comparisons",
+    "-Wclippy::range_minus_one",
+    "-Wclippy::range_plus_one",
+    "-Wclippy::unnecessary_cast",
+
+    # Performance
+    "-Wclippy::cognitive_complexity",
+    "-Wclippy::large_futures",
+    "-Wclippy::large_stack_frames",
+    "-Wclippy::unused_async",
+
+    # Incomplete code
+    "-Wclippy::dbg_macro",
+    "-Wclippy::todo",
+
+    # Manual debugging output.
+    # TODO: decide on a tracing / inspection library, ask WorldCoin what they use.
+    #"-Wclippy::print_stdout",
+    #"-Wclippy::print_stderr",
+
+    # Panics
+    "-Wclippy::fallible_impl_from",
+    "-Wclippy::unwrap_in_result",
+
+    # Documentation
+    "-Wmissing_docs",
+    "-Wclippy::missing_docs_in_private_items",
+
+    # TODO: fix code that triggers these lints,
+    # or disable the lint for that code (or for all test code).
+    "-Wclippy::cast_lossless",
+    "-Wclippy::cast_possible_truncation",
+    "-Wclippy::cast_possible_wrap",
+    "-Wclippy::cast_precision_loss",
+    "-Wclippy::cast_sign_loss",
+
+    # Outdated Rust coding styles
+    "-Wrust_2018_idioms",
+    "-Wrust_2021_idioms",
+]
+
+[build]
+rustdocflags = [
+    # Links in public docs can point to private items.
+    "-Arustdoc::private_intra_doc_links",
+]
