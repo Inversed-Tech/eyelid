@@ -1,6 +1,10 @@
 # This file enabled clippy lints
 # Lint settings are configured in clippy.toml
 
+# Based on:
+# https://github.com/ZcashFoundation/zebra/blob/9b91d4bc0e7a78566e62af8b129c14be82f8d67e/.cargo/config.toml
+# which is under the MIT or Apache 2.0 licences.
+
 # Lints that apply to all eyelid crates and configurations
 [target.'cfg(all())']
 rustflags = [
