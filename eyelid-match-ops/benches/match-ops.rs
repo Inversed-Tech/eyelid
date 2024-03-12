@@ -1,4 +1,5 @@
 //! Benchmarks for matching operations.
+#![cfg(feature = "benchmark")]
 
 use eyelid_match_ops::plaintext::{
     self,
@@ -29,10 +30,7 @@ fn bench_plaintext_full_match(settings: &mut Criterion) {
     let mask_store = random_iris_mask();
 
     settings.bench_with_input(
-        BenchmarkId::new(
-            format!("Full iris match: plaintext"),
-            format!("random iris codes and masks"),
-        ),
+        BenchmarkId::new("Full iris match: plaintext", "Random iris codes and masks"),
         &(eye_new, mask_new, eye_store, mask_store),
         |benchmark, (eye_new, mask_new, eye_store, mask_store)| {
             benchmark.iter_with_large_drop(|| {
