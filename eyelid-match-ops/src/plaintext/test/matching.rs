@@ -10,6 +10,7 @@ use crate::plaintext::{
     IrisCode, IrisMask,
 };
 
+#[cfg(test)]
 use super::assert_iris_compare;
 
 lazy_static! {

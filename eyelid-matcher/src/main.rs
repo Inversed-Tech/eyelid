@@ -4,5 +4,5 @@
 //extern crate static_assertions;
 
 fn main() {
-    println!("Hello, world!");
+    // TODO: write the binary code here
 }

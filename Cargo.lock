@@ -315,6 +315,7 @@ dependencies = [
  "ark-ff",
  "ark-poly",
  "bitvec",
+ "criterion",
  "eyelid-test",
  "lazy_static",
  "rand",

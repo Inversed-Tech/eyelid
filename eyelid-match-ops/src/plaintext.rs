@@ -7,7 +7,7 @@ use super::{
     IRIS_ROTATION_COMPARISONS, IRIS_ROTATION_LIMIT,
 };
 
-#[cfg(test)]
+#[cfg(any(test, feature = "benchmark"))]
 pub mod test;
 
 /// An iris code: the iris data from an iris scan.
