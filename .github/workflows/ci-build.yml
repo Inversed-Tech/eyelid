@@ -23,8 +23,8 @@ jobs:
 
       - name: Build
         run: |
-          cargo build --release --all-features
+          cargo build --release --all-features --all-targets
 
       - name: Run
         run: |
-          cargo run --release
+          cargo run --release --all-features
