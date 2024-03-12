@@ -40,6 +40,7 @@ bench = false
 [[bench]]
 name = "match-ops"
 harness = false
+required-features = ["benchmark"]
 
 [lints]
 workspace = true
