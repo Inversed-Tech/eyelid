@@ -23,10 +23,10 @@ jobs:
 
       - name: Build Benchmarks
         run: |
-          cargo bench --no-run --all-features
+          cargo bench --no-run --all-features --all-targets
 
       - name: Run Tests
         run: |
           echo "Warning: benchmark timings are unreliable in CI due to virtualization"
-          cargo bench --all-features
+          cargo bench --all-features --all-targets
           echo "Warning: benchmark timings are unreliable in CI due to virtualization"

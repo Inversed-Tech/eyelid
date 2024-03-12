@@ -23,11 +23,11 @@ jobs:
 
       - name: Build Tests
         run: |
-          cargo test --no-run --all-features
+          cargo test --no-run --all-features --all-targets
 
       - name: Run Tests
         run: |
-          cargo test --all-features
+          cargo test --all-features --all-targets
 
       # For historical reasons, Rust documentation tests are not run by `cargo test`.
       - name: Run Doc Tests
