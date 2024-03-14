@@ -9,6 +9,18 @@ use ark_poly::DenseUVPolynomial;
 use std::ops::Mul;
 use std::ops::Add;
 
+
+//use crate::{
+//    univariate::{DenseOrSparsePolynomial, SparsePolynomial},
+//    DenseUVPolynomial, EvaluationDomain, Evaluations, GeneralEvaluationDomain, Polynomial,
+//};
+use ark_ff::{FftField, Field, Zero};
+use ark_std::{
+    fmt,
+    ops::{AddAssign, Deref, DerefMut, Div, Neg, Sub, SubAssign},
+    vec::*,
+};
+
 const N: usize = 2048;
 
 // Next we define 2 Finite Field using pre-computed primes and generators.
@@ -47,18 +59,17 @@ fn test_mul(){
     let mut rng = thread_rng();
     let mut p1 = DensePolynomial::<Fq79>::rand(N, &mut rng);
     let mut p2 = DensePolynomial::<Fq79>::rand(N, &mut rng);
-    // We can see the degree after mul is 2*N
-    dbg!(&p1.naive_mul(&p2)); // TODO: replace by faster algorithm
     dbg!(reduce_mul(p1, p2));
+    // TODO: implement some test cases
 }
 
 pub fn reduce_mul(a: DensePolynomial::<Fq79>, b: DensePolynomial::<Fq79>) -> DensePolynomial::<Fq79>{
-    let mut rng = thread_rng();
-    let ab = a.naive_mul(&b);
-    let mut res = DensePolynomial::<Fq79>::rand(N, &mut rng); // TODO: init with zero polynomial of degree N, function zero() don't set the degree
-    for i in 0..a.coeffs.len() {
+    let mut res = a.naive_mul(&b);
+    assert_eq!(res.coeffs.len(), 2*N + 1);
+    for i in 0..N {
         // In the cyclotomic ring we have that XˆN = -1, therefore all elements from N to 2N are negated
-        res[i] = ab[i] - ab[i + N];
+        res[i] = res[i] - res[i + N];
+        res.coeffs[i + N] = Fq79::zero();
     }
     res
 }
