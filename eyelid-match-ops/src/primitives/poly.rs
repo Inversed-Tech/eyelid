@@ -1,25 +1,10 @@
 use ark_ff::MontConfig;
 use ark_ff::Fp128;
 use ark_ff::MontBackend;
-use ark_ff::BigInt;
 use ark_poly::polynomial::univariate::DensePolynomial;
 use rand::thread_rng;
-use ark_std::rand::Rng;
 use ark_poly::DenseUVPolynomial;
-use std::ops::Mul;
-use std::ops::Add;
-
-
-//use crate::{
-//    univariate::{DenseOrSparsePolynomial, SparsePolynomial},
-//    DenseUVPolynomial, EvaluationDomain, Evaluations, GeneralEvaluationDomain, Polynomial,
-//};
-use ark_ff::{FftField, Field, Zero};
-use ark_std::{
-    fmt,
-    ops::{AddAssign, Deref, DerefMut, Div, Neg, Sub, SubAssign},
-    vec::*,
-};
+use ark_ff::{Zero, One};
 
 const N: usize = 2048;
 
@@ -55,21 +40,28 @@ pub struct Fq66Config;
 pub type Fq66 = Fp128<MontBackend<Fq66Config, 2>>;
 
 #[test]
-fn test_mul(){
+fn test_cyclotomic_mul(){
     let mut rng = thread_rng();
-    let mut p1 = DensePolynomial::<Fq79>::rand(N, &mut rng);
-    let mut p2 = DensePolynomial::<Fq79>::rand(N, &mut rng);
-    dbg!(reduce_mul(p1, p2));
-    // TODO: implement some test cases
+    let p1 = DensePolynomial::<Fq79>::rand(N-1, &mut rng);
+    let mut xnm1 = DensePolynomial::<Fq79>::zero();
+    xnm1.coeffs = [Fq79::zero(); N].to_vec();
+    xnm1.coeffs[N-1] = Fq79::one(); // Xˆ{N-1}, multiplying but it will rotate by N-1 and negate (except the first)
+    let res = cyclotomic_mul(p1.clone(), xnm1);
+    for i in 0..N-1 {
+        assert_eq!(res[i], - p1[i+1]);
+    }
 }
 
-pub fn reduce_mul(a: DensePolynomial::<Fq79>, b: DensePolynomial::<Fq79>) -> DensePolynomial::<Fq79>{
+pub fn cyclotomic_mul(a: DensePolynomial::<Fq79>, b: DensePolynomial::<Fq79>) -> DensePolynomial::<Fq79>{
     let mut res = a.naive_mul(&b);
-    assert_eq!(res.coeffs.len(), 2*N + 1);
+    assert!(a.coeffs.len() <= N);
+    assert!(b.coeffs.len() <= N);
     for i in 0..N {
         // In the cyclotomic ring we have that XˆN = -1, therefore all elements from N to 2N are negated
-        res[i] = res[i] - res[i + N];
-        res.coeffs[i + N] = Fq79::zero();
+        if i + N < res.coeffs.len() {
+            res[i] = res[i] - res[i + N];
+            res[i + N] = Fq79::zero();
+        };
     }
     res
 }
