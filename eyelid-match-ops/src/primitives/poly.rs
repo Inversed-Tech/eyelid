@@ -2,15 +2,21 @@ use ark_ff::MontConfig;
 use ark_ff::Fp128;
 use ark_ff::MontBackend;
 use ark_poly::polynomial::univariate::DensePolynomial;
-use rand::thread_rng;
 use ark_poly::DenseUVPolynomial;
-use ark_ff::{Zero, One};
+use ark_ff::Zero;
+use ark_ff::One;
 
+/// The maximum polynomial degree
 const N: usize = 2048;
 
 // Next we define 2 Finite Field using pre-computed primes and generators.
 // We could also consider generating primes dynamically.
 
+#[derive(MontConfig)]
+#[modulus = "93309596432438992665667"]
+#[generator = "5"]
+/// Fq79Config
+pub struct Fq79Config;
 /// Params for full resolution (according to the report)
 // t = 2ˆ15, q = 2ˆ79, N = 2048
 // Sage commands:
@@ -19,12 +25,13 @@ const N: usize = 2048;
 // ff = GF(93309596432438992665667)
 // ff.multiplicative_generator()
 // 5
-#[derive(MontConfig)]
-#[modulus = "93309596432438992665667"]
-#[generator = "5"]
-pub struct Fq79Config;
 pub type Fq79 = Fp128<MontBackend<Fq79Config, 2>>;
 
+#[derive(MontConfig)]
+#[modulus = "33253620802622737871"]
+#[generator = "14"]
+/// Fq66Config
+pub struct Fq66Config;
 /// Params for full resolution (according to the report)
 // t = 2ˆ12, q = 2ˆ66, N = 2048
 // Sage commands:
@@ -33,16 +40,11 @@ pub type Fq79 = Fp128<MontBackend<Fq79Config, 2>>;
 // ff = GF(33253620802622737871)
 // ff.multiplicative_generator()
 // 14
-#[derive(MontConfig)]
-#[modulus = "33253620802622737871"]
-#[generator = "14"]
-pub struct Fq66Config;
 pub type Fq66 = Fp128<MontBackend<Fq66Config, 2>>;
 
 #[test]
 fn test_cyclotomic_mul(){
-    let mut rng = thread_rng();
-    let p1 = DensePolynomial::<Fq79>::rand(N-1, &mut rng);
+    let p1 = rand_pol();
     let mut xnm1 = DensePolynomial::<Fq79>::zero();
     xnm1.coeffs = [Fq79::zero(); N].to_vec();
     xnm1.coeffs[N-1] = Fq79::one(); // Xˆ{N-1}, multiplying but it will rotate by N-1 and negate (except the first)
@@ -52,6 +54,13 @@ fn test_cyclotomic_mul(){
     }
 }
 
+/// Generates a cyclotomic polynomial with random coefficients in Fq79
+pub fn rand_pol() -> DensePolynomial::<Fq79>{
+    let mut rng = ark_std::test_rng();
+    DensePolynomial::<Fq79>::rand(N-1, &mut rng)
+}
+
+/// Use naive_mul followed by reduction mod XˆN - 1
 pub fn cyclotomic_mul(a: DensePolynomial::<Fq79>, b: DensePolynomial::<Fq79>) -> DensePolynomial::<Fq79>{
     let mut res = a.naive_mul(&b);
     assert!(a.coeffs.len() <= N);
