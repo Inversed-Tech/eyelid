@@ -66,7 +66,7 @@ pub fn bench_cyclotomic_mul(settings: &mut Criterion) {
         |benchmark, (p1, p2)| {
             benchmark.iter_with_large_drop(
                 || {
-                    cyclotomic_mul(p1.clone(), p2.clone());
+                    cyclotomic_mul(p1, p2);
                 })
         },
     );

@@ -48,7 +48,7 @@ fn test_cyclotomic_mul(){
     let mut xnm1 = DensePolynomial::<Fq79>::zero();
     xnm1.coeffs = [Fq79::zero(); N].to_vec();
     xnm1.coeffs[N-1] = Fq79::one(); // Xˆ{N-1}, multiplying but it will rotate by N-1 and negate (except the first)
-    let res = cyclotomic_mul(p1.clone(), xnm1);
+    let res = cyclotomic_mul(&p1, &xnm1);
     for i in 0..N-1 {
         assert_eq!(res[i], - p1[i+1]);
     }
@@ -61,7 +61,7 @@ pub fn rand_pol() -> DensePolynomial::<Fq79>{
 }
 
 /// Use naive_mul followed by reduction mod XˆN - 1
-pub fn cyclotomic_mul(a: DensePolynomial::<Fq79>, b: DensePolynomial::<Fq79>) -> DensePolynomial::<Fq79>{
+pub fn cyclotomic_mul(a: &DensePolynomial::<Fq79>, b: &DensePolynomial::<Fq79>) -> DensePolynomial::<Fq79>{
     let mut res = a.naive_mul(&b);
     assert!(a.coeffs.len() <= N);
     assert!(b.coeffs.len() <= N);
