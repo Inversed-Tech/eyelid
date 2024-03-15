@@ -13,19 +13,23 @@ version.workspace = true
 # Benchmark-only dependencies
 benchmark = [
     "criterion",
-    "lazy_static",
     "rand",
 ]
 
 [dependencies]
 ark-ff.workspace = true
 ark-poly.workspace = true
+
 bitvec.workspace = true
+lazy_static.workspace = true
+
+rug.workspace = true
+rug-polynomial.workspace = true
+
 static_assertions.workspace = true
 
 # Benchmark-only dependencies
 criterion = {workspace = true, optional = true}
-lazy_static = {workspace = true, optional = true}
 rand = {workspace = true, optional = true}
 
 [dev-dependencies]

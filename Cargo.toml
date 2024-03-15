@@ -25,6 +25,13 @@ ark-ff = "0.4.2"
 ark-poly = "0.4.2"
 bitvec = "1.0.1"
 
+# TODO:
+# - upgrade rug when rug-polynomial updates its dependencies on rug and gmp-mpfr-sys
+# - ask rug-polynomial to make rug features ["complex", "float", "rational", "serde"] into optional features, and enable them by default (then we can turn them off here)
+# - add a dev dependency on rug with the "rand" feature
+rug = { version = "1.18.0", default-features = false, features = ["integer", "rand"] }
+rug-polynomial = "0.2.5"
+
 # Compile-time checks of production code
 static_assertions = "1.1.0"
 
