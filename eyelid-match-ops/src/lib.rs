@@ -16,6 +16,7 @@ extern crate static_assertions;
 pub mod encoded;
 pub mod encrypted;
 pub mod plaintext;
+pub mod primitives;
 
 /// The number of rows in a raw iris code or iris mask, in bits.
 pub const IRIS_COLUMN_LENGTH: usize = 80;
