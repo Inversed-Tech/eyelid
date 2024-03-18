@@ -28,7 +28,7 @@ criterion_group! {
     name = bench_cyclotomic_multiplication;
     // This can be any expression that returns a `Criterion` object.
     config = Criterion::default().sample_size(40);
-    // List full match implementations here.
+    // List cyclotomic multiplication implementations here.
     targets = bench_cyclotomic_mul
 }
 
