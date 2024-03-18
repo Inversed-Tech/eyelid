@@ -11,10 +11,6 @@ use ark_ff::One;
 /// The maximum exponent in the polynomial.
 pub const MAX_POLY_DEGREE: usize = 2048;
 
-/// The maximum length of the polynomial.
-/// One more than [`MAX_POLY_DEGREE`].
-pub const MAX_POLY_LEN: usize = MAX_POLY_DEGREE + 1;
-
 // Next we define 2 Finite Field using pre-computed primes and generators.
 // We could also consider generating primes dynamically.
 
