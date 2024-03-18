@@ -88,9 +88,9 @@ fn test_cyclotomic_mul() {
     assert!(res.len() <= MAX_POLY_LEN);
 
     for i in 0..MAX_POLY_DEGREE - 1 {
-        // TODO: fix cyclotomic_mul() so coefficients are positive
         assert_eq!(
             res.get_coefficient(i),
+            // The coefficients from cyclotomic_mul() are positive modulo COEFFICIENT_MODULUS
             COEFFICIENT_MODULUS.as_ref() - p1.get_coefficient(i + 1)
         );
     }
