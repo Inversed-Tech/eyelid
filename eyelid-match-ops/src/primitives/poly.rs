@@ -1,3 +1,5 @@
+//! Cyclotomic polynomial operations using ark-poly
+
 use ark_ff::MontConfig;
 use ark_ff::Fp128;
 use ark_ff::MontBackend;
