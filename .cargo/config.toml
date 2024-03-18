@@ -21,9 +21,15 @@ rustflags = [
 
     # Compatibility
     "-Wrust_2021_compatibility",
-    "-Wrust_2024_compatibility",
+    # Activate when it is stabilised
+    #"-Wrust_2024_compatibility",
     "-Wnonstandard_style",
     "-Wfuture_incompatible",
+
+    # Outdated Rust coding styles
+    "-Wrust_2018_idioms",
+    # Activate when it is stabilised
+    #"-Wrust_2021_idioms",
 
     # Pointers
     "-Wclippy::cast_ptr_alignment",
@@ -67,10 +73,6 @@ rustflags = [
     "-Wclippy::cast_possible_wrap",
     "-Wclippy::cast_precision_loss",
     "-Wclippy::cast_sign_loss",
-
-    # Outdated Rust coding styles
-    "-Wrust_2018_idioms",
-    "-Wrust_2021_idioms",
 ]
 
 [build]

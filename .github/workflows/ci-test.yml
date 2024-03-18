@@ -23,13 +23,16 @@ jobs:
 
       - name: Build Tests
         run: |
-          cargo test --no-run --all-features --all-targets
+          export RUSTFLAGS="-D warnings"
+          cargo test --no-run --all-features --all-targets -- -Dwarnings
 
       - name: Run Tests
         run: |
-          cargo test --all-features --all-targets
+          export RUSTFLAGS="-D warnings"
+          cargo test --all-features --all-targets -- -Dwarnings
 
       # For historical reasons, Rust documentation tests are not run by `cargo test`.
       - name: Run Doc Tests
         run: |
+          export RUSTFLAGS="-D warnings"
           cargo test --doc --all-features
