@@ -1,5 +1,9 @@
 //! Benchmarks for matching operations.
+
 #![cfg(feature = "benchmark")]
+// Allow missing docs in macro-produced code.
+// TODO: move the macros to a separate module and allow missing docs only in that module.
+#![allow(missing_docs)]
 
 use eyelid_match_ops::plaintext::{
     self,
