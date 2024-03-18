@@ -72,5 +72,6 @@ pub fn cyclotomic_mul(a: &DensePolynomial::<Fq79>, b: &DensePolynomial::<Fq79>) 
             res[i + N] = Fq79::zero();
         };
     }
+    assert!(res.coeffs.len() <= N);
     res
 }
