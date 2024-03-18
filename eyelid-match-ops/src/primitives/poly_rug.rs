@@ -51,11 +51,12 @@ pub type Polynomial = ModPoly;
 
 /// Returns `a*b % [POLY_MODULUS]`, with positive coefficients.
 /// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
-pub fn cyclotomic_mul(a: Polynomial, b: Polynomial) -> Polynomial {
+pub fn cyclotomic_mul(a: &Polynomial, b: &Polynomial) -> Polynomial {
     assert!(a.len() <= MAX_POLY_LEN);
     assert!(b.len() <= MAX_POLY_LEN);
 
-    let mut res = a * b;
+    let mut res = a.clone();
+    res *= b;
 
     // TODO: benchmark the manual cyclotomic_mul impl, to see if it's faster.
     POLY_MODULUS.with(|m| res %= m);
@@ -101,7 +102,7 @@ fn test_cyclotomic_mul_rand() {
     xnm1.set_coefficient_ui(MAX_POLY_DEGREE - 1, 1);
     assert_eq!(xnm1.len(), MAX_POLY_LEN - 1);
 
-    let res = cyclotomic_mul(p1.clone(), xnm1);
+    let res = cyclotomic_mul(&p1, &xnm1);
     assert!(res.len() <= MAX_POLY_LEN);
 
     for i in 0..MAX_POLY_DEGREE - 1 {
@@ -151,7 +152,7 @@ fn test_cyclotomic_mul_max_degree() {
         assert!(p2.len() <= MAX_POLY_LEN);
         assert_eq!(p1.len() + p2.len(), MAX_POLY_DEGREE + 2);
 
-        let res = cyclotomic_mul(p1, p2);
+        let res = cyclotomic_mul(&p1, &p2);
 
         // Make sure it's X^N
         assert_eq!(res, x_max);
