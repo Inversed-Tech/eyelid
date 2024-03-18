@@ -10,7 +10,7 @@ use rug_polynomial::ModPoly;
 pub const MAX_POLY_DEGREE: usize = 2048;
 
 /// The maximum length of the polynomial.
-/// One more than the degree.
+/// One more than [`MAX_POLY_DEGREE`].
 pub const MAX_POLY_LEN: usize = MAX_POLY_DEGREE + 1;
 
 // We define a finite field using pre-computed primes and generators.
@@ -33,8 +33,8 @@ lazy_static! {
 
 // Work around ModPoly not being thread-safe.
 thread_local! {
-    /// The polynomial modulus used for the polynomial field: `X^N + 1`.
-    /// This means that `X^N = -1`.
+    /// The polynomial modulus used for the polynomial field, `X^[MAX_POLY_DEGREE] + 1`.
+    /// This means that `X^[MAX_POLY_DEGREE] = -1`.
     pub static POLY_MODULUS: Polynomial = {
         let mut poly = Polynomial::new(COEFFICIENT_MODULUS.as_ref().clone());
         poly.set_coefficient_ui(MAX_POLY_DEGREE, 1);
@@ -44,11 +44,13 @@ thread_local! {
 }
 
 /// A modular polynomial with coefficients in [`COEFFICIENT_MODULUS`],
-/// and maximun degree [`MAX_POLY_DEGREE`].
+/// and maximum degree [`MAX_POLY_DEGREE`].
 //
 // TODO: replace this with a type wrapper that uses the constant moduli and degree above.
 pub type Polynomial = ModPoly;
 
+/// Returns `a*b % [POLY_MODULUS]`, with positive coefficients.
+/// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
 pub fn cyclotomic_mul(a: Polynomial, b: Polynomial) -> Polynomial {
     assert!(a.len() <= MAX_POLY_LEN);
     assert!(b.len() <= MAX_POLY_LEN);
@@ -64,22 +66,37 @@ pub fn cyclotomic_mul(a: Polynomial, b: Polynomial) -> Polynomial {
 }
 
 // TODO: put tests in another file to speed up compilation.
-#[test]
-fn test_cyclotomic_mul() {
-    use rug::rand::RandState;
 
-    let mut rng = RandState::new();
+/// Returns a random polynomial with degree `degree`,
+/// which must be less than or equal to [`MAX_POLY_DEGREE`].
+///
+/// In rare cases, the degree can be less than `degree`,
+/// because the random coefficient of `X^[MAX_POLY_DEGREE]` is zero.
+pub fn rand_poly(degree: usize) -> Polynomial {
+    assert!(degree <= MAX_POLY_DEGREE);
 
-    // A random polynomial with degree `MAX_POLY_DEGREE - 1`
-    let mut p1 = Polynomial::new(COEFFICIENT_MODULUS.as_ref().clone());
-    for i in 0..MAX_POLY_DEGREE {
+    let mut rng = rug::rand::RandState::new();
+
+    // TODO: consider using a random degree, biased towards small and large degree edge cases.
+    let mut poly = Polynomial::new(COEFFICIENT_MODULUS.as_ref().clone());
+    for i in 0..=degree {
         let coeff: Integer = COEFFICIENT_MODULUS.random_below_ref(&mut rng).into();
-        p1.set_coefficient(i, &coeff);
+        poly.set_coefficient(i, &coeff);
     }
     // TODO: create a degree() method that correctly subtracts one
-    assert_eq!(p1.len(), MAX_POLY_LEN - 1);
+    assert!(poly.len() <= degree + 1);
 
-    // Multiplying by Xˆ{N-1} will rotate by N-1 and negate (except for X^{N-1} and X^N)
+    poly
+}
+
+/// Test cyclotomic multiplication of a random polynomial by `X^{[MAX_POLY_DEGREE] - 1}`.
+#[test]
+fn test_cyclotomic_mul_rand() {
+    // Create a random polynomial.
+    let p1 = rand_poly(MAX_POLY_DEGREE - 1);
+
+    // Multiplying by Xˆ{MAX_POLY_DEGREE-1} will rotate by MAX_POLY_DEGREE-1 and negate
+    // (except for X^{MAX_POLY_DEGREE-1} and X^MAX_POLY_DEGREE)
     let mut xnm1 = Polynomial::new(COEFFICIENT_MODULUS.as_ref().clone());
     xnm1.set_coefficient_ui(MAX_POLY_DEGREE - 1, 1);
     assert_eq!(xnm1.len(), MAX_POLY_LEN - 1);
@@ -103,4 +120,40 @@ fn test_cyclotomic_mul() {
         res.get_coefficient(MAX_POLY_DEGREE),
         p1.get_coefficient(MAX_POLY_DEGREE)
     );
+}
+
+/// Test cyclotomic multiplication that results in `X^[MAX_POLY_DEGREE]`.
+#[test]
+fn test_cyclotomic_mul_max_degree() {
+    // X^MAX_POLY_DEGREE
+    let mut x_max = Polynomial::new(COEFFICIENT_MODULUS.as_ref().clone());
+    x_max.set_coefficient_ui(MAX_POLY_DEGREE, 1);
+    // There is a shorter representation of -1 as the constant `COEFFICIENT_MODULUS - 1`.
+    POLY_MODULUS.with(|m| x_max %= m);
+    assert_eq!(
+        x_max,
+        Polynomial::from_int(
+            COEFFICIENT_MODULUS.as_ref().clone(),
+            Integer::from(COEFFICIENT_MODULUS.as_ref() - 1),
+        )
+    );
+
+    for i in 0..=MAX_POLY_DEGREE {
+        // X^i * X^{MAX_POLY_DEGREE - i} = X^MAX_POLY_DEGREE
+        let mut p1 = Polynomial::new(COEFFICIENT_MODULUS.as_ref().clone());
+        p1.set_coefficient_ui(i, 1);
+
+        let mut p2 = Polynomial::new(COEFFICIENT_MODULUS.as_ref().clone());
+        p2.set_coefficient_ui(MAX_POLY_DEGREE - i, 1);
+
+        // TODO: create a degree() method that correctly subtracts one
+        assert!(p1.len() <= MAX_POLY_LEN);
+        assert!(p2.len() <= MAX_POLY_LEN);
+        assert_eq!(p1.len() + p2.len(), MAX_POLY_DEGREE + 2);
+
+        let res = cyclotomic_mul(p1, p2);
+
+        // Make sure it's X^N
+        assert_eq!(res, x_max);
+    }
 }
