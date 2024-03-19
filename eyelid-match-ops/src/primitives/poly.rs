@@ -139,7 +139,8 @@ fn test_cyclotomic_mul_rand() {
     assert!(res.degree() <= MAX_POLY_DEGREE);
 
     for i in 0..MAX_POLY_DEGREE - 1 {
-        // TODO: should this be `Fq79Config::MODULUS - p1[i + 1]` ?
+        // Negative numbers are automatically converted to canonical
+        // representation in the interval [0, Fq79Config::MODULUS)
         assert_eq!(res[i], -p1[i + 1]);
     }
     assert_eq!(res[MAX_POLY_DEGREE - 1], p1[0]);
