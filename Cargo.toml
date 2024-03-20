@@ -23,6 +23,7 @@ eyelid-test = { version = "0.1.0", path = "eyelid-test" }
 # Production
 ark-ff = "0.4.2"
 ark-poly = "0.4.2"
+ark-std = "0.4.0"
 bitvec = "1.0.1"
 
 # Compile-time checks of production code
