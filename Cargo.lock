@@ -314,13 +314,16 @@ version = "0.1.0"
 dependencies = [
  "ark-ff",
  "ark-poly",
+ "ark-serialize",
  "ark-std",
  "bitvec",
  "criterion",
  "eyelid-test",
  "lazy_static",
+ "num-bigint",
  "rand",
  "static_assertions",
+ "zeroize",
 ]
 
 [[package]]

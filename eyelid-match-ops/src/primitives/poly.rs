@@ -1,38 +1,22 @@
 //! Cyclotomic polynomial operations using ark-poly
 
-use ark_ff::{Fp128, MontBackend, MontConfig, One, Zero};
+use ark_ff::{One, Zero};
 use ark_poly::polynomial::{
     univariate::{DenseOrSparsePolynomial, DensePolynomial},
     Polynomial,
 };
 use lazy_static::lazy_static;
 
+pub mod fq79u128;
+pub mod fq79u64x2;
+
 #[cfg(any(test, feature = "benchmark"))]
 pub mod test;
 
+pub use fq79u64x2::Fq79;
+
 /// The maximum exponent in the polynomial.
 pub const MAX_POLY_DEGREE: usize = 2048;
-
-/// The configuration of the modular field used for polynomial coefficients.
-#[derive(MontConfig)]
-#[modulus = "93309596432438992665667"]
-#[generator = "5"]
-pub struct Fq79Config;
-
-/// The modular field used for polynomial coefficients, with precomputed primes and generators.
-///
-/// These are the parameters for full resolution, according to the Inversed Tech report.
-/// t = 2ˆ15, q = 2ˆ79, N = 2048
-//
-// Sage commands:
-// random_prime(2**79)
-// 93309596432438992665667
-// ff = GF(93309596432438992665667)
-// ff.multiplicative_generator()
-// 5
-//
-// We could also consider generating primes dynamically, but this could impact performance.
-pub type Fq79 = Fp128<MontBackend<Fq79Config, 2>>;
 
 /// A modular polynomial with coefficients in [`Fq79`],
 /// and maximum degree [`MAX_POLY_DEGREE`].

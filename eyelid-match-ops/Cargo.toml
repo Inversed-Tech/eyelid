@@ -19,10 +19,13 @@ benchmark = [
 [dependencies]
 ark-ff.workspace = true
 ark-poly.workspace = true
+ark-serialize.workspace = true
 ark-std.workspace = true
+num-bigint.workspace = true
 
 bitvec.workspace = true
 lazy_static.workspace = true
+zeroize.workspace = true
 
 static_assertions.workspace = true
 
