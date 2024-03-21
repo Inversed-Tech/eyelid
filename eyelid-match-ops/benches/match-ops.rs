@@ -12,7 +12,7 @@ use eyelid_match_ops::{
         self,
         test::gen::{random_iris_code, random_iris_mask},
     },
-    primitives::poly::{self, rand_poly, MAX_POLY_DEGREE},
+    primitives::poly::{self, test::gen::rand_poly, MAX_POLY_DEGREE},
 };
 
 // Configure Criterion:
