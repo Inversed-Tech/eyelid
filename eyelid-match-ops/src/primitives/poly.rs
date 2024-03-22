@@ -74,7 +74,20 @@ pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
     assert!(a.degree() <= MAX_POLY_DEGREE);
     assert!(b.degree() <= MAX_POLY_DEGREE);
 
-    let mut res = a.naive_mul(b);
+    let dividend = a.naive_mul(b);
+
+    let res = mod_poly_manual(&dividend);
+
+    assert!(res.degree() <= MAX_POLY_DEGREE);
+
+    res
+}
+
+/// Returns the remainder of `dividend % [POLY_MODULUS]`, as a polynomial.
+///
+/// This is a manual implementation.
+pub fn mod_poly_manual(dividend: &Poly) -> Poly {
+    let mut res = dividend.clone();
 
     for i in 0..MAX_POLY_DEGREE {
         // In the cyclotomic ring we have that XˆN = -1,
@@ -92,7 +105,18 @@ pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
         res.coeffs.pop();
     }
 
-    assert!(res.degree() <= MAX_POLY_DEGREE);
-
     res
+}
+
+/// Returns the remainder of `dividend % [POLY_MODULUS]`, as a polynomial.
+///
+/// This uses an [`ark-poly`] library implementation.
+pub fn mod_poly_ark(dividend: &Poly) -> Poly {
+    let dividend: DenseOrSparsePolynomial<'_, _> = dividend.into();
+
+    let (_quotient, remainder) = dividend
+        .divide_with_q_and_r(&*POLY_MODULUS)
+        .expect("POLY_MODULUS is not zero");
+
+    remainder
 }
