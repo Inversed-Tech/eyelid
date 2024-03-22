@@ -76,7 +76,10 @@ pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
 
     let dividend = a.naive_mul(b);
 
+    // Use the fastest benchmark between mod_poly_manual() and mod_poly_ark() here,
+    // and debug_assert_eq!() the other one.
     let res = mod_poly_manual(&dividend);
+    debug_assert_eq!(res, mod_poly_ark(&dividend));
 
     assert!(res.degree() <= MAX_POLY_DEGREE);
 
