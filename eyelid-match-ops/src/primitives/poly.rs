@@ -13,7 +13,9 @@ pub mod fq8;
 #[cfg(any(test, feature = "benchmark"))]
 pub mod test;
 
-pub use fq8::{Coeff, MAX_POLY_DEGREE};
+pub use fq79::{Coeff, MAX_POLY_DEGREE};
+// Temporarily switch to this tiny field to make test errors easier to debug.
+//pub use fq8::{Coeff, MAX_POLY_DEGREE};
 
 /// A modular polynomial with coefficients in [`Coeff`],
 /// and maximum degree [`MAX_POLY_DEGREE`].
