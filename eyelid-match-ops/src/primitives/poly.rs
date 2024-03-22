@@ -8,6 +8,7 @@ use ark_poly::polynomial::{
 use lazy_static::lazy_static;
 
 pub mod fq79;
+pub mod fq8;
 
 #[cfg(any(test, feature = "benchmark"))]
 pub mod test;
