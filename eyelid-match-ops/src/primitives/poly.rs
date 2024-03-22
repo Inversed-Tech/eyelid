@@ -85,7 +85,7 @@ pub fn mod_poly_manual(dividend: &Poly) -> Poly {
         } else {
             res[r] = res[r] + res[i];
         }
-        i = i + 1;
+        i += 1;
     }
 
     // These elements have already been negated and summed above.
