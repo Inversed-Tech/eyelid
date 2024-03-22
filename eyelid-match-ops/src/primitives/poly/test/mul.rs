@@ -16,7 +16,7 @@ fn test_cyclotomic_mul_rand() {
 
     // Xˆ{N-1}, multiplying by it will rotate by N-1 and negate (except the first).
     let mut xnm1 = zero_poly(MAX_POLY_DEGREE - 1);
-    xnm1.coeffs[MAX_POLY_DEGREE - 1] = Fq79::one();
+    xnm1.coeffs[MAX_POLY_DEGREE - 1] = Coeff::one();
 
     assert_eq!(xnm1.degree(), MAX_POLY_DEGREE - 1);
 
@@ -25,7 +25,7 @@ fn test_cyclotomic_mul_rand() {
 
     for i in 0..MAX_POLY_DEGREE - 1 {
         // Negative numbers are automatically converted to canonical
-        // representation in the interval [0, Fq79Config::MODULUS)
+        // representation in the interval [0, MODULUS)
         assert_eq!(res[i], -p1[i + 1]);
     }
     assert_eq!(res[MAX_POLY_DEGREE - 1], p1[0]);
@@ -33,7 +33,7 @@ fn test_cyclotomic_mul_rand() {
     // Zero coefficients aren't stored.
     if res.degree() >= MAX_POLY_DEGREE {
         for i in (MAX_POLY_DEGREE)..=res.degree() {
-            assert_eq!(res[i], Fq79::zero());
+            assert_eq!(res[i], Coeff::zero());
         }
     }
 }
@@ -45,28 +45,28 @@ fn test_cyclotomic_mul_max_degree() {
 
     // X^MAX_POLY_DEGREE
     let mut x_max = zero_poly(MAX_POLY_DEGREE);
-    x_max[MAX_POLY_DEGREE] = Fq79::one();
+    x_max[MAX_POLY_DEGREE] = Coeff::one();
 
-    // There is a shorter representation of X^N as the constant `Fq79Config::MODULUS - 1`.
+    // There is a shorter representation of X^N as the constant `MODULUS - 1`.
     let x_max = DenseOrSparsePolynomial::from(x_max);
     let (q, x_max) = x_max
         .divide_with_q_and_r(&*POLY_MODULUS)
         .expect("is divisible by X^MAX_POLY_DEGREE");
 
-    assert_eq!(q, Poly::from_coefficients_vec(vec![Fq79::one()]));
+    assert_eq!(q, Poly::from_coefficients_vec(vec![Coeff::one()]));
     assert_eq!(
         x_max,
         // TODO: should this be a constant?
-        Poly::from_coefficients_vec(vec![Fq79::zero() - Fq79::one()]),
+        Poly::from_coefficients_vec(vec![Coeff::zero() - Coeff::one()]),
     );
 
     for i in 0..=MAX_POLY_DEGREE {
         // X^i * X^{MAX_POLY_DEGREE - i} = X^MAX_POLY_DEGREE
         let mut p1 = zero_poly(i);
-        p1[i] = Fq79::one();
+        p1[i] = Coeff::one();
 
         let mut p2 = zero_poly(MAX_POLY_DEGREE - i);
-        p2[MAX_POLY_DEGREE - i] = Fq79::one();
+        p2[MAX_POLY_DEGREE - i] = Coeff::one();
 
         assert_eq!(p1.degree() + p2.degree(), MAX_POLY_DEGREE);
 
