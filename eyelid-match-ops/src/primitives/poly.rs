@@ -6,9 +6,13 @@ use ark_poly::polynomial::{
     Polynomial,
 };
 use lazy_static::lazy_static;
+use std::ops::Add;
+use std::ops::Sub;
 
 /// The maximum exponent in the polynomial.
 pub const MAX_POLY_DEGREE: usize = 2048;
+/// Minimum degree for recursive Karatsuba calls
+pub const MIN_KARATSUBA_REC_DEGREE: usize = 8; // TODO: fine tune
 
 /// The configuration of the modular field used for polynomial coefficients.
 #[derive(MontConfig)]
@@ -66,7 +70,7 @@ pub fn zero_poly(degree: usize) -> Poly {
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1`.
 /// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
-pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
+pub fn naive_cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
     // TODO: change these assertions to debug_assert!() to avoid panics in production code.
     assert!(a.degree() <= MAX_POLY_DEGREE);
     assert!(b.degree() <= MAX_POLY_DEGREE);
@@ -92,6 +96,80 @@ pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
     assert!(res.degree() <= MAX_POLY_DEGREE);
 
     res
+}
+
+/// Returns `a * b` followed by reduction mod `XˆN + 1`.
+/// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
+pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
+    // General idea:
+    // if a or b has degree less than min, condition is true
+
+    let n = a.degree()+1;
+    //dbg!(n);
+
+    let cond_a = a.degree()+1 < MIN_KARATSUBA_REC_DEGREE;
+    let cond_b = b.degree()+1 < MIN_KARATSUBA_REC_DEGREE;
+    let rec_cond = cond_a || cond_b;
+    // If degree is less than the recursion minimum, just use the naive version
+    let mut res = zero_poly(n);
+    if rec_cond {
+        res = naive_cyclotomic_mul(a, b);
+    } else {
+        // Otherwise recursively call for al.bl and ar.br
+        // Compute al, ar
+        let (al, ar) = poly_split(a);
+        // Compute bl, br
+        let (bl, br) = poly_split(b);
+        // Compute al.bl
+        let albl = karatsuba_mul(&al, &bl);
+        // Compute ar.br
+        let arbr = karatsuba_mul(&ar, &br);
+        // Compute (al + ar)
+        let alpar = al.add(ar);
+        // Compute (bl + br)
+        let blpbr = bl.add(br);
+        // Compute y = (al + ar).(bl + br)
+        let y = karatsuba_mul(&alpar, &blpbr);
+        // Compute res = (al.bl - ar.br) + (y - al.bl - ar.br)xˆn/2
+        res = y.clone();
+        res = res.sub(&albl);
+        res = res.sub(&arbr);
+        let halfn = n/2;
+        let mut xnb2 = zero_poly(halfn);
+        xnb2.coeffs[halfn] = Fq79::one();
+        dbg!(xnb2.clone());
+        res = naive_cyclotomic_mul(&res.clone(), &xnb2);
+        res = res.add(albl);
+        res = res.sub(&arbr);
+    };
+    res.coeffs.truncate(MAX_POLY_DEGREE);
+    // Leading elements might be zero, so make sure the polynomial is in the canonical form.
+    while res.coeffs.last() == Some(&Fq79::zero()) {
+        res.coeffs.pop();
+    }
+    res
+}
+
+pub fn poly_split(a: &Poly) -> (Poly, Poly) {
+    // TODO: replace naive/inefficient implementation
+    // Starting with naive code is easy to code and to understand the algorithm
+    let n = a.degree()+1;
+    let halfn = n/2;
+    let mut al = zero_poly(halfn);
+    let mut ar = zero_poly(halfn);
+    for i in 0..halfn {
+        al.coeffs[i] = a.coeffs[i];
+        ar.coeffs[i] = a.coeffs[halfn + i];
+    }
+    al.coeffs.truncate(MAX_POLY_DEGREE);
+    while al.coeffs.last() == Some(&Fq79::zero()) {
+        al.coeffs.pop();
+    }
+    ar.coeffs.truncate(MAX_POLY_DEGREE);
+    while ar.coeffs.last() == Some(&Fq79::zero()) {
+        ar.coeffs.pop();
+    }
+    (al, ar)
 }
 
 // TODO: put tests in another file to speed up compilation.
@@ -135,7 +213,7 @@ fn test_cyclotomic_mul_rand() {
 
     assert_eq!(xnm1.degree(), MAX_POLY_DEGREE - 1);
 
-    let res = cyclotomic_mul(&p1, &xnm1);
+    let res = naive_cyclotomic_mul(&p1, &xnm1);
     assert!(res.degree() <= MAX_POLY_DEGREE);
 
     for i in 0..MAX_POLY_DEGREE - 1 {
@@ -151,6 +229,26 @@ fn test_cyclotomic_mul_rand() {
             assert_eq!(res[i], Fq79::zero());
         }
     }
+}
+
+/// Test cyclotomic multiplication of a random polynomial by `X^{[MAX_POLY_DEGREE] - 1}`.
+#[test]
+fn test_karatsuba_mul_rand() {
+    let p1 = rand_poly(MAX_POLY_DEGREE - 1);
+    let p2 = rand_poly(MAX_POLY_DEGREE - 1);
+
+    #[allow(clippy::int_plus_one)]
+    {
+        assert!(p1.degree() <= MAX_POLY_DEGREE - 1);
+        assert!(p2.degree() <= MAX_POLY_DEGREE - 1);
+    }
+
+    let expected = naive_cyclotomic_mul(&p1, &p2);
+    assert!(expected.degree() <= MAX_POLY_DEGREE);
+    let res = karatsuba_mul(&p1, &p2);
+    assert!(res.degree() <= MAX_POLY_DEGREE);
+
+    assert_eq!(expected, res);
 }
 
 /// Test cyclotomic multiplication that results in `X^[MAX_POLY_DEGREE]`.
@@ -185,7 +283,7 @@ fn test_cyclotomic_mul_max_degree() {
 
         assert_eq!(p1.degree() + p2.degree(), MAX_POLY_DEGREE);
 
-        let res = cyclotomic_mul(&p1, &p2);
+        let res = naive_cyclotomic_mul(&p1, &p2);
 
         // Make sure it's X^N
         assert_eq!(res, x_max);
