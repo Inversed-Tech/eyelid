@@ -7,6 +7,9 @@ use ark_poly::polynomial::{
 };
 use lazy_static::lazy_static;
 
+#[cfg(any(test, feature = "benchmark"))]
+pub mod test;
+
 /// The maximum exponent in the polynomial.
 pub const MAX_POLY_DEGREE: usize = 2048;
 
@@ -92,102 +95,4 @@ pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
     assert!(res.degree() <= MAX_POLY_DEGREE);
 
     res
-}
-
-// TODO: put tests in another file to speed up compilation.
-
-/// Generates a cyclotomic polynomial of `degree`, with random coefficients in Fq79.
-/// `degree` must be less than or equal to [`MAX_POLY_DEGREE`].
-///
-/// In rare cases, the degree can be less than `degree`,
-/// because the random coefficient of `X^[MAX_POLY_DEGREE]` is zero.
-#[cfg(any(test, feature = "benchmark"))]
-pub fn rand_poly(degree: usize) -> Poly {
-    use ark_poly::DenseUVPolynomial;
-    use rand::thread_rng;
-
-    assert!(degree <= MAX_POLY_DEGREE);
-
-    // We can't use test_rng() here, because a deterministic RNG can make benchmarks inaccurate.
-    let mut rng = thread_rng();
-
-    // TODO: consider using a random degree, biased towards small and large degree edge cases.
-    let poly = Poly::rand(degree, &mut rng);
-
-    assert!(poly.degree() <= degree);
-
-    poly
-}
-
-/// Test cyclotomic multiplication of a random polynomial by `X^{[MAX_POLY_DEGREE] - 1}`.
-#[test]
-fn test_cyclotomic_mul_rand() {
-    let p1 = rand_poly(MAX_POLY_DEGREE - 1);
-
-    #[allow(clippy::int_plus_one)]
-    {
-        assert!(p1.degree() <= MAX_POLY_DEGREE - 1);
-    }
-
-    // Xˆ{N-1}, multiplying by it will rotate by N-1 and negate (except the first).
-    let mut xnm1 = zero_poly(MAX_POLY_DEGREE - 1);
-    xnm1.coeffs[MAX_POLY_DEGREE - 1] = Fq79::one();
-
-    assert_eq!(xnm1.degree(), MAX_POLY_DEGREE - 1);
-
-    let res = cyclotomic_mul(&p1, &xnm1);
-    assert!(res.degree() <= MAX_POLY_DEGREE);
-
-    for i in 0..MAX_POLY_DEGREE - 1 {
-        // Negative numbers are automatically converted to canonical
-        // representation in the interval [0, Fq79Config::MODULUS)
-        assert_eq!(res[i], -p1[i + 1]);
-    }
-    assert_eq!(res[MAX_POLY_DEGREE - 1], p1[0]);
-
-    // Zero coefficients aren't stored.
-    if res.degree() >= MAX_POLY_DEGREE {
-        for i in (MAX_POLY_DEGREE)..=res.degree() {
-            assert_eq!(res[i], Fq79::zero());
-        }
-    }
-}
-
-/// Test cyclotomic multiplication that results in `X^[MAX_POLY_DEGREE]`.
-#[test]
-fn test_cyclotomic_mul_max_degree() {
-    use ark_poly::DenseUVPolynomial;
-
-    // X^MAX_POLY_DEGREE
-    let mut x_max = zero_poly(MAX_POLY_DEGREE);
-    x_max[MAX_POLY_DEGREE] = Fq79::one();
-
-    // There is a shorter representation of X^N as the constant `Fq79Config::MODULUS - 1`.
-    let x_max = DenseOrSparsePolynomial::from(x_max);
-    let (q, x_max) = x_max
-        .divide_with_q_and_r(&*POLY_MODULUS)
-        .expect("is divisible by X^MAX_POLY_DEGREE");
-
-    assert_eq!(q, Poly::from_coefficients_vec(vec![Fq79::one()]));
-    assert_eq!(
-        x_max,
-        // TODO: should this be a constant?
-        Poly::from_coefficients_vec(vec![Fq79::zero() - Fq79::one()]),
-    );
-
-    for i in 0..=MAX_POLY_DEGREE {
-        // X^i * X^{MAX_POLY_DEGREE - i} = X^MAX_POLY_DEGREE
-        let mut p1 = zero_poly(i);
-        p1[i] = Fq79::one();
-
-        let mut p2 = zero_poly(MAX_POLY_DEGREE - i);
-        p2[MAX_POLY_DEGREE - i] = Fq79::one();
-
-        assert_eq!(p1.degree() + p2.degree(), MAX_POLY_DEGREE);
-
-        let res = cyclotomic_mul(&p1, &p2);
-
-        // Make sure it's X^N
-        assert_eq!(res, x_max);
-    }
 }
