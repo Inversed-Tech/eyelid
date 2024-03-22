@@ -73,12 +73,19 @@ pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
 pub fn mod_poly_manual(dividend: &Poly) -> Poly {
     let mut res = dividend.clone();
 
-    for i in 0..MAX_POLY_DEGREE {
+    let mut i = MAX_POLY_DEGREE;
+    while i < res.coeffs.len() {
         // In the cyclotomic ring we have that XˆN = -1,
         // therefore all elements from N to 2N-1 are negated.
-        if i + MAX_POLY_DEGREE < res.coeffs.len() {
-            res[i] = res[i] - res[i + MAX_POLY_DEGREE];
-        };
+
+        let q = i / MAX_POLY_DEGREE;
+        let r = i % MAX_POLY_DEGREE;
+        if q % 2 == 1 {
+            res[r] = res[r] - res[i];
+        } else {
+            res[r] = res[r] + res[i];
+        }
+        i = i + 1;
     }
 
     // These elements have already been negated and summed above.
