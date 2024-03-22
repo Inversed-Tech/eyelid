@@ -11,7 +11,8 @@ pub fn rand_poly(degree: usize) -> Poly {
     use ark_poly::DenseUVPolynomial;
     use rand::thread_rng;
 
-    assert!(degree <= MAX_POLY_DEGREE);
+    // We need larger degrees in the polynomial modulus tests.
+    //assert!(degree <= MAX_POLY_DEGREE);
 
     // We can't use test_rng() here, because a deterministic RNG can make benchmarks inaccurate.
     let mut rng = thread_rng();
