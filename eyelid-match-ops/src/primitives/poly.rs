@@ -1,53 +1,36 @@
 //! Cyclotomic polynomial operations using ark-poly
 
-use ark_ff::{Fp128, MontBackend, MontConfig, One, Zero};
+use ark_ff::{One, Zero};
 use ark_poly::polynomial::{
     univariate::{DenseOrSparsePolynomial, DensePolynomial},
     Polynomial,
 };
 use lazy_static::lazy_static;
 
+pub mod fq79;
+pub mod fq8;
+
 #[cfg(any(test, feature = "benchmark"))]
 pub mod test;
 
-/// The maximum exponent in the polynomial.
-pub const MAX_POLY_DEGREE: usize = 2048;
+pub use fq79::{Coeff, MAX_POLY_DEGREE};
+// Temporarily switch to this tiny field to make test errors easier to debug.
+//pub use fq8::{Coeff, MAX_POLY_DEGREE};
 
-/// The configuration of the modular field used for polynomial coefficients.
-#[derive(MontConfig)]
-#[modulus = "93309596432438992665667"]
-#[generator = "5"]
-pub struct Fq79Config;
-
-/// The modular field used for polynomial coefficients, with precomputed primes and generators.
-///
-/// These are the parameters for full resolution, according to the Inversed Tech report.
-/// t = 2ˆ15, q = 2ˆ79, N = 2048
-//
-// Sage commands:
-// random_prime(2**79)
-// 93309596432438992665667
-// ff = GF(93309596432438992665667)
-// ff.multiplicative_generator()
-// 5
-//
-// We could also consider generating primes dynamically, but this could impact performance.
-pub type Fq79 = Fp128<MontBackend<Fq79Config, 2>>;
-
-/// A modular polynomial with coefficients in [`Fq79`],
+/// A modular polynomial with coefficients in [`Coeff`],
 /// and maximum degree [`MAX_POLY_DEGREE`].
 //
-// TODO: replace this with a type wrapper that uses the constant degree above.
-pub type Poly = DensePolynomial<Fq79>;
+// TODO: replace this with a type wrapper that uses the constant degree MAX_POLY_DEGREE.
+pub type Poly = DensePolynomial<Coeff>;
 
 lazy_static! {
     /// The polynomial modulus used for the polynomial field, `X^[MAX_POLY_DEGREE] + 1`.
     /// This means that `X^[MAX_POLY_DEGREE] = -1`.
-    pub static ref POLY_MODULUS: DenseOrSparsePolynomial<'static, Fq79> = {
+    pub static ref POLY_MODULUS: DenseOrSparsePolynomial<'static, Coeff> = {
         let mut poly = zero_poly(MAX_POLY_DEGREE);
 
-        poly[MAX_POLY_DEGREE] = Fq79::one();
-        poly[0] = Fq79::one();
+        poly[MAX_POLY_DEGREE] = Coeff::one();
+        poly[0] = Coeff::one();
 
         assert_eq!(poly.degree(), MAX_POLY_DEGREE);
 
@@ -63,7 +46,7 @@ pub fn zero_poly(degree: usize) -> Poly {
     assert!(degree <= MAX_POLY_DEGREE);
 
     let mut poly = Poly::zero();
-    poly.coeffs = vec![Fq79::zero(); degree + 1];
+    poly.coeffs = vec![Coeff::zero(); degree + 1];
     poly
 }
 
@@ -76,7 +59,10 @@ pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
 
     let dividend = a.naive_mul(b);
 
+    // Use the fastest benchmark between mod_poly_manual() and mod_poly_ark() here,
+    // and debug_assert_eq!() the other one.
     let res = mod_poly_manual(&dividend);
+    debug_assert_eq!(res, mod_poly_ark(&dividend));
 
     assert!(res.degree() <= MAX_POLY_DEGREE);
 
@@ -101,7 +87,7 @@ pub fn mod_poly_manual(dividend: &Poly) -> Poly {
     res.coeffs.truncate(MAX_POLY_DEGREE);
 
     // Leading elements might be zero, so make sure the polynomial is in the canonical form.
-    while res.coeffs.last() == Some(&Fq79::zero()) {
+    while res.coeffs.last() == Some(&Coeff::zero()) {
         res.coeffs.pop();
     }
 
