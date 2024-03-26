@@ -1,12 +1,12 @@
 //! Cyclotomic polynomial operations using ark-poly
 
+use crate::primitives::poly::fq79::Fq79;
 use ark_ff::{One, Zero};
 use ark_poly::polynomial::{
     univariate::{DenseOrSparsePolynomial, DensePolynomial},
     Polynomial,
 };
 use lazy_static::lazy_static;
-use crate::primitives::poly::fq79::Fq79;
 use std::ops::Add;
 use std::ops::Sub;
 
@@ -123,13 +123,12 @@ pub fn mod_poly_ark(dividend: &Poly) -> Poly {
 /// Returns `a * b` followed by reduction mod `XˆN + 1` using recursive Karatsuba method.
 /// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
 pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
-
     let mut res;
-    let n = a.degree()+1;
+    let n = a.degree() + 1;
 
     // if a or b has degree less than min, condition is true
-    let cond_a = a.degree()+1 < MIN_KARATSUBA_REC_DEGREE;
-    let cond_b = b.degree()+1 < MIN_KARATSUBA_REC_DEGREE;
+    let cond_a = a.degree() + 1 < MIN_KARATSUBA_REC_DEGREE;
+    let cond_b = b.degree() + 1 < MIN_KARATSUBA_REC_DEGREE;
     let rec_cond = cond_a || cond_b;
     if rec_cond {
         // If degree is less than the recursion minimum, just use the naive version
@@ -148,7 +147,7 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         res = y.clone();
         res = res.sub(&albl);
         res = res.sub(&arbr);
-        let halfn = n/2;
+        let halfn = n / 2;
         let mut xnb2 = zero_poly(halfn);
         xnb2.coeffs[halfn] = Fq79::one();
         res = cyclotomic_mul(&res.clone(), &xnb2);
@@ -157,7 +156,7 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
             // negate ar.br if n is equal to the max degree (edge case)
             res = res.sub(&arbr);
         } else {
-            // Otherwise proceed as usal
+            // Otherwise proceed as usual
             let mut xn = zero_poly(n);
             xn.coeffs[n] = Fq79::one();
             let aux = cyclotomic_mul(&arbr, &xn);
@@ -169,23 +168,10 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
 
 /// Split the polynomial into left and right parts.
 pub fn poly_split(a: &Poly) -> (Poly, Poly) {
-    // TODO: replace naive/inefficient implementation
-    // Starting with naive code is easy to code and to understand the algorithm
-    let n = a.degree()+1;
-    let halfn = n/2;
-    let mut al = zero_poly(halfn);
-    let mut ar = zero_poly(halfn);
-    for i in 0..halfn {
-        al.coeffs[i] = a.coeffs[i];
-        ar.coeffs[i] = a.coeffs[halfn + i];
-    }
-    al.coeffs.truncate(MAX_POLY_DEGREE);
-    while al.coeffs.last() == Some(&Fq79::zero()) {
-        al.coeffs.pop();
-    }
-    ar.coeffs.truncate(MAX_POLY_DEGREE);
-    while ar.coeffs.last() == Some(&Fq79::zero()) {
-        ar.coeffs.pop();
-    }
-    (al, ar)
+    // TODO: review performance
+    let n = a.degree() + 1;
+    let halfn = n / 2;
+    let mut al = a.clone();
+    let ar = al.coeffs.split_off(halfn);
+    (al, DensePolynomial { coeffs: ar })
 }

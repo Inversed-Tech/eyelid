@@ -89,8 +89,6 @@ fn test_karatsuba_mul_rand() {
         assert!(p2.degree() <= MAX_POLY_DEGREE - 1);
     }
 
-    dbg!(p1.clone());
-    dbg!(p2.clone());
     let expected = cyclotomic_mul(&p1, &p2);
     assert!(expected.degree() <= MAX_POLY_DEGREE);
     let res = karatsuba_mul(&p1, &p2);
