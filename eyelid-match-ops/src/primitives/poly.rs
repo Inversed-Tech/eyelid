@@ -27,7 +27,7 @@ pub use fq79::{Coeff, MAX_POLY_DEGREE};
 pub type Poly = DensePolynomial<Coeff>;
 
 /// Minimum degree for recursive Karatsuba calls
-pub const MIN_KARATSUBA_REC_DEGREE: usize = 4; // TODO: fine tune
+pub const MIN_KARATSUBA_REC_DEGREE: usize = 32; // TODO: fine tune
 
 lazy_static! {
     /// The polynomial modulus used for the polynomial field, `X^[MAX_POLY_DEGREE] + 1`.
@@ -153,7 +153,7 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         xnb2.coeffs[halfn] = Fq79::one();
         res = cyclotomic_mul(&res.clone(), &xnb2);
         res = res.add(albl);
-        if n == MAX_POLY_DEGREE {
+        if n >= MAX_POLY_DEGREE {
             // negate ar.br if n is equal to the max degree (edge case)
             res = res.sub(&arbr);
         } else {
@@ -164,11 +164,6 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
             res = res.add(aux);
         }
     };
-    res.coeffs.truncate(MAX_POLY_DEGREE);
-    // Leading elements might be zero, so make sure the polynomial is in the canonical form.
-    while res.coeffs.last() == Some(&Fq79::zero()) {
-        res.coeffs.pop();
-    }
     res
 }
 
