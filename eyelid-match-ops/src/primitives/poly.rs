@@ -6,6 +6,7 @@ use ark_poly::polynomial::{
     Polynomial,
 };
 use lazy_static::lazy_static;
+use std::ops::Sub;
 
 pub mod fq79;
 pub mod fq8;
@@ -49,6 +50,25 @@ pub fn zero_poly(degree: usize) -> Poly {
     poly.coeffs = vec![Coeff::zero(); degree + 1];
     poly
 }
+
+/// Returns a Boolean indicating if the input is equal or not to the additive
+/// identity in the polynomial ring
+pub fn is_zero_poly(a: Poly) -> bool {
+    let mut poly = Poly::zero();
+    poly.coeffs = vec![Coeff::zero(); MAX_POLY_DEGREE + 1];
+    poly == a
+}
+
+/// Returns the multiplicative element of the polynomial ring.
+pub fn one_poly(degree: usize) -> Poly {
+    assert!(degree <= MAX_POLY_DEGREE);
+
+    let mut poly = Poly::zero();
+    poly.coeffs = vec![Coeff::zero(); degree + 1];
+    poly.coeffs[0] = Coeff::one();
+    poly
+}
+
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1`.
 /// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
@@ -112,4 +132,48 @@ pub fn mod_poly_ark(dividend: &Poly) -> Poly {
         .expect("POLY_MODULUS is not zero");
 
     remainder
+}
+
+/// Returns polynomials x, y, d such that a.x + a.y = d.
+/// When d=1 we have that x is the multiplicative inverse of a.
+pub fn extended_gcd(a: &Poly, b: Poly) -> (Poly, Poly, Poly) {
+    // Invariant a.xi + b.yi = ri
+
+    // init with x0=1, y0=0, r0=a
+    let mut x_prev = one_poly(MAX_POLY_DEGREE);
+    let mut y_prev = zero_poly(MAX_POLY_DEGREE);
+    let ri_prev = a.clone();
+    // next:     x1=0, y1=1, r1=b
+    let mut x_cur = zero_poly(MAX_POLY_DEGREE);
+    let mut y_cur = one_poly(MAX_POLY_DEGREE);
+    let ri_cur = b.clone();
+
+    let mut dividend: DenseOrSparsePolynomial<'_, _> = ri_prev.clone().into();
+    let (mut ri_cur, mut q) = dividend
+        .divide_with_q_and_r(&ri_cur.into())
+        .expect("POLY_MODULUS is not zero");
+    // xi+1 = xi-1 - q.xi
+    let mut x_aux = x_cur.clone();
+    x_cur = x_prev.sub(&cyclotomic_mul(&q, &x_cur));
+    x_prev = x_aux;
+    // yi+1 = yi-1 - q.yi
+    let mut y_aux = y_cur.clone();
+    y_cur = y_prev.sub(&cyclotomic_mul(&q, &y_cur));
+    y_prev = y_aux;
+    // loop until ri_cur = 0
+    while !is_zero_poly(ri_cur.clone()) {
+        dividend = ri_prev.clone().into();
+        (ri_cur, q) = dividend
+            .divide_with_q_and_r(&*POLY_MODULUS)
+            .expect("POLY_MODULUS is not zero");
+        // xi+1 = xi-1 - q.xi
+        x_aux = x_cur.clone();
+        x_cur = x_prev.sub(&cyclotomic_mul(&q, &x_cur));
+        x_prev = x_aux;
+        // yi+1 = yi-1 - q.yi
+        y_aux = y_cur.clone();
+        y_cur = y_prev.sub(&cyclotomic_mul(&q, &y_cur));
+        y_prev = y_aux;
+    }
+    (x_cur, y_cur, ri_cur)
 }
