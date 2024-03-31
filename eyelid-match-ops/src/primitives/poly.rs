@@ -149,6 +149,7 @@ pub fn extended_gcd(a: &Poly, b: Poly) -> (Poly, Poly, Poly) {
     // FIXME: we need a way to create the zero polynomial, whose degree is zero
     // But right now if we use the zero_poly function, the program will panic when
     // degree() is called inside cyclotomic_mul
+    // See Issue #13
     let mut x_cur = zero_poly(0);
     let mut y_cur = one_poly(0);
     let ri_cur = b.clone();
