@@ -5,3 +5,6 @@ pub mod gen;
 
 #[cfg(test)]
 pub mod mul;
+
+#[cfg(test)]
+pub mod inv;

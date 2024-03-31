@@ -74,7 +74,9 @@ pub fn one_poly(degree: usize) -> Poly {
 /// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
 pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
     // TODO: change these assertions to debug_assert!() to avoid panics in production code.
+    dbg!("bug after");
     assert!(a.degree() <= MAX_POLY_DEGREE);
+    dbg!("bug before");
     assert!(b.degree() <= MAX_POLY_DEGREE);
 
     let dividend = a.naive_mul(b);
@@ -144,8 +146,11 @@ pub fn extended_gcd(a: &Poly, b: Poly) -> (Poly, Poly, Poly) {
     let mut y_prev = zero_poly(MAX_POLY_DEGREE);
     let ri_prev = a.clone();
     // next:     x1=0, y1=1, r1=b
-    let mut x_cur = zero_poly(MAX_POLY_DEGREE);
-    let mut y_cur = one_poly(MAX_POLY_DEGREE);
+    // FIXME: we need a way to create the zero polynomial, whose degree is zero
+    // But right now if we use the zero_poly function, the program will panic when
+    // degree() is called inside cyclotomic_mul
+    let mut x_cur = zero_poly(0);
+    let mut y_cur = one_poly(0);
     let ri_cur = b.clone();
 
     let mut dividend: DenseOrSparsePolynomial<'_, _> = ri_prev.clone().into();
