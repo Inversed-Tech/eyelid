@@ -30,7 +30,15 @@ criterion_group! {
     // This can be any expression that returns a `Criterion` object.
     config = Criterion::default().sample_size(50);
     // List cyclotomic multiplication implementations here.
-    targets = bench_cyclotomic_mul
+    targets = bench_cyclotomic_mul_naive, bench_karatsuba_mul
+}
+
+criterion_group! {
+    name = bench_poly_split_karatsuba;
+    // This can be any expression that returns a `Criterion` object.
+    config = Criterion::default().sample_size(50);
+    // List cyclotomic multiplication implementations here.
+    targets = bench_poly_split
 }
 
 criterion_group! {
@@ -45,6 +53,7 @@ criterion_group! {
 criterion_main!(
     bench_full_match,
     bench_cyclotomic_multiplication,
+    bench_poly_split_karatsuba,
     bench_polynomial_modulus
 );
 
@@ -69,7 +78,7 @@ fn bench_plaintext_full_match(settings: &mut Criterion) {
 }
 
 /// Run [`poly::cyclotomic_mul()`] as a Criterion benchmark with random data.
-pub fn bench_cyclotomic_mul(settings: &mut Criterion) {
+pub fn bench_cyclotomic_mul_naive(settings: &mut Criterion) {
     // Setup: generate random cyclotomic polynomials
     let p1 = rand_poly(MAX_POLY_DEGREE);
     let p2 = rand_poly(MAX_POLY_DEGREE);
@@ -84,6 +93,44 @@ pub fn bench_cyclotomic_mul(settings: &mut Criterion) {
             benchmark.iter_with_large_drop(|| {
                 // To avoid timing dropping the return value, this line must not end in ';'
                 poly::cyclotomic_mul(p1, p2)
+            })
+        },
+    );
+}
+
+/// Run [`poly::karatsuba_mul()`] as a Criterion benchmark with random data.
+pub fn bench_karatsuba_mul(settings: &mut Criterion) {
+    // Setup: generate random cyclotomic polynomials
+    let p1 = rand_poly(MAX_POLY_DEGREE);
+    let p2 = rand_poly(MAX_POLY_DEGREE);
+
+    settings.bench_with_input(
+        BenchmarkId::new(
+            "Karatsuba multiplication: polynomial",
+            "2 random polys of degree N",
+        ),
+        &(p1, p2),
+        |benchmark, (p1, p2)| {
+            benchmark.iter_with_large_drop(|| {
+                // To avoid timing dropping the return value, this line must not end in ';'
+                poly::karatsuba_mul(p1, p2)
+            })
+        },
+    );
+}
+
+/// Run [`poly::poly_split()`] as a Criterion benchmark with random data.
+pub fn bench_poly_split(settings: &mut Criterion) {
+    // Setup: generate random cyclotomic polynomials
+    let p = rand_poly(MAX_POLY_DEGREE);
+
+    settings.bench_with_input(
+        BenchmarkId::new("Karatsuba: poly split", "random poly of degree N"),
+        &(p),
+        |benchmark, p| {
+            benchmark.iter_with_large_drop(|| {
+                // To avoid timing dropping the return value, this line must not end in ';'
+                poly::poly_split(p)
             })
         },
     );

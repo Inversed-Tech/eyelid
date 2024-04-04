@@ -76,3 +76,23 @@ fn test_cyclotomic_mul_max_degree() {
         assert_eq!(res, x_max);
     }
 }
+
+/// Test cyclotomic multiplication of a random polynomial by `X^{[MAX_POLY_DEGREE] - 1}`.
+#[test]
+fn test_karatsuba_mul_rand() {
+    let p1 = rand_poly(MAX_POLY_DEGREE - 1);
+    let p2 = rand_poly(MAX_POLY_DEGREE - 1);
+
+    #[allow(clippy::int_plus_one)]
+    {
+        assert!(p1.degree() <= MAX_POLY_DEGREE - 1);
+        assert!(p2.degree() <= MAX_POLY_DEGREE - 1);
+    }
+
+    let expected = cyclotomic_mul(&p1, &p2);
+    assert!(expected.degree() <= MAX_POLY_DEGREE);
+    let res = karatsuba_mul(&p1, &p2);
+    assert!(res.degree() <= MAX_POLY_DEGREE);
+
+    assert_eq!(expected, res);
+}
