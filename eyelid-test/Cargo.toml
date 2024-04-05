@@ -3,7 +3,10 @@ name = "eyelid-test"
 description = "Iris matching test frameworks and test data"
 
 # Configure in eyelid/Cargo.toml
+authors.workspace = true
 edition.workspace = true
+homepage.workspace = true
+license.workspace = true
 readme.workspace = true
 publish.workspace = true
 repository.workspace = true

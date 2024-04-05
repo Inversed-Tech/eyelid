@@ -3,7 +3,10 @@ name = "eyelid-matcher"
 description = "Iris matching binary"
 
 # Configure in eyelid/Cargo.toml
+authors.workspace = true
 edition.workspace = true
+homepage.workspace = true
+license.workspace = true
 readme.workspace = true
 publish.workspace = true
 repository.workspace = true
