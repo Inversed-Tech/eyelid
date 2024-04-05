@@ -1,14 +1,13 @@
 [package]
 name = "eyelid-test"
+description = "Iris matching test frameworks and test data"
 
 # Configure in eyelid/Cargo.toml
 edition.workspace = true
 readme.workspace = true
+publish.workspace = true
 repository.workspace = true
 version.workspace = true
-
-# Test-only configuration
-publish = false
 
 [dependencies]
 static_assertions.workspace = true

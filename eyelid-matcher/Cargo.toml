@@ -1,5 +1,6 @@
 [package]
 name = "eyelid-matcher"
+description = "Iris matching binary"
 
 # Configure in eyelid/Cargo.toml
 edition.workspace = true

@@ -1,5 +1,6 @@
 [package]
 name = "eyelid-match-ops"
+description = "Iris matching operations"
 
 # Configure in eyelid/Cargo.toml
 edition.workspace = true
