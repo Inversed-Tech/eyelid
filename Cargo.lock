@@ -329,17 +329,11 @@ version = "0.1.0"
 dependencies = [
  "eyelid-match-ops",
  "eyelid-test",
- "static_assertions",
 ]
 
 [[package]]
 name = "eyelid-test"
 version = "0.1.0"
-dependencies = [
- "bitvec",
- "criterion",
- "static_assertions",
-]
 
 [[package]]
 name = "funty"
