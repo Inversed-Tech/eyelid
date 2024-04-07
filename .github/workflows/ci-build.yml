@@ -1,4 +1,4 @@
-name: 'Build and Run Rust Binaries'
+name: 'Build and Run'
 
 on:
   workflow_dispatch:
@@ -16,6 +16,8 @@ concurrency:
 
 jobs:
   build:
+    name: Rust Build and Run
+
     strategy:
       matrix:
         # rustc config options
@@ -29,7 +31,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build Binaries
+      - name: Build All Targets
         run: |
           export RUSTFLAGS="-D warnings ${{ matrix.cfg}}"
           cargo build --release --all-targets ${{ matrix.features}}

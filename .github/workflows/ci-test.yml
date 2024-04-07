@@ -1,4 +1,4 @@
-name: 'Rust Tests'
+name: 'Tests'
 
 on:
   workflow_dispatch:
@@ -16,6 +16,8 @@ concurrency:
 
 jobs:
   test:
+    name: Rust Tests
+
     strategy:
       matrix:
         # rustc config options
