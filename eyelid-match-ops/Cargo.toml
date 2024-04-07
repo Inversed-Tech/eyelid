@@ -20,6 +20,10 @@ benchmark = [
     "rand",
 ]
 
+# Temporarily switch to a tiny field to make test errors easier to debug:
+# RUSTFLAGS="--cfg tiny_poly" cargo test
+# RUSTFLAGS="--cfg tiny_poly" cargo bench --features benchmark
+
 [dependencies]
 ark-ff.workspace = true
 ark-poly.workspace = true
