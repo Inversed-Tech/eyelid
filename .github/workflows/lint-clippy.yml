@@ -16,7 +16,15 @@ concurrency:
 
 jobs:
   clippy:
+    strategy:
+      matrix:
+        # rustc config options
+        cfg: ["", "--cfg tiny_poly"]
+        # cargo feature options
+        features: ["", "--no-default-features", "--all-features"]
+
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,4 +33,4 @@ jobs:
         uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features --all-targets -- -D warnings
+          args: --all-targets ${{ matrix.features}} -- -D warnings ${{ matrix.cfg}}

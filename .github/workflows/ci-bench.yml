@@ -15,20 +15,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  bench:
+  build:
+    # Benchmarks have custom code to compare different functions, so we don't need to have a matrix here.
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: Build Benchmarks
-        run: |
-          export RUSTFLAGS="-D warnings"
-          cargo bench --no-run --all-features --all-targets
+    - name: Build Benchmarks
+      run: |
+        export RUSTFLAGS="-D warnings"
+        cargo bench --no-run --features benchmark --all-targets
 
-      - name: Run Tests
-        run: |
-          export RUSTFLAGS="-D warnings"
-          echo "Warning: benchmark timings are unreliable in CI due to virtualization"
-          cargo bench --all-features --all-targets
-          echo "Warning: benchmark timings are unreliable in CI due to virtualization"
+    - name: Run Benchmarks
+      run: |
+        export RUSTFLAGS="-D warnings"
+        echo "Warning: benchmark timings are unreliable in CI due to virtualization"
+        cargo bench --features benchmark --all-targets
+        echo "Warning: benchmark timings are unreliable in CI due to virtualization"
