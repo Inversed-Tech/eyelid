@@ -8,7 +8,10 @@ resolver = "2"
 
 # Shared configuration
 [workspace.package]
+authors = ["Inversed Tech <https://inversed.tech/contact-us>"]
 edition = "2021"
+homepage = "https://inversed.tech/#our-portfolio"
+license = "MIT OR Apache-2.0"
 readme = "README.md"
 publish = true
 repository = "https://github.com/Inversed-Tech/eyelid"

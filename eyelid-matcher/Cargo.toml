@@ -1,8 +1,12 @@
 [package]
 name = "eyelid-matcher"
+description = "Iris matching binary"
 
 # Configure in eyelid/Cargo.toml
+authors.workspace = true
 edition.workspace = true
+homepage.workspace = true
+license.workspace = true
 readme.workspace = true
 publish.workspace = true
 repository.workspace = true
@@ -10,7 +14,6 @@ version.workspace = true
 
 [dependencies]
 eyelid-match-ops.workspace = true
-static_assertions.workspace = true
 
 [dev-dependencies]
 eyelid-test.workspace = true
