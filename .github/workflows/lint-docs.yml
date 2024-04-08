@@ -27,4 +27,5 @@ jobs:
 
       - name: Build docs
         run: |
+          export RUSTFLAGS="-D warnings"
           cargo doc --no-deps --workspace --all-features --document-private-items
