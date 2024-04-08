@@ -41,8 +41,6 @@ fn test_cyclotomic_mul_rand() {
 /// Test cyclotomic multiplication that results in `X^[MAX_POLY_DEGREE]`.
 #[test]
 fn test_cyclotomic_mul_max_degree() {
-    use ark_poly::DenseUVPolynomial;
-
     // X^MAX_POLY_DEGREE
     let mut x_max = zero_poly(MAX_POLY_DEGREE);
     x_max[MAX_POLY_DEGREE] = Coeff::one();
@@ -52,6 +50,8 @@ fn test_cyclotomic_mul_max_degree() {
     let (q, x_max) = x_max
         .divide_with_q_and_r(&*POLY_MODULUS)
         .expect("is divisible by X^MAX_POLY_DEGREE");
+    let q: Poly = q.into();
+    let x_max: Poly = x_max.into();
 
     assert_eq!(q, Poly::from_coefficients_vec(vec![Coeff::one()]));
     assert_eq!(

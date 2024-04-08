@@ -9,18 +9,19 @@ use ark_poly::polynomial::{
 };
 use lazy_static::lazy_static;
 
+pub use fq::{Coeff, MAX_POLY_DEGREE};
+pub use modular_poly::Poly;
+
 pub mod fq;
+pub mod modular_poly;
 
 #[cfg(any(test, feature = "benchmark"))]
 pub mod test;
 
-pub use fq::{Coeff,MAX_POLY_DEGREE};
-
-/// A modular polynomial with coefficients in [`Coeff`],
-/// and maximum degree [`MAX_POLY_DEGREE`].
-//
-// TODO: replace this with a type wrapper that uses the constant degree MAX_POLY_DEGREE.
-pub type Poly = DensePolynomial<Coeff>;
+// TODO:
+// - enforce the constant degree MAX_POLY_DEGREE
+// - re-implement Index and IndexMut manually, to enforce the canonical form (highest coefficient is non-zero) and modular arithmetic
+// - re-implement Mul and MulAssign manually, to enforce modular arithmetic by POLY_MODULUS (Add, Sub, Div, Rem, and Neg can't increase the degree)
 
 /// Minimum degree for recursive Karatsuba calls
 pub const MIN_KARATSUBA_REC_DEGREE: usize = 32; // TODO: fine tune
@@ -59,7 +60,7 @@ pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
     assert!(a.degree() <= MAX_POLY_DEGREE);
     assert!(b.degree() <= MAX_POLY_DEGREE);
 
-    let dividend = a.naive_mul(b);
+    let dividend: Poly = a.naive_mul(b).into();
 
     // Use the fastest benchmark between mod_poly_manual() and mod_poly_ark() here,
     // and debug_assert_eq!() the other one.
@@ -113,7 +114,7 @@ pub fn mod_poly_ark(dividend: &Poly) -> Poly {
         .divide_with_q_and_r(&*POLY_MODULUS)
         .expect("POLY_MODULUS is not zero");
 
-    remainder
+    remainder.into()
 }
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1` using recursive Karatsuba method.
@@ -169,5 +170,5 @@ pub fn poly_split(a: &Poly) -> (Poly, Poly) {
     let halfn = n / 2;
     let mut al = a.clone();
     let ar = al.coeffs.split_off(halfn);
-    (al, DensePolynomial { coeffs: ar })
+    (al, DensePolynomial { coeffs: ar }.into())
 }
