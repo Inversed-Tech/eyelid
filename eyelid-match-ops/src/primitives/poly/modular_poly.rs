@@ -66,6 +66,8 @@ impl Poly {
     /// Only for use in tests and benchmarks.
     #[cfg(any(test, feature = "benchmark"))]
     pub fn rand<R: Rng>(d: usize, rng: &mut R) -> Self {
+        use ark_poly::DenseUVPolynomial;
+
         DensePolynomial::rand(d, rng).into()
     }
 }
