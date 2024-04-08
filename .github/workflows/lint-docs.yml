@@ -25,6 +25,7 @@ jobs:
         uses: actions/checkout@v4
       - uses: r7kamura/rust-problem-matchers@v1
 
+      # "--all-features" covers "" and "--no-default-features" for now
       - name: Build docs
         run: |
           export RUSTDOCFLAGS="-D warnings"
