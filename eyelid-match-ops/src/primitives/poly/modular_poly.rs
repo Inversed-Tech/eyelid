@@ -16,9 +16,11 @@ use derive_more::{
     Add, AsRef, Constructor, Deref, DerefMut, Div, DivAssign, From, Index, IndexMut, Into, Mul,
     MulAssign, Neg, Rem, RemAssign,
 };
-use rand::Rng;
 
 use super::Coeff;
+
+#[cfg(any(test, feature = "benchmark"))]
+use rand::Rng;
 
 /// A modular polynomial with coefficients in [`Coeff`], and maximum degree [`MAX_POLY_DEGREE`].
 //
@@ -60,6 +62,8 @@ impl Poly {
     }
 
     /// Returns a random polynomial with degree `d`.
+    /// Only for use in tests and benchmarks.
+    #[cfg(any(test, feature = "benchmark"))]
     pub fn rand<R: Rng>(d: usize, rng: &mut R) -> Self {
         DensePolynomial::rand(d, rng).into()
     }
