@@ -9,21 +9,12 @@ use ark_poly::polynomial::{
 };
 use lazy_static::lazy_static;
 
-pub mod fq79;
-pub mod fq8;
+pub mod fq;
 
 #[cfg(any(test, feature = "benchmark"))]
 pub mod test;
 
-#[cfg(not(tiny_poly))]
-pub use fq79::{Coeff, MAX_POLY_DEGREE};
-// Temporarily switch to this tiny field to make test errors easier to debug:
-// ```no_run
-// RUSTFLAGS="--cfg tiny_poly" cargo test
-// RUSTFLAGS="--cfg tiny_poly" cargo bench --features benchmark
-// ```
-#[cfg(tiny_poly)]
-pub use fq8::{Coeff, MAX_POLY_DEGREE};
+pub use fq::{Coeff,MAX_POLY_DEGREE};
 
 /// A modular polynomial with coefficients in [`Coeff`],
 /// and maximum degree [`MAX_POLY_DEGREE`].
