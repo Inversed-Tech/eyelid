@@ -9,10 +9,7 @@ use std::{
 
 use ark_ff::{One, Zero};
 use ark_poly::{
-    polynomial::{
-        univariate::{DenseOrSparsePolynomial, DensePolynomial},
-        Polynomial,
-    },
+    polynomial::univariate::{DenseOrSparsePolynomial, DensePolynomial},
     DenseUVPolynomial,
 };
 use derive_more::{

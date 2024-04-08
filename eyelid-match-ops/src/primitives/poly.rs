@@ -3,12 +3,9 @@
 use std::ops::{Add, Sub};
 
 use ark_ff::{One, Zero};
-use ark_poly::{
-    polynomial::{
-        univariate::{DenseOrSparsePolynomial, DensePolynomial},
-        Polynomial,
-    },
-    DenseUVPolynomial,
+use ark_poly::polynomial::{
+    univariate::{DenseOrSparsePolynomial, DensePolynomial},
+    Polynomial,
 };
 use lazy_static::lazy_static;
 
