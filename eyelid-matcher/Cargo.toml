@@ -12,6 +12,9 @@ publish.workspace = true
 repository.workspace = true
 version.workspace = true
 
+[package.metadata.cargo-machete]
+ignored = ["eyelid-match-ops"]
+
 [dependencies]
 eyelid-match-ops.workspace = true
 
