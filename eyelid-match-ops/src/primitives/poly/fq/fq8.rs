@@ -3,6 +3,8 @@
 //! These test parameters are specifically chosen to make failing tests easy to read and diagnose.
 //! q = 2ˆ8, N = 4
 
+#![cfg_attr(not(tiny_poly), allow(dead_code))]
+
 use ark_ff::{Fp64, MontBackend, MontConfig};
 
 /// The maximum exponent in the test-only polynomial.

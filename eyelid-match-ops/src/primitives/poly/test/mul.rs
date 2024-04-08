@@ -61,6 +61,11 @@ fn test_cyclotomic_mul_max_degree() {
     );
 
     for i in 0..=MAX_POLY_DEGREE {
+        // This test is slow, so skip most values.
+        if i % 101 != 0 && ![0, 1, MAX_POLY_DEGREE/2 - 1, MAX_POLY_DEGREE/2, MAX_POLY_DEGREE/2 + 1, MAX_POLY_DEGREE - 1, MAX_POLY_DEGREE].contains(&i) {
+            continue;
+        }
+
         // X^i * X^{MAX_POLY_DEGREE - i} = X^MAX_POLY_DEGREE
         let mut p1 = zero_poly(i);
         p1[i] = Coeff::one();

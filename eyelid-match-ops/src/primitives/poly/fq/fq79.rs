@@ -3,6 +3,8 @@
 //! These are the parameters for full resolution, according to the Inversed Tech report.
 //! t = 2ˆ15, q = 2ˆ79, N = 2048
 
+#![cfg_attr(tiny_poly, allow(dead_code))]
+
 use ark_ff::{Fp128, MontBackend, MontConfig};
 
 /// The maximum exponent in the polynomial.
