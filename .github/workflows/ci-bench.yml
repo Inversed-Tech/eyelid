@@ -18,12 +18,12 @@ jobs:
   bench:
     name: Rust Benchmarks
 
-    # Benchmarks have custom code to compare different functions, so we don't need to have a matrix here.
+    # Benchmarks have custom code to compare different functions, so we don't need a matrix here.
     runs-on: ubuntu-latest
 
     steps:
-     - name: Checkout
-       uses: actions/checkout@v4
+     - uses: actions/checkout@v4
+     - uses: r7kamura/rust-problem-matchers@v1
 
      - name: Build Benchmarks
        run: |
