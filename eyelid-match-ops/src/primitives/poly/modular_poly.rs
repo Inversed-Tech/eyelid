@@ -8,16 +8,17 @@ use std::{
 };
 
 use ark_ff::{One, Zero};
-use ark_poly::{
-    polynomial::univariate::{DenseOrSparsePolynomial, DensePolynomial},
-    DenseUVPolynomial,
-};
+use ark_poly::polynomial::univariate::{DenseOrSparsePolynomial, DensePolynomial};
 use derive_more::{
     Add, AsRef, Constructor, Deref, DerefMut, Div, DivAssign, From, Index, IndexMut, Into, Mul,
     MulAssign, Neg, Rem, RemAssign,
 };
 
 use super::Coeff;
+
+// For doc links
+#[allow(unused_imports)]
+use super::MAX_POLY_DEGREE;
 
 #[cfg(any(test, feature = "benchmark"))]
 use rand::Rng;
