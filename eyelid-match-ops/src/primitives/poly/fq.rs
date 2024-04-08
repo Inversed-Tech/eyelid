@@ -1,7 +1,7 @@
 //! The underlying integer field.
-//! 
-//! Outside this module, use [`fq::Coeff`] and [`fq::MAX_POLY_DEGREE`] instead of `fq79` or `fq8`.
-//! This automatically enables tests on both fields.
+//!
+//! Outside this module, use [`fq::Coeff`](Coeff) and [`fq::MAX_POLY_DEGREE`](MAX_POLY_DEGREE) instead of `fq79` or `fq8`.
+//! This automatically enables CI tests on both fields.
 
 mod fq79;
 mod fq8;
