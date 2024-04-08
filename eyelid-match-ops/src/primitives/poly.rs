@@ -1,26 +1,31 @@
 //! Cyclotomic polynomial operations using ark-poly
 
-use std::ops::{Add, Sub};
+use std::{
+    borrow::Borrow,
+    ops::{Add, AddAssign, Mul, Sub, SubAssign},
+};
 
 use ark_ff::{One, Zero};
-use ark_poly::polynomial::{
-    univariate::{DenseOrSparsePolynomial, DensePolynomial},
-    Polynomial,
+use ark_poly::{
+    polynomial::{
+        univariate::{DenseOrSparsePolynomial, DensePolynomial},
+        Polynomial,
+    },
+    DenseUVPolynomial,
+};
+use derive_more::{
+    Add, AsRef, Constructor, Deref, DerefMut, Div, DivAssign, From, Index, IndexMut, Into, Mul,
+    MulAssign, Neg, Rem, RemAssign,
 };
 use lazy_static::lazy_static;
+use rand::Rng;
+
+pub use fq::{Coeff, MAX_POLY_DEGREE};
 
 pub mod fq;
 
 #[cfg(any(test, feature = "benchmark"))]
 pub mod test;
-
-pub use fq::{Coeff,MAX_POLY_DEGREE};
-
-/// A modular polynomial with coefficients in [`Coeff`],
-/// and maximum degree [`MAX_POLY_DEGREE`].
-//
-// TODO: replace this with a type wrapper that uses the constant degree MAX_POLY_DEGREE.
-pub type Poly = DensePolynomial<Coeff>;
 
 /// Minimum degree for recursive Karatsuba calls
 pub const MIN_KARATSUBA_REC_DEGREE: usize = 32; // TODO: fine tune
@@ -36,8 +41,159 @@ lazy_static! {
 
         assert_eq!(poly.degree(), MAX_POLY_DEGREE);
 
-        poly.into()
+        poly.0.into()
     };
+}
+
+/// A modular polynomial with coefficients in [`Coeff`], and maximum degree [`MAX_POLY_DEGREE`].
+//
+// TODO:
+// - move Poly into its own file
+// - enforce the constant degree MAX_POLY_DEGREE
+// - re-implement Index and IndexMut manually, to enforce the canonical form (highest coefficient is non-zero) and modular arithmetic
+// - re-implement Mul and MulAssign manually, to enforce modular arithmetic by POLY_MODULUS (Add, Sub, Div, Rem, and Neg can't increase the degree)
+// Optional:
+// - implement Sum manually
+#[derive(
+    Clone,
+    Debug,
+    Default,
+    PartialEq,
+    Eq,
+    Hash,
+    AsRef,
+    Constructor,
+    Deref,
+    DerefMut,
+    From,
+    Into,
+    Index,
+    IndexMut,
+    Neg,
+    Add,
+    Mul,
+    MulAssign,
+    Div,
+    DivAssign,
+    Rem,
+    RemAssign,
+)]
+pub struct Poly(DensePolynomial<Coeff>);
+
+impl Poly {
+    // Partial implementation of DenseUVPolynomial
+
+    /// Converts `coeffs` into a dense polynomial.
+    pub fn from_coefficients_vec(coeffs: Vec<Coeff>) -> Self {
+        Self(DensePolynomial { coeffs })
+    }
+
+    /// Returns a random polynomial with degree `d`.
+    pub fn rand<R: Rng>(d: usize, rng: &mut R) -> Self {
+        DensePolynomial::rand(d, rng).into()
+    }
+}
+
+impl Borrow<DensePolynomial<Coeff>> for Poly {
+    fn borrow(&self) -> &DensePolynomial<Coeff> {
+        &self.0
+    }
+}
+
+impl From<Poly> for DenseOrSparsePolynomial<'static, Coeff> {
+    fn from(poly: Poly) -> DenseOrSparsePolynomial<'static, Coeff> {
+        poly.0.into()
+    }
+}
+
+impl<'a> From<&'a Poly> for DenseOrSparsePolynomial<'a, Coeff> {
+    fn from(poly: &'a Poly) -> DenseOrSparsePolynomial<'a, Coeff> {
+        (&poly.0).into()
+    }
+}
+
+impl Zero for Poly {
+    fn zero() -> Self {
+        Self(DensePolynomial { coeffs: vec![] })
+    }
+
+    fn is_zero(&self) -> bool {
+        self.coeffs.is_empty()
+    }
+}
+
+impl One for Poly {
+    fn one() -> Self {
+        let mut poly = Self::zero();
+        poly.coeffs[0] = Coeff::one();
+        poly
+    }
+
+    fn set_one(&mut self) {
+        self.coeffs = vec![Coeff::one()];
+    }
+
+    fn is_one(&self) -> bool {
+        self.coeffs == vec![Coeff::one()]
+    }
+}
+
+// Poly + Poly is provided by the derive
+
+impl Add<&Poly> for Poly {
+    type Output = Self;
+
+    fn add(self, rhs: &Self) -> Poly {
+        Poly(&self.0 + &rhs.0)
+    }
+}
+
+impl Sub for Poly {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self {
+        Self(&self.0 - &rhs.0)
+    }
+}
+
+impl Sub<&Poly> for Poly {
+    type Output = Self;
+
+    fn sub(self, rhs: &Self) -> Poly {
+        Poly(&self.0 - &rhs.0)
+    }
+}
+
+impl AddAssign<Poly> for Poly {
+    fn add_assign(&mut self, rhs: Self) {
+        self.0 += &rhs.0;
+    }
+}
+
+impl AddAssign<&Poly> for Poly {
+    fn add_assign(&mut self, rhs: &Self) {
+        self.0 += &rhs.0;
+    }
+}
+
+impl SubAssign<Poly> for Poly {
+    fn sub_assign(&mut self, rhs: Self) {
+        self.0 -= &rhs.0;
+    }
+}
+
+impl SubAssign<&Poly> for Poly {
+    fn sub_assign(&mut self, rhs: &Self) {
+        self.0 -= &rhs.0;
+    }
+}
+
+impl Mul for Poly {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self {
+        Self(&self.0 * &rhs.0)
+    }
 }
 
 /// Returns the zero polynomial with `degree`.
@@ -59,7 +215,7 @@ pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
     assert!(a.degree() <= MAX_POLY_DEGREE);
     assert!(b.degree() <= MAX_POLY_DEGREE);
 
-    let dividend = a.naive_mul(b);
+    let dividend: Poly = a.naive_mul(b).into();
 
     // Use the fastest benchmark between mod_poly_manual() and mod_poly_ark() here,
     // and debug_assert_eq!() the other one.
@@ -113,7 +269,7 @@ pub fn mod_poly_ark(dividend: &Poly) -> Poly {
         .divide_with_q_and_r(&*POLY_MODULUS)
         .expect("POLY_MODULUS is not zero");
 
-    remainder
+    remainder.into()
 }
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1` using recursive Karatsuba method.
@@ -169,5 +325,5 @@ pub fn poly_split(a: &Poly) -> (Poly, Poly) {
     let halfn = n / 2;
     let mut al = a.clone();
     let ar = al.coeffs.split_off(halfn);
-    (al, DensePolynomial { coeffs: ar })
+    (al, DensePolynomial { coeffs: ar }.into())
 }

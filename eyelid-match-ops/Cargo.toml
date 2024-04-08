@@ -30,6 +30,7 @@ ark-poly.workspace = true
 ark-std.workspace = true
 
 bitvec.workspace = true
+derive_more.workspace = true
 lazy_static.workspace = true
 
 static_assertions.workspace = true
