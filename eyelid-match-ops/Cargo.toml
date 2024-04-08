@@ -27,7 +27,6 @@ benchmark = [
 [dependencies]
 ark-ff.workspace = true
 ark-poly.workspace = true
-ark-std.workspace = true
 
 bitvec.workspace = true
 derive_more.workspace = true
