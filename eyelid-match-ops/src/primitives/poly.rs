@@ -5,7 +5,7 @@
 use std::ops::{Add, Sub};
 
 use ark_ff::One;
-use ark_poly::polynomial::{univariate::DensePolynomial, Polynomial};
+use ark_poly::polynomial::Polynomial;
 
 pub use fq::{Coeff, MAX_POLY_DEGREE};
 pub use modular_poly::{mod_poly, zero_poly, Poly, POLY_MODULUS};
