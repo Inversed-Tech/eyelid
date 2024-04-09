@@ -72,12 +72,35 @@ impl Poly {
 
     /// Converts the `coeffs` vector into a dense polynomial.
     pub fn from_coefficients_vec(coeffs: Vec<Coeff>) -> Self {
-        Self(DensePolynomial { coeffs })
+        let mut new = Self(DensePolynomial { coeffs });
+        new.truncate_to_canonical_form();
+        new
     }
 
     /// Converts the `coeffs` slice into a dense polynomial.
     pub fn from_coefficients_slice(coeffs: &[Coeff]) -> Self {
         Self::from_coefficients_vec(coeffs.to_vec())
+    }
+
+    // Basic Internal Operations
+
+    /// Reduce this polynomial so it is less than [`POLY_MODULUS`].
+    /// This also ensures its degree is less than [`MAX_POLY_DEGREE`].
+    ///
+    /// This operation should be performed after every [`Poly`] method that increases the degree of the polynomial.
+    /// [`DensePolynomial`] methods *do not* do this reduction.
+    pub fn reduce_mod_poly(&mut self) {
+        mod_poly(self);
+    }
+
+    /// Truncate this polynomial so it is in the valid canonical form expected by [`DensePolynomial`] methods.
+    ///
+    /// This operation must be performed after every [`Poly`] method that changes the degree or coefficients of the polynomial.
+    /// (`DensePolynomial` methods already do this.)
+    pub fn truncate_to_canonical_form(&mut self) {
+        while self.coeffs.last() == Some(&Coeff::zero()) {
+            self.coeffs.pop();
+        }
     }
 }
 
@@ -94,44 +117,47 @@ pub fn zero_poly(degree: usize) -> Poly {
 }
 
 /// The fastest available modular polynomial operation.
-pub use mod_poly_manual as mod_poly;
+pub use mod_poly_manual_mut as mod_poly;
 
-/// Returns the remainder of `dividend % [POLY_MODULUS]`, as a polynomial.
+/// Reduces `dividend` to `dividend % [POLY_MODULUS]`.
 ///
-/// This is a manual implementation.
-pub fn mod_poly_manual(dividend: &Poly) -> Poly {
-    let mut res = dividend.clone();
-
+/// This is the most efficient manual implementation.
+pub fn mod_poly_manual_mut(dividend: &mut Poly) {
     let mut i = MAX_POLY_DEGREE;
-    while i < res.coeffs.len() {
+    while i < dividend.coeffs.len() {
         // In the cyclotomic ring we have that XˆN = -1,
         // therefore all elements from N to 2N-1 are negated.
 
         let q = i / MAX_POLY_DEGREE;
         let r = i % MAX_POLY_DEGREE;
         if q % 2 == 1 {
-            res[r] = res[r] - res[i];
+            dividend[r] = dividend[r] - dividend[i];
         } else {
-            res[r] = res[r] + res[i];
+            dividend[r] = dividend[r] + dividend[i];
         }
         i += 1;
     }
 
-    // These elements have already been negated and summed above.
-    res.coeffs.truncate(MAX_POLY_DEGREE);
+    // The coefficients of MAX_POLY_DEGREE and higher have already been summed above.
+    dividend.coeffs.truncate(MAX_POLY_DEGREE);
 
-    // Leading elements might be zero, so make sure the polynomial is in the canonical form.
-    while res.coeffs.last() == Some(&Coeff::zero()) {
-        res.coeffs.pop();
-    }
-
-    res
+    // The coefficients could sum to zero, so make sure the polynomial is in the canonical form.
+    dividend.truncate_to_canonical_form();
 }
 
 /// Returns the remainder of `dividend % [POLY_MODULUS]`, as a polynomial.
 ///
-/// This uses an [`ark-poly`] library implementation.
-pub fn mod_poly_ark(dividend: &Poly) -> Poly {
+/// This clones then uses the manual implementation.
+pub fn mod_poly_manual_ref(dividend: &Poly) -> Poly {
+    let mut dividend = dividend.clone();
+    mod_poly_manual_mut(&mut dividend);
+    dividend
+}
+
+/// Returns the remainder of `dividend % [POLY_MODULUS]`, as a polynomial.
+///
+/// This uses an [`ark-poly`] library implementation, which always creates a new polynomial.
+pub fn mod_poly_ark_ref(dividend: &Poly) -> Poly {
     let dividend: DenseOrSparsePolynomial<'_, _> = dividend.into();
 
     let (_quotient, remainder) = dividend
@@ -139,4 +165,12 @@ pub fn mod_poly_ark(dividend: &Poly) -> Poly {
         .expect("POLY_MODULUS is not zero");
 
     remainder.into()
+}
+
+/// Reduces `dividend` to `dividend % [POLY_MODULUS]`.
+///
+/// This uses an [`ark-poly`] library implementation, and entirely replaces the inner polynomial representation.
+pub fn mod_poly_ark_mut(dividend: &mut Poly) {
+    let remainder = mod_poly_ark_ref(dividend);
+    *dividend = remainder;
 }

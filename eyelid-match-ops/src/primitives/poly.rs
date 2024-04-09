@@ -12,9 +12,9 @@ pub use modular_poly::{mod_poly, zero_poly, Poly, POLY_MODULUS};
 
 // Use `mod_poly` outside this module, it is set to the fastest modulus operation.
 #[cfg(not(any(test, feature = "benchmark")))]
-use modular_poly::{mod_poly_ark, mod_poly_manual};
+use modular_poly::{mod_poly_ark_ref, mod_poly_manual_mut};
 #[cfg(any(test, feature = "benchmark"))]
-pub use modular_poly::{mod_poly_ark, mod_poly_manual};
+pub use modular_poly::{mod_poly_ark_ref, mod_poly_manual_mut};
 
 pub mod fq;
 pub mod modular_poly;
@@ -32,12 +32,14 @@ pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
     assert!(a.degree() <= MAX_POLY_DEGREE);
     assert!(b.degree() <= MAX_POLY_DEGREE);
 
-    let dividend: Poly = a.naive_mul(b).into();
+    let mut res: Poly = a.naive_mul(b).into();
+    #[cfg(debug_assertions)]
+    let dividend = res.clone();
 
-    // Use the fastest benchmark between mod_poly_manual() and mod_poly_ark() here,
+    // Use the fastest benchmark between mod_poly_manual*() and mod_poly_ark*() here,
     // and debug_assert_eq!() the other one.
-    let res = mod_poly_manual(&dividend);
-    debug_assert_eq!(res, mod_poly_ark(&dividend));
+    mod_poly_manual_mut(&mut res);
+    debug_assert_eq!(res, mod_poly_ark_ref(&dividend));
 
     assert!(res.degree() <= MAX_POLY_DEGREE);
 
@@ -71,9 +73,11 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         res = y.clone();
         res = res.sub(&albl);
         res = res.sub(&arbr);
+
         let halfn = n / 2;
         let mut xnb2 = zero_poly(halfn);
         xnb2.coeffs[halfn] = Coeff::one();
+
         res = cyclotomic_mul(&res.clone(), &xnb2);
         res = res.add(albl);
         if n >= MAX_POLY_DEGREE {
@@ -87,6 +91,9 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
             res = res.add(aux);
         }
     };
+
+    // After manually modifying the leading coefficients, ensure polynomials are in canonical form.
+    res.truncate_to_canonical_form();
     res
 }
 
@@ -95,7 +102,13 @@ pub fn poly_split(a: &Poly) -> (Poly, Poly) {
     // TODO: review performance
     let n = a.degree() + 1;
     let halfn = n / 2;
+
     let mut al = a.clone();
     let ar = al.coeffs.split_off(halfn);
-    (al, DensePolynomial { coeffs: ar }.into())
+
+    // After manually modifying the leading coefficients, ensure polynomials are in canonical form.
+    al.truncate_to_canonical_form();
+    let ar = Poly::from_coefficients_vec(ar);
+
+    (al, ar)
 }
