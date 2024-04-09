@@ -1,4 +1,6 @@
-//! Cyclotomic polynomial operations using ark-poly
+//! Cyclotomic polynomial operations using ark-poly.
+//!
+//! This module contains the base implementations of complex polynomial operations, such as multiplication and reduction.
 
 use std::ops::{Add, Sub};
 
@@ -7,10 +9,9 @@ use ark_poly::polynomial::{
     univariate::{DenseOrSparsePolynomial, DensePolynomial},
     Polynomial,
 };
-use lazy_static::lazy_static;
 
 pub use fq::{Coeff, MAX_POLY_DEGREE};
-pub use modular_poly::Poly;
+pub use modular_poly::{Poly, POLY_MODULUS, zero_poly};
 
 pub mod fq;
 pub mod modular_poly;
@@ -18,40 +19,8 @@ pub mod modular_poly;
 #[cfg(any(test, feature = "benchmark"))]
 pub mod test;
 
-// TODO:
-// - enforce the constant degree MAX_POLY_DEGREE
-// - re-implement Index and IndexMut manually, to enforce the canonical form (highest coefficient is non-zero) and modular arithmetic
-// - re-implement Mul and MulAssign manually, to enforce modular arithmetic by POLY_MODULUS (Add, Sub, Div, Rem, and Neg can't increase the degree)
-
 /// Minimum degree for recursive Karatsuba calls
 pub const MIN_KARATSUBA_REC_DEGREE: usize = 32; // TODO: fine tune
-
-lazy_static! {
-    /// The polynomial modulus used for the polynomial field, `X^[MAX_POLY_DEGREE] + 1`.
-    /// This means that `X^[MAX_POLY_DEGREE] = -1`.
-    pub static ref POLY_MODULUS: DenseOrSparsePolynomial<'static, Coeff> = {
-        let mut poly = zero_poly(MAX_POLY_DEGREE);
-
-        poly[MAX_POLY_DEGREE] = Coeff::one();
-        poly[0] = Coeff::one();
-
-        assert_eq!(poly.degree(), MAX_POLY_DEGREE);
-
-        poly.into()
-    };
-}
-
-/// Returns the zero polynomial with `degree`.
-///
-/// This is not the canonical form, but it's useful for creating other polynomials.
-/// (Non-canonical polynomials will panic when `degree()` is called on them.)
-pub fn zero_poly(degree: usize) -> Poly {
-    assert!(degree <= MAX_POLY_DEGREE);
-
-    let mut poly = Poly::zero();
-    poly.coeffs = vec![Coeff::zero(); degree + 1];
-    poly
-}
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1`.
 /// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].

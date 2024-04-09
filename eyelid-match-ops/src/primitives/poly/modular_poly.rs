@@ -1,18 +1,17 @@
-//! The base implementation of a modular polynomial, [`Poly`].
+//! The implementation of a modular polynomial, [`Poly`].
 //!
-//! This module contains the transparent operations, which just forward to the underlying [`DensePolynomial`].
-
-use std::{
-    borrow::Borrow,
-    ops::{Add, AddAssign, Mul, Sub, SubAssign},
-};
+//! This module calls the base operations from [`super`] to ensure that the polynomial is always in its canonical form.
 
 use ark_ff::{One, Zero};
-use ark_poly::polynomial::univariate::{DenseOrSparsePolynomial, DensePolynomial};
+use ark_poly::polynomial::{
+    univariate::{DenseOrSparsePolynomial, DensePolynomial},
+    Polynomial,
+};
 use derive_more::{
     Add, AsRef, Constructor, Deref, DerefMut, Div, DivAssign, From, Index, IndexMut, Into, Mul,
     MulAssign, Neg, Rem, RemAssign,
 };
+use lazy_static::lazy_static;
 
 use super::Coeff;
 
@@ -20,14 +19,24 @@ use super::Coeff;
 #[allow(unused_imports)]
 use super::MAX_POLY_DEGREE;
 
-#[cfg(any(test, feature = "benchmark"))]
-use rand::Rng;
+mod trivial;
+
+lazy_static! {
+    /// The polynomial modulus used for the polynomial field, `X^[MAX_POLY_DEGREE] + 1`.
+    /// This means that `X^[MAX_POLY_DEGREE] = -1`.
+    pub static ref POLY_MODULUS: DenseOrSparsePolynomial<'static, Coeff> = {
+        let mut poly = zero_poly(MAX_POLY_DEGREE);
+
+        poly[MAX_POLY_DEGREE] = Coeff::one();
+        poly[0] = Coeff::one();
+
+        assert_eq!(poly.degree(), MAX_POLY_DEGREE);
+
+        poly.into()
+    };
+}
 
 /// A modular polynomial with coefficients in [`Coeff`], and maximum degree [`MAX_POLY_DEGREE`].
-//
-// TODO:
-// Optional:
-// - implement Sum manually
 #[derive(
     Clone,
     Debug,
@@ -54,122 +63,32 @@ use rand::Rng;
 )]
 pub struct Poly(DensePolynomial<Coeff>);
 
+// TODO:
+// - enforce the constant degree MAX_POLY_DEGREE
+// - re-implement Index and IndexMut manually, to enforce the canonical form (highest coefficient is non-zero) and modular arithmetic
+// - re-implement Mul and MulAssign manually, to enforce modular arithmetic by POLY_MODULUS (Add, Sub, Div, Rem, and Neg can't increase the degree)
 impl Poly {
-    // Partial implementation of DenseUVPolynomial
+    // Shadow DenseUVPolynomial methods, so we don't have to implement Polynomial and all its supertraits.
 
-    /// Converts `coeffs` into a dense polynomial.
+    /// Converts the `coeffs` vector into a dense polynomial.
     pub fn from_coefficients_vec(coeffs: Vec<Coeff>) -> Self {
         Self(DensePolynomial { coeffs })
     }
 
-    /// Returns a random polynomial with degree `d`.
-    /// Only for use in tests and benchmarks.
-    #[cfg(any(test, feature = "benchmark"))]
-    pub fn rand<R: Rng>(d: usize, rng: &mut R) -> Self {
-        use ark_poly::DenseUVPolynomial;
-
-        DensePolynomial::rand(d, rng).into()
+    /// Converts the `coeffs` slice into a dense polynomial.
+    pub fn from_coefficients_slice(coeffs: &[Coeff]) -> Self {
+        Self::from_coefficients_vec(coeffs.to_vec())
     }
 }
 
-impl Borrow<DensePolynomial<Coeff>> for Poly {
-    fn borrow(&self) -> &DensePolynomial<Coeff> {
-        &self.0
-    }
-}
+/// Returns the zero polynomial with `degree`.
+///
+/// This is not the canonical form, but it's useful for creating other polynomials.
+/// (Non-canonical polynomials will panic when `degree()` is called on them.)
+pub fn zero_poly(degree: usize) -> Poly {
+    assert!(degree <= MAX_POLY_DEGREE);
 
-impl From<Poly> for DenseOrSparsePolynomial<'static, Coeff> {
-    fn from(poly: Poly) -> DenseOrSparsePolynomial<'static, Coeff> {
-        poly.0.into()
-    }
-}
-
-impl<'a> From<&'a Poly> for DenseOrSparsePolynomial<'a, Coeff> {
-    fn from(poly: &'a Poly) -> DenseOrSparsePolynomial<'a, Coeff> {
-        (&poly.0).into()
-    }
-}
-
-impl Zero for Poly {
-    fn zero() -> Self {
-        Self(DensePolynomial { coeffs: vec![] })
-    }
-
-    fn is_zero(&self) -> bool {
-        self.coeffs.is_empty()
-    }
-}
-
-impl One for Poly {
-    fn one() -> Self {
-        let mut poly = Self::zero();
-        poly.coeffs[0] = Coeff::one();
-        poly
-    }
-
-    fn set_one(&mut self) {
-        self.coeffs = vec![Coeff::one()];
-    }
-
-    fn is_one(&self) -> bool {
-        self.coeffs == vec![Coeff::one()]
-    }
-}
-
-// Poly + Poly is provided by the derive
-
-impl Add<&Poly> for Poly {
-    type Output = Self;
-
-    fn add(self, rhs: &Self) -> Poly {
-        Poly(&self.0 + &rhs.0)
-    }
-}
-
-impl Sub for Poly {
-    type Output = Self;
-
-    fn sub(self, rhs: Self) -> Self {
-        Self(&self.0 - &rhs.0)
-    }
-}
-
-impl Sub<&Poly> for Poly {
-    type Output = Self;
-
-    fn sub(self, rhs: &Self) -> Poly {
-        Poly(&self.0 - &rhs.0)
-    }
-}
-
-impl AddAssign<Poly> for Poly {
-    fn add_assign(&mut self, rhs: Self) {
-        self.0 += &rhs.0;
-    }
-}
-
-impl AddAssign<&Poly> for Poly {
-    fn add_assign(&mut self, rhs: &Self) {
-        self.0 += &rhs.0;
-    }
-}
-
-impl SubAssign<Poly> for Poly {
-    fn sub_assign(&mut self, rhs: Self) {
-        self.0 -= &rhs.0;
-    }
-}
-
-impl SubAssign<&Poly> for Poly {
-    fn sub_assign(&mut self, rhs: &Self) {
-        self.0 -= &rhs.0;
-    }
-}
-
-impl Mul for Poly {
-    type Output = Self;
-
-    fn mul(self, rhs: Self) -> Self {
-        Self(&self.0 * &rhs.0)
-    }
+    let mut poly = Poly::zero();
+    poly.coeffs = vec![Coeff::zero(); degree + 1];
+    poly
 }
