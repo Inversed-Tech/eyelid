@@ -84,7 +84,7 @@ fn test_cyclotomic_mul_max_degree() {
         }
 
         // X^i * X^{MAX_POLY_DEGREE - i} = X^MAX_POLY_DEGREE
-        
+
         // `p1` and `p2` are only reduced when i is `1..=(MAX_POLY_DEGREE-1)`.`
         // But they are always in canonical form, because the leading coefficient is non-zero.
         let mut p1 = Poly::zero();
