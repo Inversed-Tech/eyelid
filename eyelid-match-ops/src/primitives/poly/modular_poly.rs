@@ -90,7 +90,7 @@ impl Poly {
 
     // Basic Internal Operations
 
-    /// Reduce this polynomial so it is less than [`POLY_MODULUS`].
+    /// Reduce this polynomial so it is less than [`POLY_MODULUS`](static@POLY_MODULUS).
     /// This also ensures its degree is less than [`MAX_POLY_DEGREE`].
     ///
     /// This operation should be performed after every [`Poly`] method that increases the degree of the polynomial.
@@ -113,7 +113,7 @@ impl Poly {
 impl Mul for Poly {
     type Output = Self;
 
-    /// Multiplies then reduces by [`POLY_MODULUS`].
+    /// Multiplies then reduces by [`POLY_MODULUS`](static@POLY_MODULUS).
     fn mul(self, rhs: Self) -> Self {
         let mut res = Self(&self.0 * &rhs.0);
         res.reduce_mod_poly();

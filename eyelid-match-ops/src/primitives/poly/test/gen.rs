@@ -5,6 +5,10 @@ use rand::Rng;
 
 use crate::primitives::poly::Poly;
 
+// Doc links only
+#[allow(unused_imports)]
+use crate::primitives::poly::{Coeff, MAX_POLY_DEGREE};
+
 /// Returns an un-reduced cyclotomic polynomial of `degree`, with random coefficients in [`Coeff`].
 /// `degree` must be less than or equal to [`MAX_POLY_DEGREE`].
 ///
