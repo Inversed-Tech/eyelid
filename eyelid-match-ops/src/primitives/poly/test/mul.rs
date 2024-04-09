@@ -1,8 +1,12 @@
 //! Tests for basic polynomial operations.
 
-use super::gen::rand_poly;
+use ark_ff::{One, Zero};
+use ark_poly::{univariate::DenseOrSparsePolynomial, Polynomial};
 
-use super::super::*;
+use crate::primitives::poly::{
+    cyclotomic_mul, karatsuba_mul, test::gen::rand_poly, zero_poly, Coeff, Poly, MAX_POLY_DEGREE,
+    POLY_MODULUS,
+};
 
 /// Test cyclotomic multiplication of a random polynomial by `X^{[MAX_POLY_DEGREE] - 1}`.
 #[test]

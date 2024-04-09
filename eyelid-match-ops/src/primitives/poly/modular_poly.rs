@@ -92,3 +92,51 @@ pub fn zero_poly(degree: usize) -> Poly {
     poly.coeffs = vec![Coeff::zero(); degree + 1];
     poly
 }
+
+/// The fastest available modular polynomial operation.
+pub use mod_poly_manual as mod_poly;
+
+/// Returns the remainder of `dividend % [POLY_MODULUS]`, as a polynomial.
+///
+/// This is a manual implementation.
+pub fn mod_poly_manual(dividend: &Poly) -> Poly {
+    let mut res = dividend.clone();
+
+    let mut i = MAX_POLY_DEGREE;
+    while i < res.coeffs.len() {
+        // In the cyclotomic ring we have that XˆN = -1,
+        // therefore all elements from N to 2N-1 are negated.
+
+        let q = i / MAX_POLY_DEGREE;
+        let r = i % MAX_POLY_DEGREE;
+        if q % 2 == 1 {
+            res[r] = res[r] - res[i];
+        } else {
+            res[r] = res[r] + res[i];
+        }
+        i += 1;
+    }
+
+    // These elements have already been negated and summed above.
+    res.coeffs.truncate(MAX_POLY_DEGREE);
+
+    // Leading elements might be zero, so make sure the polynomial is in the canonical form.
+    while res.coeffs.last() == Some(&Coeff::zero()) {
+        res.coeffs.pop();
+    }
+
+    res
+}
+
+/// Returns the remainder of `dividend % [POLY_MODULUS]`, as a polynomial.
+///
+/// This uses an [`ark-poly`] library implementation.
+pub fn mod_poly_ark(dividend: &Poly) -> Poly {
+    let dividend: DenseOrSparsePolynomial<'_, _> = dividend.into();
+
+    let (_quotient, remainder) = dividend
+        .divide_with_q_and_r(&*POLY_MODULUS)
+        .expect("POLY_MODULUS is not zero");
+
+    remainder.into()
+}

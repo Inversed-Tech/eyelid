@@ -1,10 +1,11 @@
 //! Test data generation for polynomials.
 
+use ark_poly::{univariate::DensePolynomial, DenseUVPolynomial, Polynomial};
 use rand::Rng;
 
-use super::super::*;
+use crate::primitives::poly::Poly;
 
-/// Returns a cyclotomic polynomial of `degree`, with random coefficients in [`Coeff`].
+/// Returns an un-reduced cyclotomic polynomial of `degree`, with random coefficients in [`Coeff`].
 /// `degree` must be less than or equal to [`MAX_POLY_DEGREE`].
 ///
 /// In rare cases, the degree can be less than `degree`,
@@ -29,8 +30,6 @@ impl Poly {
     /// Returns a random polynomial with degree `d`.
     /// Only for use in tests and benchmarks.
     pub fn rand<R: Rng>(d: usize, rng: &mut R) -> Self {
-        use ark_poly::DenseUVPolynomial;
-
         DensePolynomial::rand(d, rng).into()
     }
 }

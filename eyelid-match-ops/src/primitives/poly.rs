@@ -4,14 +4,17 @@
 
 use std::ops::{Add, Sub};
 
-use ark_ff::{One, Zero};
-use ark_poly::polynomial::{
-    univariate::{DenseOrSparsePolynomial, DensePolynomial},
-    Polynomial,
-};
+use ark_ff::One;
+use ark_poly::polynomial::{univariate::DensePolynomial, Polynomial};
 
 pub use fq::{Coeff, MAX_POLY_DEGREE};
-pub use modular_poly::{Poly, POLY_MODULUS, zero_poly};
+pub use modular_poly::{mod_poly, zero_poly, Poly, POLY_MODULUS};
+
+// Use `mod_poly` outside this module, it is set to the fastest modulus operation.
+#[cfg(not(any(test, feature = "benchmark")))]
+use modular_poly::{mod_poly_ark, mod_poly_manual};
+#[cfg(any(test, feature = "benchmark"))]
+pub use modular_poly::{mod_poly_ark, mod_poly_manual};
 
 pub mod fq;
 pub mod modular_poly;
@@ -39,51 +42,6 @@ pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
     assert!(res.degree() <= MAX_POLY_DEGREE);
 
     res
-}
-
-/// Returns the remainder of `dividend % [POLY_MODULUS]`, as a polynomial.
-///
-/// This is a manual implementation.
-pub fn mod_poly_manual(dividend: &Poly) -> Poly {
-    let mut res = dividend.clone();
-
-    let mut i = MAX_POLY_DEGREE;
-    while i < res.coeffs.len() {
-        // In the cyclotomic ring we have that XˆN = -1,
-        // therefore all elements from N to 2N-1 are negated.
-
-        let q = i / MAX_POLY_DEGREE;
-        let r = i % MAX_POLY_DEGREE;
-        if q % 2 == 1 {
-            res[r] = res[r] - res[i];
-        } else {
-            res[r] = res[r] + res[i];
-        }
-        i += 1;
-    }
-
-    // These elements have already been negated and summed above.
-    res.coeffs.truncate(MAX_POLY_DEGREE);
-
-    // Leading elements might be zero, so make sure the polynomial is in the canonical form.
-    while res.coeffs.last() == Some(&Coeff::zero()) {
-        res.coeffs.pop();
-    }
-
-    res
-}
-
-/// Returns the remainder of `dividend % [POLY_MODULUS]`, as a polynomial.
-///
-/// This uses an [`ark-poly`] library implementation.
-pub fn mod_poly_ark(dividend: &Poly) -> Poly {
-    let dividend: DenseOrSparsePolynomial<'_, _> = dividend.into();
-
-    let (_quotient, remainder) = dividend
-        .divide_with_q_and_r(&*POLY_MODULUS)
-        .expect("POLY_MODULUS is not zero");
-
-    remainder.into()
 }
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1` using recursive Karatsuba method.
