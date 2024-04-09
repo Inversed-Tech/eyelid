@@ -8,8 +8,7 @@ use ark_poly::polynomial::{
     Polynomial,
 };
 use derive_more::{
-    Add, AsRef, Constructor, Deref, DerefMut, Div, DivAssign, From, Index, IndexMut, Into, Mul,
-    MulAssign, Neg, Rem, RemAssign,
+    Add, AsRef, Deref, DerefMut, Div, DivAssign, From, Into, Mul, MulAssign, Neg, Rem, RemAssign,
 };
 use lazy_static::lazy_static;
 
@@ -45,16 +44,17 @@ lazy_static! {
     Eq,
     Hash,
     AsRef,
-    Constructor,
     Deref,
+    // TODO: manually implement a final reduce step
     DerefMut,
+    // TODO: manually implement a final reduce step
     From,
     Into,
-    Index,
-    IndexMut,
     Neg,
     Add,
+    // TODO: manually implement a final reduce step
     Mul,
+    // TODO: manually implement a final reduce step
     MulAssign,
     Div,
     DivAssign,
