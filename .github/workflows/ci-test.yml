@@ -22,14 +22,14 @@ jobs:
       matrix:
         # rustc config options
         cfg: ["", "--cfg tiny_poly"]
-        # cargo feature options
-        features: ["", "--no-default-features", "--all-features"]
+        # cargo feature options, "--no-default-features" is the same as "" for now
+        features: ["", "--all-features"]
     
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: r7kamura/rust-problem-matchers@v1
 
       - name: Build Tests
         run: |

@@ -1,0 +1,33 @@
+name: 'Rust Format'
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+
+  pull_request:
+
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+jobs:
+  bench:
+    name: Check Rust Formatting
+
+    # Active and inactive code is format checked, so we don't need a matrix here.
+    runs-on: ubuntu-latest
+
+    steps:
+     - uses: actions/checkout@v4
+
+      # Ensure rustfmt is installed, and set up problem matchers
+     - uses: actions-rust-lang/setup-rust-toolchain@v1
+       with:
+         components: rustfmt
+
+     - name: Check rustfmt
+       uses: actions-rust-lang/rustfmt@v1

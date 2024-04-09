@@ -16,20 +16,19 @@ concurrency:
 
 jobs:
   clippy:
-    name: Rust Lints
+    name: Check Rust Lints
 
     strategy:
       matrix:
         # rustc config options
         cfg: ["", "--cfg tiny_poly"]
-        # cargo feature options
-        features: ["", "--no-default-features", "--all-features"]
+        # cargo feature options: "--all-features" covers "" and "--no-default-features" for now
+        features: ["--all-features"]
 
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Clippy Lints
         uses: actions-rs/clippy-check@v1
