@@ -1,8 +1,11 @@
 //! The implementation of a modular polynomial, [`Poly`].
 //!
-//! This module calls the base operations from [`super`] to ensure that the polynomial is always in its canonical form.
+//! This module contains funamental operations which ensure that the polynomial is always in its canonical form.
+//! They should be called after every operation that can create non-canonical polynomials, which can happen when:
+//! - the leading coefficient is set to zero, including when the polynomial is split or truncated, or
+//! - the degree of the polynomial is increased, for example, during multiplication.
 
-use std::ops::Mul;
+use std::ops::{Index, IndexMut, Mul};
 
 use ark_ff::{One, Zero};
 use ark_poly::polynomial::{
@@ -21,12 +24,17 @@ mod trivial;
 lazy_static! {
     /// The polynomial modulus used for the polynomial field, `X^[MAX_POLY_DEGREE] + 1`.
     /// This means that `X^[MAX_POLY_DEGREE] = -1`.
+    ///
+    /// This is the canonical but un-reduced form of the modulus, because the reduced form is the zero polynomial.
     pub static ref POLY_MODULUS: DenseOrSparsePolynomial<'static, Coeff> = {
-        let mut poly = zero_poly(MAX_POLY_DEGREE);
+        let mut poly = Poly::zero();
 
+        // Since the leading coefficient is non-zero, this is in canonical form.
+        // Resize to the maximum size first, to avoid repeated reallocations.
         poly[MAX_POLY_DEGREE] = Coeff::one();
         poly[0] = Coeff::one();
 
+        // Check canonicity and degree.
         assert_eq!(poly.degree(), MAX_POLY_DEGREE);
 
         poly.into()
@@ -105,6 +113,7 @@ impl Poly {
 impl Mul for Poly {
     type Output = Self;
 
+    /// Multiplies then reduces by [`POLY_MODULUS`].
     fn mul(self, rhs: Self) -> Self {
         let mut res = Self(&self.0 * &rhs.0);
         res.reduce_mod_poly();
@@ -112,16 +121,39 @@ impl Mul for Poly {
     }
 }
 
-/// Returns the zero polynomial with `degree`.
-///
-/// This is not the canonical form, but it's useful for creating other polynomials.
-/// (Non-canonical polynomials will panic when `degree()` is called on them.)
-pub fn zero_poly(degree: usize) -> Poly {
-    assert!(degree <= MAX_POLY_DEGREE);
+impl Index<usize> for Poly {
+    type Output = Coeff;
 
-    let mut poly = Poly::zero();
-    poly.coeffs = vec![Coeff::zero(); degree + 1];
-    poly
+    /// A trivial index forwarding implementation that panics.
+    ///
+    /// Panics indicate redundant code which should have stopped at the highest non-zero coefficient.
+    /// Using `self.coeffs.iter()` is one way to ensure the code only accesses real indexes.
+    fn index(&self, index: usize) -> &Self::Output {
+        self.coeffs.get(index).expect(
+            "accessed redundant zero coefficient: \
+            improve performance by stopping at the highest non-zero coefficient",
+        )
+    }
+}
+
+impl IndexMut<usize> for Poly {
+    /// An auto-expanding index implementation that can set any coefficient without panicking.
+    /// Use this implementation via `poly[index]`.
+    ///
+    /// # Correct Usage
+    ///
+    /// After setting the index, the caller must reduce the polynomial and restore canonical form,
+    /// by calling `Poly::reduce_mod_poly()`.
+    ///
+    /// Using `poly.coeffs[index]` can panic, because it skip this implementation, using `<Vec as IndexMut>` instead.
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        // Make sure there is a coefficient entry for `index`, but don't truncate if the index already exists.
+        if index + 1 > self.coeffs.len() {
+            self.coeffs.resize(index + 1, Coeff::zero());
+        }
+
+        self.coeffs.get_mut(index).expect("just resized")
+    }
 }
 
 /// The fastest available modular polynomial operation.
@@ -133,15 +165,18 @@ pub use mod_poly_manual_mut as mod_poly;
 pub fn mod_poly_manual_mut(dividend: &mut Poly) {
     let mut i = MAX_POLY_DEGREE;
     while i < dividend.coeffs.len() {
-        // In the cyclotomic ring we have that XˆN = -1,
-        // therefore all elements from N to 2N-1 are negated.
-
         let q = i / MAX_POLY_DEGREE;
         let r = i % MAX_POLY_DEGREE;
+
+        // In the cyclotomic ring we have that XˆN = -1,
+        // therefore all elements from N to 2N-1 are negated.
+        //
+        // For performance reasons, we use <Vec as IndexMut>,
+        // because the loop condition limits `i` to valid indexes.
         if q % 2 == 1 {
-            dividend[r] = dividend[r] - dividend[i];
+            dividend.coeffs[r] = dividend.coeffs[r] - dividend.coeffs[i];
         } else {
-            dividend[r] = dividend[r] + dividend[i];
+            dividend.coeffs[r] = dividend.coeffs[r] + dividend.coeffs[i];
         }
         i += 1;
     }
@@ -168,6 +203,7 @@ pub fn mod_poly_manual_ref(dividend: &Poly) -> Poly {
 pub fn mod_poly_ark_ref(dividend: &Poly) -> Poly {
     let dividend: DenseOrSparsePolynomial<'_, _> = dividend.into();
 
+    // The DenseOrSparsePolynomial implementation ensures canonical form.
     let (_quotient, remainder) = dividend
         .divide_with_q_and_r(&*POLY_MODULUS)
         .expect("POLY_MODULUS is not zero");

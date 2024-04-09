@@ -4,11 +4,11 @@
 
 use std::ops::{Add, Sub};
 
-use ark_ff::One;
+use ark_ff::{One, Zero};
 use ark_poly::polynomial::Polynomial;
 
 pub use fq::{Coeff, MAX_POLY_DEGREE};
-pub use modular_poly::{mod_poly, zero_poly, Poly, POLY_MODULUS};
+pub use modular_poly::{mod_poly, Poly, POLY_MODULUS};
 
 // Use `mod_poly` outside this module, it is set to the fastest modulus operation.
 #[cfg(not(any(test, feature = "benchmark")))]
@@ -36,7 +36,10 @@ pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
     #[cfg(debug_assertions)]
     let dividend = res.clone();
 
-    // Use the fastest benchmark between mod_poly_manual*() and mod_poly_ark*() here,
+    // Manually ensure the polynomial is reduced and in canonical form,
+    // so that we can check the alternate implementation in tests.
+    //
+    // Use the faster operation between mod_poly_manual*() and mod_poly_ark*() here,
     // and debug_assert_eq!() the other one.
     mod_poly_manual_mut(&mut res);
     debug_assert_eq!(res, mod_poly_ark_ref(&dividend));
@@ -74,9 +77,11 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         res = res.sub(&albl);
         res = res.sub(&arbr);
 
+        // If `a` is reduced, then `xnb2` will never need to be reduced.
+        // Setting the leading coefficient to 1 also creates a polynomial in the canonical form.
         let halfn = n / 2;
-        let mut xnb2 = zero_poly(halfn);
-        xnb2.coeffs[halfn] = Coeff::one();
+        let mut xnb2 = Poly::zero();
+        xnb2[halfn] = Coeff::one();
 
         res = cyclotomic_mul(&res.clone(), &xnb2);
         res = res.add(albl);
@@ -85,15 +90,23 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
             res = res.sub(&arbr);
         } else {
             // Otherwise proceed as usual
-            let mut xn = zero_poly(n);
-            xn.coeffs[n] = Coeff::one();
+            //
+            // Even if `a` is reduced, `n` can still be over the maximum degree.
+            // But setting the leading coefficient to 1 does create a polynomial in the canonical form.
+            let mut xn = Poly::zero();
+            xn[n] = Coeff::one();
+            // This will only reduce in the initial case, when `a` is the maximum reduced degree.
+            // And the reduction is quick, because it is only a single index.
+            xn.reduce_mod_poly();
+
             let aux = cyclotomic_mul(&arbr, &xn);
             res = res.add(aux);
         }
+
+        // After manually modifying the leading coefficients, ensure polynomials are in canonical form.
+        res.truncate_to_canonical_form();
     };
 
-    // After manually modifying the leading coefficients, ensure polynomials are in canonical form.
-    res.truncate_to_canonical_form();
     res
 }
 
