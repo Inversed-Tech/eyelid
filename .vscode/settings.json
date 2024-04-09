@@ -1,7 +1,0 @@
-{
-    "rust-analyzer.hover.documentation.enable": false,
-    "rust-analyzer.hover.documentation.keywords.enable": false,
-    "rust-analyzer.signatureInfo.documentation.enable": false,
-    "rust-analyzer.completion.fullFunctionSignatures.enable": true,
-    "rust-analyzer.rustfmt.rangeFormatting.enable": true
-}

@@ -25,4 +25,5 @@ target/
 
 # Visual Studio Code local configs
 .vscode/
-
+# VSCode does not process .gitignore directory rules correctly, so this is also needed
+.vscode/settings.json
