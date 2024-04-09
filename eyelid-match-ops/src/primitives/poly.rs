@@ -33,8 +33,15 @@ pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
     assert!(b.degree() <= MAX_POLY_DEGREE);
 
     let mut res: Poly = a.naive_mul(b).into();
-    #[cfg(debug_assertions)]
-    let dividend = res.clone();
+
+    // debug_assert_eq!() always needs its arguments, even when the assertion itself is
+    // conditionally compiled out using `if cfg!(debug_assertions)`.
+    // But when the assertion isn't compiled, the values of the arguments don't matter.
+    let dividend = if cfg!(debug_assertions) {
+        res.clone()
+    } else {
+        Poly::zero()
+    };
 
     // Manually ensure the polynomial is reduced and in canonical form,
     // so that we can check the alternate implementation in tests.
