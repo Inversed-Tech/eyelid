@@ -5,13 +5,13 @@
 
 use std::{
     borrow::Borrow,
-    ops::{Add, AddAssign, Mul, Sub, SubAssign},
+    ops::{Add, AddAssign, Sub, SubAssign},
 };
 
 use ark_ff::{One, Zero};
 use ark_poly::polynomial::univariate::{DenseOrSparsePolynomial, DensePolynomial};
 
-use super::*;
+use crate::primitives::poly::modular_poly::{Coeff, Poly};
 
 // TODO:
 // Optional:
@@ -108,13 +108,5 @@ impl SubAssign<Poly> for Poly {
 impl SubAssign<&Poly> for Poly {
     fn sub_assign(&mut self, rhs: &Self) {
         self.0 -= &rhs.0;
-    }
-}
-
-impl Mul for Poly {
-    type Output = Self;
-
-    fn mul(self, rhs: Self) -> Self {
-        Self(&self.0 * &rhs.0)
     }
 }

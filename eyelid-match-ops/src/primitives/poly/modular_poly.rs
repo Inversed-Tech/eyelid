@@ -2,6 +2,8 @@
 //!
 //! This module calls the base operations from [`super`] to ensure that the polynomial is always in its canonical form.
 
+use std::ops::Mul;
+
 use ark_ff::{One, Zero};
 use ark_poly::polynomial::{
     univariate::{DenseOrSparsePolynomial, DensePolynomial},
@@ -12,11 +14,7 @@ use derive_more::{
 };
 use lazy_static::lazy_static;
 
-use super::Coeff;
-
-// For doc links
-#[allow(unused_imports)]
-use super::MAX_POLY_DEGREE;
+use crate::primitives::poly::{Coeff, MAX_POLY_DEGREE};
 
 mod trivial;
 
@@ -101,6 +99,16 @@ impl Poly {
         while self.coeffs.last() == Some(&Coeff::zero()) {
             self.coeffs.pop();
         }
+    }
+}
+
+impl Mul for Poly {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self {
+        let mut res = Self(&self.0 * &rhs.0);
+        res.reduce_mod_poly();
+        res
     }
 }
 
