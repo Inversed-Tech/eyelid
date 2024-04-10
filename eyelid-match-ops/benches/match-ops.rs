@@ -140,7 +140,6 @@ pub fn bench_flat_karatsuba_mul(settings: &mut Criterion) {
     );
 }
 
-
 /// Run [`poly::poly_split()`] as a Criterion benchmark with random data.
 pub fn bench_poly_split(settings: &mut Criterion) {
     // Setup: generate random cyclotomic polynomials

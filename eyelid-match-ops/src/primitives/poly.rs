@@ -122,7 +122,7 @@ pub fn mod_poly_ark(dividend: &Poly) -> Poly {
 pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     let mut res;
     let n = a.degree() + 1; // invariant: n is a power of 2
-    debug_assert!(n.count_ones()==1); // checking the invariant
+    debug_assert!(n.count_ones() == 1); // checking the invariant
 
     // if a or b has degree less than min, condition is true
     let cond_a = a.degree() <= MIN_KARATSUBA_REC_DEGREE;
@@ -162,7 +162,7 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
             xn.coeffs[n] = Coeff::one();
             // TODO: use specific function for this kind of shift, as described above
             let aux = arbr.naive_mul(&xn);
-            
+
             res = res.add(aux);
         }
     };
@@ -177,9 +177,8 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     let n = a.degree() + 1;
     let recursion_height = usize::ilog2(n);
 
-
     let mut first_layer_number = 3; // TODO: fine tune
-    let mut chunk_size = 2usize.pow(first_layer_number-1);
+    let mut chunk_size = 2usize.pow(first_layer_number - 1);
     let first_layer_length = MAX_POLY_DEGREE / chunk_size;
     let mut polys_current_layer: Vec<Poly> = vec![];
     let mut polys_next_layer: Vec<Poly> = vec![];
@@ -187,13 +186,13 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     let b_chunks = poly_split(b, chunk_size);
 
     // Take 2 at each step
-    for i in 0..first_layer_length/2 {
+    for i in 0..first_layer_length / 2 {
         // al, ar
-        let al = &a_chunks[2*i];
-        let ar = &a_chunks[2*i+1];
+        let al = &a_chunks[2 * i];
+        let ar = &a_chunks[2 * i + 1];
         // bl, br
-        let bl = &b_chunks[2*i];
-        let br = &b_chunks[2*i+1];
+        let bl = &b_chunks[2 * i];
+        let br = &b_chunks[2 * i + 1];
 
         let albl = al.naive_mul(&bl);
         let arbr = ar.naive_mul(&br);
@@ -212,8 +211,8 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         res = res.add(albl);
 
         // along the process part:
-        let mut xip1 = zero_poly(2*chunk_size);
-        xip1.coeffs[2*chunk_size] = Fq79::one();
+        let mut xip1 = zero_poly(2 * chunk_size);
+        xip1.coeffs[2 * chunk_size] = Fq79::one();
         // TODO: use specific function for this kind of shift, as described above
         let aux = arbr.naive_mul(&xip1);
         res = res.add(aux);
@@ -227,24 +226,24 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         let b_chunks = poly_split(b, chunk_size);
         let layer_length = polys_current_layer.len();
         // Take 2
-        debug_assert!(a_chunks.len()==MAX_POLY_DEGREE/chunk_size);
-        debug_assert!(a_chunks.len()==b_chunks.len());
-        debug_assert!(a_chunks.len()==polys_current_layer.len());
-        for j in 0..layer_length/2 {
+        debug_assert!(a_chunks.len() == MAX_POLY_DEGREE / chunk_size);
+        debug_assert!(a_chunks.len() == b_chunks.len());
+        debug_assert!(a_chunks.len() == polys_current_layer.len());
+        for j in 0..layer_length / 2 {
             // Take two polynomials each round
 
             // al, ar
-            let al = &a_chunks[2*j];
-            let ar = &a_chunks[2*j+1];
+            let al = &a_chunks[2 * j];
+            let ar = &a_chunks[2 * j + 1];
             // bl, br
-            let bl = &b_chunks[2*j];
-            let br = &b_chunks[2*j+1];
+            let bl = &b_chunks[2 * j];
+            let br = &b_chunks[2 * j + 1];
 
             // NOT NEEDED, SINCE IT COMES FROM PREVIOUS LAYER
             //let albl = al.naive_mul(&bl);
-            let albl = &polys_current_layer[2*j];
+            let albl = &polys_current_layer[2 * j];
             //let arbr = ar.naive_mul(&br);
-            let arbr = &polys_current_layer[2*j+1];
+            let arbr = &polys_current_layer[2 * j + 1];
             let alpar = al.add(ar);
             let blpbr = bl.add(br);
             // Compute y = (al + ar).(bl + br)
@@ -263,8 +262,8 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
             res = res.naive_mul(&xnb2);
             res = albl.add(&res);
 
-            let mut xip1 = zero_poly(2*chunk_size);
-            xip1.coeffs[2*chunk_size] = Fq79::one();
+            let mut xip1 = zero_poly(2 * chunk_size);
+            xip1.coeffs[2 * chunk_size] = Fq79::one();
             let aux = arbr.naive_mul(&xip1);
             res = res.add(aux);
 
@@ -276,7 +275,7 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         chunk_size *= 2;
     }
 
-    debug_assert!(polys_current_layer.len()==1);
+    debug_assert!(polys_current_layer.len() == 1);
     let result = mod_poly_manual(&polys_current_layer[0]);
     result
 }
@@ -285,10 +284,13 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
 pub fn poly_split(a: &Poly, k: usize) -> Vec<Poly> {
     // TODO: review performance
     // TODO: k must be a power of 2, check it
-    let res: Vec<&[ark_ff::Fp<ark_ff::MontBackend<fq79::Fq79Config, 2>, 2>]> = a.coeffs.chunks(k).collect();
+    let res: Vec<&[ark_ff::Fp<ark_ff::MontBackend<fq79::Fq79Config, 2>, 2>]> =
+        a.coeffs.chunks(k).collect();
     let mut result: Vec<Poly> = vec![];
     for i in 0..res.len() {
-        let dp = DensePolynomial { coeffs: res[i].to_vec() };
+        let dp = DensePolynomial {
+            coeffs: res[i].to_vec(),
+        };
 
         result.push(dp);
     }
