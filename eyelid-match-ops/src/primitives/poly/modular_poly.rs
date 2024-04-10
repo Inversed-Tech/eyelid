@@ -72,7 +72,34 @@ impl Poly {
         poly
     }
 
+    /// Multiplies `self` by `X^n`, then reduces if needed.
+    pub fn mul_xn(&mut self, n: usize) {
+        // Puts `n` zeroes as the highest coefficients of the polynomial.
+        let new_len = self.coeffs.len() + n;
+        self.coeffs.resize(new_len, Coeff::zero());
+
+        // Moves those `n` zeroes to the lowest coefficients of the polynomial, and shifts the rest up.
+        self.coeffs.rotate_right(n);
+
+        self.reduce_mod_poly();
+    }
+
+    /// Divides `self` by `X^n`, and returns `(quotient, remainder)`.
+    pub fn div_xn(mut self, n: usize) -> (Self, Self) {
+        // Make `self` the remainder by splitting off the quotient.
+        let quotient = self.coeffs.split_off(n);
+
+        (Self::from_coefficients_vec(quotient), self)
+    }
+
     // Basic Internal Operations
+
+    /// Multiplies two polynomials, and returns the result in reduced form.
+    ///
+    /// This operation can be called using the `*` operator, this method is only needed to disambiguate.
+    pub fn mul_reduce(&self, rhs: &Self) -> Poly {
+        mul_poly(self, rhs)
+    }
 
     /// Reduce this polynomial so it is less than [`POLY_MODULUS`](static@POLY_MODULUS).
     /// This also ensures its degree is less than [`MAX_POLY_DEGREE`].
