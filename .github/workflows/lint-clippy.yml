@@ -19,6 +19,7 @@ jobs:
     name: Check Rust Lints
 
     strategy:
+      # Most clippy errors will be duplicates, so we don't need to run to completion here
       matrix:
         # rustc config options
         cfg: ["", "--cfg tiny_poly"]

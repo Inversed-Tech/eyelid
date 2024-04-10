@@ -19,6 +19,8 @@ jobs:
     name: Rust Tests
 
     strategy:
+      # We want to run tiny_poly to completion, so bugs are easier to diagnose
+      fail-fast: false      
       matrix:
         # rustc config options
         cfg: ["", "--cfg tiny_poly"]
