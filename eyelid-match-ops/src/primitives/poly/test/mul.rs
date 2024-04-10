@@ -1,8 +1,11 @@
 //! Tests for basic polynomial operations.
 
-use super::gen::rand_poly;
+use ark_ff::{One, Zero};
+use ark_poly::{univariate::DenseOrSparsePolynomial, Polynomial};
 
-use super::super::*;
+use crate::primitives::poly::{
+    cyclotomic_mul, karatsuba_mul, test::gen::rand_poly, Coeff, Poly, MAX_POLY_DEGREE, POLY_MODULUS,
+};
 
 /// Test cyclotomic multiplication of a random polynomial by `X^{[MAX_POLY_DEGREE] - 1}`.
 #[test]
@@ -15,8 +18,11 @@ fn test_cyclotomic_mul_rand() {
     }
 
     // Xˆ{N-1}, multiplying by it will rotate by N-1 and negate (except the first).
-    let mut xnm1 = zero_poly(MAX_POLY_DEGREE - 1);
-    xnm1.coeffs[MAX_POLY_DEGREE - 1] = Coeff::one();
+    //
+    // Since the degree is less than MAX_POLY_DEGREE, this is already reduced.
+    // It is also in canonical form, because the leading coefficient is non-zero.
+    let mut xnm1 = Poly::zero();
+    xnm1[MAX_POLY_DEGREE - 1] = Coeff::one();
 
     assert_eq!(xnm1.degree(), MAX_POLY_DEGREE - 1);
 
@@ -30,22 +36,22 @@ fn test_cyclotomic_mul_rand() {
     }
     assert_eq!(res[MAX_POLY_DEGREE - 1], p1[0]);
 
-    // Zero coefficients aren't stored.
-    if res.degree() >= MAX_POLY_DEGREE {
-        for i in (MAX_POLY_DEGREE)..=res.degree() {
-            assert_eq!(res[i], Coeff::zero());
-        }
-    }
+    // Zero leading coefficients aren't stored.
+    // `degree()` panics if the leading coefficient is zero anyway.
+    assert!(res.degree() < MAX_POLY_DEGREE);
 }
 
 /// Test cyclotomic multiplication that results in `X^[MAX_POLY_DEGREE]`.
 #[test]
 fn test_cyclotomic_mul_max_degree() {
     // X^MAX_POLY_DEGREE
-    let mut x_max = zero_poly(MAX_POLY_DEGREE);
+    //
+    // Since the degree is equal to MAX_POLY_DEGREE, this is not reduced.
+    // But it is in canonical form, because the leading coefficient is non-zero.
+    let mut x_max = Poly::zero();
     x_max[MAX_POLY_DEGREE] = Coeff::one();
 
-    // There is a shorter representation of X^N as the constant `MODULUS - 1`.
+    // Manually calculate the reduced representation of X^N as the constant `MODULUS - 1`.
     let x_max = DenseOrSparsePolynomial::from(x_max);
     let (q, x_max) = x_max
         .divide_with_q_and_r(&*POLY_MODULUS)
@@ -56,7 +62,7 @@ fn test_cyclotomic_mul_max_degree() {
     assert_eq!(q, Poly::from_coefficients_vec(vec![Coeff::one()]));
     assert_eq!(
         x_max,
-        // TODO: should this be a constant?
+        // TODO: should `MODULUS - 1` be a constant?
         Poly::from_coefficients_vec(vec![Coeff::zero() - Coeff::one()]),
     );
 
@@ -78,10 +84,13 @@ fn test_cyclotomic_mul_max_degree() {
         }
 
         // X^i * X^{MAX_POLY_DEGREE - i} = X^MAX_POLY_DEGREE
-        let mut p1 = zero_poly(i);
+
+        // `p1` and `p2` are only reduced when i is `1..=(MAX_POLY_DEGREE-1)`.`
+        // But they are always in canonical form, because the leading coefficient is non-zero.
+        let mut p1 = Poly::zero();
         p1[i] = Coeff::one();
 
-        let mut p2 = zero_poly(MAX_POLY_DEGREE - i);
+        let mut p2 = Poly::zero();
         p2[MAX_POLY_DEGREE - i] = Coeff::one();
 
         assert_eq!(p1.degree() + p2.degree(), MAX_POLY_DEGREE);
@@ -93,7 +102,7 @@ fn test_cyclotomic_mul_max_degree() {
     }
 }
 
-/// Test cyclotomic multiplication of a random polynomial by `X^{[MAX_POLY_DEGREE] - 1}`.
+/// Test karatsuba and cyclotomic multiplication of two random polynomials produce the same result.
 #[test]
 fn test_karatsuba_mul_rand() {
     let p1 = rand_poly(MAX_POLY_DEGREE - 1);

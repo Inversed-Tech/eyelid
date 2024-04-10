@@ -1,16 +1,20 @@
-//! Cyclotomic polynomial operations using ark-poly
+//! Cyclotomic polynomial operations using ark-poly.
+//!
+//! This module contains the base implementations of complex polynomial operations, such as multiplication and reduction.
 
 use std::ops::{Add, Sub};
 
 use ark_ff::{One, Zero};
-use ark_poly::polynomial::{
-    univariate::{DenseOrSparsePolynomial, DensePolynomial},
-    Polynomial,
-};
-use lazy_static::lazy_static;
+use ark_poly::polynomial::Polynomial;
 
 pub use fq::{Coeff, MAX_POLY_DEGREE};
-pub use modular_poly::Poly;
+pub use modular_poly::{mod_poly, Poly, POLY_MODULUS};
+
+// Use `mod_poly` outside this module, it is set to the fastest modulus operation.
+#[cfg(not(any(test, feature = "benchmark")))]
+use modular_poly::{mod_poly_ark_ref, mod_poly_manual_mut};
+#[cfg(any(test, feature = "benchmark"))]
+pub use modular_poly::{mod_poly_ark_ref, mod_poly_manual_mut};
 
 pub mod fq;
 pub mod modular_poly;
@@ -18,40 +22,8 @@ pub mod modular_poly;
 #[cfg(any(test, feature = "benchmark"))]
 pub mod test;
 
-// TODO:
-// - enforce the constant degree MAX_POLY_DEGREE
-// - re-implement Index and IndexMut manually, to enforce the canonical form (highest coefficient is non-zero) and modular arithmetic
-// - re-implement Mul and MulAssign manually, to enforce modular arithmetic by POLY_MODULUS (Add, Sub, Div, Rem, and Neg can't increase the degree)
-
 /// Minimum degree for recursive Karatsuba calls
 pub const MIN_KARATSUBA_REC_DEGREE: usize = 32; // TODO: fine tune
-
-lazy_static! {
-    /// The polynomial modulus used for the polynomial field, `X^[MAX_POLY_DEGREE] + 1`.
-    /// This means that `X^[MAX_POLY_DEGREE] = -1`.
-    pub static ref POLY_MODULUS: DenseOrSparsePolynomial<'static, Coeff> = {
-        let mut poly = zero_poly(MAX_POLY_DEGREE);
-
-        poly[MAX_POLY_DEGREE] = Coeff::one();
-        poly[0] = Coeff::one();
-
-        assert_eq!(poly.degree(), MAX_POLY_DEGREE);
-
-        poly.into()
-    };
-}
-
-/// Returns the zero polynomial with `degree`.
-///
-/// This is not the canonical form, but it's useful for creating other polynomials.
-/// (Non-canonical polynomials will panic when `degree()` is called on them.)
-pub fn zero_poly(degree: usize) -> Poly {
-    assert!(degree <= MAX_POLY_DEGREE);
-
-    let mut poly = Poly::zero();
-    poly.coeffs = vec![Coeff::zero(); degree + 1];
-    poly
-}
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1`.
 /// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
@@ -60,61 +32,28 @@ pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
     assert!(a.degree() <= MAX_POLY_DEGREE);
     assert!(b.degree() <= MAX_POLY_DEGREE);
 
-    let dividend: Poly = a.naive_mul(b).into();
+    let mut res: Poly = a.naive_mul(b).into();
 
-    // Use the fastest benchmark between mod_poly_manual() and mod_poly_ark() here,
+    // debug_assert_eq!() always needs its arguments, even when the assertion itself is
+    // conditionally compiled out using `if cfg!(debug_assertions)`.
+    // But when the assertion isn't compiled, the values of the arguments don't matter.
+    let dividend = if cfg!(debug_assertions) {
+        res.clone()
+    } else {
+        Poly::zero()
+    };
+
+    // Manually ensure the polynomial is reduced and in canonical form,
+    // so that we can check the alternate implementation in tests.
+    //
+    // Use the faster operation between mod_poly_manual*() and mod_poly_ark*() here,
     // and debug_assert_eq!() the other one.
-    let res = mod_poly_manual(&dividend);
-    debug_assert_eq!(res, mod_poly_ark(&dividend));
+    mod_poly_manual_mut(&mut res);
+    debug_assert_eq!(res, mod_poly_ark_ref(&dividend));
 
     assert!(res.degree() <= MAX_POLY_DEGREE);
 
     res
-}
-
-/// Returns the remainder of `dividend % [POLY_MODULUS]`, as a polynomial.
-///
-/// This is a manual implementation.
-pub fn mod_poly_manual(dividend: &Poly) -> Poly {
-    let mut res = dividend.clone();
-
-    let mut i = MAX_POLY_DEGREE;
-    while i < res.coeffs.len() {
-        // In the cyclotomic ring we have that XˆN = -1,
-        // therefore all elements from N to 2N-1 are negated.
-
-        let q = i / MAX_POLY_DEGREE;
-        let r = i % MAX_POLY_DEGREE;
-        if q % 2 == 1 {
-            res[r] = res[r] - res[i];
-        } else {
-            res[r] = res[r] + res[i];
-        }
-        i += 1;
-    }
-
-    // These elements have already been negated and summed above.
-    res.coeffs.truncate(MAX_POLY_DEGREE);
-
-    // Leading elements might be zero, so make sure the polynomial is in the canonical form.
-    while res.coeffs.last() == Some(&Coeff::zero()) {
-        res.coeffs.pop();
-    }
-
-    res
-}
-
-/// Returns the remainder of `dividend % [POLY_MODULUS]`, as a polynomial.
-///
-/// This uses an [`ark-poly`] library implementation.
-pub fn mod_poly_ark(dividend: &Poly) -> Poly {
-    let dividend: DenseOrSparsePolynomial<'_, _> = dividend.into();
-
-    let (_quotient, remainder) = dividend
-        .divide_with_q_and_r(&*POLY_MODULUS)
-        .expect("POLY_MODULUS is not zero");
-
-    remainder.into()
 }
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1` using recursive Karatsuba method.
@@ -144,9 +83,13 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         res = y.clone();
         res = res.sub(&albl);
         res = res.sub(&arbr);
+
+        // If `a` is reduced, then `xnb2` will never need to be reduced.
+        // Setting the leading coefficient to 1 also creates a polynomial in the canonical form.
         let halfn = n / 2;
-        let mut xnb2 = zero_poly(halfn);
-        xnb2.coeffs[halfn] = Coeff::one();
+        let mut xnb2 = Poly::zero();
+        xnb2[halfn] = Coeff::one();
+
         res = cyclotomic_mul(&res.clone(), &xnb2);
         res = res.add(albl);
         if n >= MAX_POLY_DEGREE {
@@ -154,12 +97,23 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
             res = res.sub(&arbr);
         } else {
             // Otherwise proceed as usual
-            let mut xn = zero_poly(n);
-            xn.coeffs[n] = Coeff::one();
+            //
+            // Even if `a` is reduced, `n` can still be over the maximum degree.
+            // But setting the leading coefficient to 1 does create a polynomial in the canonical form.
+            let mut xn = Poly::zero();
+            xn[n] = Coeff::one();
+            // This will only reduce in the initial case, when `a` is the maximum reduced degree.
+            // And the reduction is quick, because it is only a single index.
+            xn.reduce_mod_poly();
+
             let aux = cyclotomic_mul(&arbr, &xn);
             res = res.add(aux);
         }
+
+        // After manually modifying the leading coefficients, ensure polynomials are in canonical form.
+        res.truncate_to_canonical_form();
     };
+
     res
 }
 
@@ -168,7 +122,13 @@ pub fn poly_split(a: &Poly) -> (Poly, Poly) {
     // TODO: review performance
     let n = a.degree() + 1;
     let halfn = n / 2;
+
     let mut al = a.clone();
     let ar = al.coeffs.split_off(halfn);
-    (al, DensePolynomial { coeffs: ar }.into())
+
+    // After manually modifying the leading coefficients, ensure polynomials are in canonical form.
+    al.truncate_to_canonical_form();
+    let ar = Poly::from_coefficients_vec(ar);
+
+    (al, ar)
 }
