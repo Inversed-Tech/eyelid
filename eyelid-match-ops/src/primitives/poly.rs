@@ -136,8 +136,8 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         res = a.naive_mul(b);
     } else {
         // Otherwise recursively call for al.bl and ar.br
-        let (al, ar) = poly_split(a);
-        let (bl, br) = poly_split(b);
+        let (al, ar) = poly_split_half(a);
+        let (bl, br) = poly_split_half(b);
         let albl = karatsuba_mul(&al, &bl);
         let arbr = karatsuba_mul(&ar, &br);
         let alpar = al.add(ar);
@@ -145,12 +145,15 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         // Compute y = (al + ar).(bl + br)
         let y = karatsuba_mul(&alpar, &blpbr);
         // Compute res = al.bl + (y - al.bl - ar.br)xˆn/2 + (ar.br)x^n
-        //res = y.clone();
         res = y.sub(&albl);
         res = res.sub(&arbr);
         let halfn = n / 2;
         let mut xnb2 = zero_poly(halfn);
         xnb2.coeffs[halfn] = Fq79::one();
+        // TODO: analyze efficiency of next naive_mul,
+        // because in principle this operation should be easy,
+        // since it is a shift in the coefficients vector (filling with zeros)
+        // Analogously for many other multiplications by a power fo X.
         res = res.naive_mul(&xnb2);
         res = res.add(albl);
         if n >= MAX_POLY_DEGREE {
@@ -160,6 +163,7 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
             // Otherwise proceed as usual
             let mut xn = zero_poly(n);
             xn.coeffs[n] = Fq79::one();
+            // TODO: use specific function for this kind of shift, as described above
             let aux = arbr.naive_mul(&xn);
             res = res.add(aux);
         }
@@ -168,17 +172,21 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     result
 }
 
+/// Flat (without recursion) implementation of Karatsuba.
+/// This implementation can be parallelized since for each layer
+/// we have that chunks are independent of each other.
 pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     let n = a.degree() + 1;
     let recursion_height = usize::ilog2(n);
 
 
-    let mut chunk_size = 1;
+    let mut first_layer_number = 3; // TODO: fine tune
+    let mut chunk_size = 2usize.pow(first_layer_number-1);
     let first_layer_length = MAX_POLY_DEGREE / chunk_size;
     let mut polys_current_layer: Vec<Poly> = vec![];
     let mut polys_next_layer: Vec<Poly> = vec![];
-    let a_chunks = new_poly_split(a, chunk_size);
-    let b_chunks = new_poly_split(b, chunk_size);
+    let a_chunks = poly_split(a, chunk_size);
+    let b_chunks = poly_split(b, chunk_size);
 
     // Take 2 at each step
     for i in 0..first_layer_length/2 {
@@ -199,14 +207,16 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         // Compute res = al.bl + (y - al.bl - ar.br)xˆ1 + (ar.br)x^2
         res = res.sub(&albl);
         res = res.sub(&arbr);
-        let mut xnb2 = zero_poly(1);
-        xnb2.coeffs[1] = Fq79::one();
+        let mut xnb2 = zero_poly(chunk_size);
+        xnb2.coeffs[chunk_size] = Fq79::one();
+        // TODO: use specific function for this kind of shift, as described above
         res = res.naive_mul(&xnb2);
         res = res.add(albl);
 
         // along the process part:
-        let mut xip1 = zero_poly(2);
-        xip1.coeffs[2] = Fq79::one();
+        let mut xip1 = zero_poly(2*chunk_size);
+        xip1.coeffs[2*chunk_size] = Fq79::one();
+        // TODO: use specific function for this kind of shift, as described above
         let aux = arbr.naive_mul(&xip1);
         res = res.add(aux);
 
@@ -214,9 +224,9 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     }
     chunk_size *= 2;
 
-    for _ in 1..recursion_height {
-        let a_chunks = new_poly_split(a, chunk_size);
-        let b_chunks = new_poly_split(b, chunk_size);
+    while first_layer_number < recursion_height {
+        let a_chunks = poly_split(a, chunk_size);
+        let b_chunks = poly_split(b, chunk_size);
         let layer_length = polys_current_layer.len();
         // Take 2
         debug_assert!(a_chunks.len()==MAX_POLY_DEGREE/chunk_size);
@@ -248,6 +258,10 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
             let half_chunk_size = chunk_size;
             let mut xnb2 = zero_poly(half_chunk_size);
             xnb2.coeffs[half_chunk_size] = Fq79::one();
+            // TODO: analyze efficiency of next naive_mul,
+            // because in principle this operation should be easy,
+            // since it is a shift in the coefficients vector (filling with zeros)
+            // Analogously for many other multiplications by a power fo X.
             res = res.naive_mul(&xnb2);
             res = albl.add(&res);
 
@@ -260,9 +274,9 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         }
         polys_current_layer = polys_next_layer;
         polys_next_layer = vec![];
+        first_layer_number += 1;
         chunk_size *= 2;
-
-    } 
+    }
 
     debug_assert!(polys_current_layer.len()==1);
     let result = mod_poly_manual(&polys_current_layer[0]);
@@ -270,7 +284,7 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
 }
 
 /// Split the polynomial into left and right parts.
-pub fn new_poly_split(a: &Poly, k: usize) -> Vec<Poly> {
+pub fn poly_split(a: &Poly, k: usize) -> Vec<Poly> {
     // TODO: review performance
     // TODO: k must be a power of 2, check it
     let res: Vec<&[ark_ff::Fp<ark_ff::MontBackend<fq79::Fq79Config, 2>, 2>]> = a.coeffs.chunks(k).collect();
@@ -284,7 +298,7 @@ pub fn new_poly_split(a: &Poly, k: usize) -> Vec<Poly> {
 }
 
 /// Split the polynomial into left and right parts.
-pub fn poly_split(a: &Poly) -> (Poly, Poly) {
+pub fn poly_split_half(a: &Poly) -> (Poly, Poly) {
     // TODO: review performance
     let n = a.degree() + 1;
     let halfn = n / 2;

@@ -152,7 +152,7 @@ pub fn bench_poly_split(settings: &mut Criterion) {
         |benchmark, p| {
             benchmark.iter_with_large_drop(|| {
                 // To avoid timing dropping the return value, this line must not end in ';'
-                poly::poly_split(p)
+                poly::poly_split_half(p)
             })
         },
     );
