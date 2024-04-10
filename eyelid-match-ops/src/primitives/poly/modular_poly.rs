@@ -1,6 +1,6 @@
 //! The implementation of a modular polynomial, [`Poly`].
 //!
-//! This module contains funamental operations which ensure that the polynomial is always in its canonical form.
+//! This module contains fundamental operations which ensure that the polynomial is always in its canonical form.
 //! They should be called after every operation that can create non-canonical polynomials, which can happen when:
 //! - the leading coefficient is set to zero, including when the polynomial is split or truncated, or
 //! - the degree of the polynomial is increased, for example, during multiplication.

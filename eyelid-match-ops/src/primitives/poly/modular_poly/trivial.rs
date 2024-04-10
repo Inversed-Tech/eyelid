@@ -1,6 +1,6 @@
 //! Trivial operations on [`Poly`].
 //!
-//! This module implements trival polynomial operations, which just forward to the underlying [`DensePolynomial`].
+//! This module implements trivial polynomial operations, which just forward to the underlying [`DensePolynomial`].
 //! The derives on [`Poly`] are also trivial operations.
 
 use std::{
