@@ -5,7 +5,7 @@
 
 use std::{
     borrow::Borrow,
-    ops::{Add, AddAssign, Sub, SubAssign},
+    ops::{Add, AddAssign, Sub, SubAssign, Mul},
 };
 
 use ark_ff::{One, Zero};
@@ -104,5 +104,14 @@ impl SubAssign<Poly> for Poly {
 impl SubAssign<&Poly> for Poly {
     fn sub_assign(&mut self, rhs: &Self) {
         self.0 -= &rhs.0;
+    }
+}
+
+// Multiplying by a scalar can't increase the degree, so it is trivial.
+impl Mul<Coeff> for Poly {
+    type Output = Self;
+
+    fn mul(self, rhs: Coeff) -> Self {
+        Poly(&self.0 * rhs)
     }
 }

@@ -8,19 +8,27 @@ use ark_ff::{One, Zero};
 use ark_poly::polynomial::Polynomial;
 
 pub use fq::{Coeff, MAX_POLY_DEGREE};
-pub use modular_poly::{mod_poly, Poly, POLY_MODULUS};
+pub use modular_poly::{
+    modulus::{mod_poly, POLY_MODULUS},
+    Poly,
+};
 
 // Use `mod_poly` outside this module, it is set to the fastest modulus operation.
 #[cfg(not(any(test, feature = "benchmark")))]
-use modular_poly::{mod_poly_ark_ref, mod_poly_manual_mut};
+use modular_poly::modulus::{mod_poly_ark_ref, mod_poly_manual_mut};
 #[cfg(any(test, feature = "benchmark"))]
-pub use modular_poly::{mod_poly_ark_ref, mod_poly_manual_mut};
+pub use modular_poly::modulus::{mod_poly_ark_ref, mod_poly_manual_mut};
 
 pub mod fq;
 pub mod modular_poly;
 
 #[cfg(any(test, feature = "benchmark"))]
 pub mod test;
+
+// TODO: move low-level multiplication code to `modular_poly::mul`
+
+/// The fastest available cyclotomic polynomial multiplication operation (multiply then reduce).
+pub use cyclotomic_mul as mul_poly;
 
 /// Minimum degree for recursive Karatsuba calls
 pub const MIN_KARATSUBA_REC_DEGREE: usize = 32; // TODO: fine tune
