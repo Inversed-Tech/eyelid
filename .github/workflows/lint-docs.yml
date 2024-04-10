@@ -1,0 +1,32 @@
+name: 'Rust Docs'
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+
+  pull_request:
+
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+jobs:
+  docs:
+    name: Check Docs
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: r7kamura/rust-problem-matchers@v1
+
+      # "--all-features" covers "" and "--no-default-features" for now
+      - name: Build docs
+        run: |
+          export RUSTDOCFLAGS="-D warnings"
+          cargo doc --no-deps --workspace --all-features --document-private-items

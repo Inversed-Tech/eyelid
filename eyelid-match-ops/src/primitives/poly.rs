@@ -1,30 +1,27 @@
 //! Cyclotomic polynomial operations using ark-poly
 
-use crate::primitives::poly::fq79::Fq79;
+use std::ops::{Add, Sub};
+
 use ark_ff::{One, Zero};
 use ark_poly::polynomial::{
     univariate::{DenseOrSparsePolynomial, DensePolynomial},
     Polynomial,
 };
 use lazy_static::lazy_static;
-use std::ops::Add;
-use std::ops::Sub;
 
-pub mod fq79;
-pub mod fq8;
+pub use fq::{Coeff, MAX_POLY_DEGREE};
+pub use modular_poly::Poly;
+
+pub mod fq;
+pub mod modular_poly;
 
 #[cfg(any(test, feature = "benchmark"))]
 pub mod test;
 
-pub use fq79::{Coeff, MAX_POLY_DEGREE};
-// Temporarily switch to this tiny field to make test errors easier to debug.
-//pub use fq8::{Coeff, MAX_POLY_DEGREE};
-
-/// A modular polynomial with coefficients in [`Coeff`],
-/// and maximum degree [`MAX_POLY_DEGREE`].
-//
-// TODO: replace this with a type wrapper that uses the constant degree MAX_POLY_DEGREE.
-pub type Poly = DensePolynomial<Coeff>;
+// TODO:
+// - enforce the constant degree MAX_POLY_DEGREE
+// - re-implement Index and IndexMut manually, to enforce the canonical form (highest coefficient is non-zero) and modular arithmetic
+// - re-implement Mul and MulAssign manually, to enforce modular arithmetic by POLY_MODULUS (Add, Sub, Div, Rem, and Neg can't increase the degree)
 
 /// Minimum degree for recursive Karatsuba calls
 pub const MIN_KARATSUBA_REC_DEGREE: usize = 8; // TODO: fine tune
@@ -63,7 +60,7 @@ pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
     assert!(a.degree() <= MAX_POLY_DEGREE);
     assert!(b.degree() <= MAX_POLY_DEGREE);
 
-    let dividend = a.naive_mul(b);
+    let dividend: Poly = a.naive_mul(b).into();
 
     // Use the fastest benchmark between mod_poly_manual() and mod_poly_ark() here,
     // and debug_assert_eq!() the other one.
@@ -117,7 +114,7 @@ pub fn mod_poly_ark(dividend: &Poly) -> Poly {
         .divide_with_q_and_r(&*POLY_MODULUS)
         .expect("POLY_MODULUS is not zero");
 
-    remainder
+    remainder.into()
 }
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1` using recursive Karatsuba method.
@@ -149,7 +146,7 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         res = res.sub(&arbr);
         let halfn = n / 2;
         let mut xnb2 = zero_poly(halfn);
-        xnb2.coeffs[halfn] = Fq79::one();
+        xnb2.coeffs[halfn] = Coeff::one();
         // TODO: analyze efficiency of next naive_mul,
         // because in principle this operation should be easy,
         // since it is a shift in the coefficients vector (filling with zeros)
@@ -162,9 +159,10 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         } else {
             // Otherwise proceed as usual
             let mut xn = zero_poly(n);
-            xn.coeffs[n] = Fq79::one();
+            xn.coeffs[n] = Coeff::one();
             // TODO: use specific function for this kind of shift, as described above
             let aux = arbr.naive_mul(&xn);
+            
             res = res.add(aux);
         }
     };
@@ -304,5 +302,5 @@ pub fn poly_split_half(a: &Poly) -> (Poly, Poly) {
     let halfn = n / 2;
     let mut al = a.clone();
     let ar = al.coeffs.split_off(halfn);
-    (al, DensePolynomial { coeffs: ar })
+    (al, DensePolynomial { coeffs: ar }.into())
 }

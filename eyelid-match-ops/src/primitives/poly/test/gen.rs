@@ -8,7 +8,6 @@ use super::super::*;
 /// In rare cases, the degree can be less than `degree`,
 /// because the random coefficient of `X^[MAX_POLY_DEGREE]` is zero.
 pub fn rand_poly(degree: usize) -> Poly {
-    use ark_poly::DenseUVPolynomial;
     use rand::thread_rng;
 
     // We need larger degrees in the polynomial modulus tests.

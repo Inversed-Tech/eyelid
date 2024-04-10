@@ -8,7 +8,10 @@ resolver = "2"
 
 # Shared configuration
 [workspace.package]
+authors = ["Inversed Tech <https://inversed.tech/contact-us>"]
 edition = "2021"
+homepage = "https://inversed.tech/#our-portfolio"
+license = "MIT OR Apache-2.0"
 readme = "README.md"
 publish = true
 repository = "https://github.com/Inversed-Tech/eyelid"
@@ -25,6 +28,8 @@ ark-ff = "0.4.2"
 ark-poly = "0.4.2"
 ark-std = "0.4.0"
 bitvec = "1.0.1"
+# Full list at https://github.com/JelteF/derive_more/blob/master/Cargo.toml#L49
+derive_more = { version = "0.99.17", features = ["add_assign", "add", "as_ref", "constructor", "deref", "deref_mut", "from", "into"] }
 
 # Compile-time checks of production code
 static_assertions = "1.1.0"
