@@ -5,6 +5,12 @@
 //! - the leading coefficient is set to zero, including when the polynomial is split or truncated, or
 //! - the degree of the polynomial is increased, for example, during multiplication.
 
+// Optional TODOs:
+// - re-implement IndexMut manually, to enforce the canonical form (highest coefficient is non-zero) and modular arithmetic
+//   (this can be done by returning a new type with `DerefMut<Target = Coeff>``, but it could have performance impacts)
+// Trivial:
+// - implement Sum manually
+
 use std::ops::{Index, IndexMut, Mul};
 
 use ark_ff::{One, Zero};
@@ -51,7 +57,6 @@ lazy_static! {
     Hash,
     AsRef,
     Deref,
-    // TODO: manually implement a final reduce step
     DerefMut,
     // TODO: manually implement a final reduce step
     From,
@@ -69,10 +74,6 @@ lazy_static! {
 )]
 pub struct Poly(DensePolynomial<Coeff>);
 
-// TODO:
-// - enforce the constant degree MAX_POLY_DEGREE
-// - re-implement Index and IndexMut manually, to enforce the canonical form (highest coefficient is non-zero) and modular arithmetic
-// - re-implement Mul and MulAssign manually, to enforce modular arithmetic by POLY_MODULUS (Add, Sub, Div, Rem, and Neg can't increase the degree)
 impl Poly {
     // Shadow DenseUVPolynomial methods, so we don't have to implement Polynomial and all its supertraits.
 

@@ -13,10 +13,6 @@ use ark_poly::polynomial::univariate::{DenseOrSparsePolynomial, DensePolynomial}
 
 use crate::primitives::poly::modular_poly::{Coeff, Poly};
 
-// TODO:
-// Optional:
-// - implement Sum manually
-
 impl Borrow<DensePolynomial<Coeff>> for Poly {
     fn borrow(&self) -> &DensePolynomial<Coeff> {
         &self.0
