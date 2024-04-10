@@ -14,12 +14,15 @@
 use std::ops::{Index, IndexMut, Mul};
 
 use ark_ff::{One, Zero};
-use ark_poly::polynomial::{
-    univariate::{DenseOrSparsePolynomial, DensePolynomial},
-    Polynomial,
+use ark_poly::{
+    polynomial::{
+        univariate::{DenseOrSparsePolynomial, DensePolynomial},
+        Polynomial,
+    },
+    univariate::SparsePolynomial,
 };
 use derive_more::{
-    Add, AsRef, Deref, DerefMut, Div, DivAssign, From, Into, Mul, MulAssign, Neg, Rem, RemAssign,
+    Add, AsRef, Deref, DerefMut, Div, DivAssign, Into, Mul, MulAssign, Neg, Rem, RemAssign,
 };
 use lazy_static::lazy_static;
 
@@ -58,8 +61,6 @@ lazy_static! {
     AsRef,
     Deref,
     DerefMut,
-    // TODO: manually implement a final reduce step
-    From,
     Into,
     Neg,
     Add,
@@ -111,14 +112,44 @@ impl Poly {
     }
 }
 
-impl Mul for Poly {
-    type Output = Self;
+impl From<DensePolynomial<Coeff>> for Poly {
+    fn from(poly: DensePolynomial<Coeff>) -> Self {
+        let mut poly = Self(poly);
+        poly.reduce_mod_poly();
+        poly
+    }
+}
 
-    /// Multiplies then reduces by [`POLY_MODULUS`](static@POLY_MODULUS).
-    fn mul(self, rhs: Self) -> Self {
-        let mut res = Self(&self.0 * &rhs.0);
-        res.reduce_mod_poly();
-        res
+impl From<&DensePolynomial<Coeff>> for Poly {
+    fn from(poly: &DensePolynomial<Coeff>) -> Self {
+        let mut poly = Self(poly.clone());
+        poly.reduce_mod_poly();
+        poly
+    }
+}
+
+// These are less likely to be called, so it's ok to have sub-optimal performance.
+impl From<SparsePolynomial<Coeff>> for Poly {
+    fn from(poly: SparsePolynomial<Coeff>) -> Self {
+        DensePolynomial::from(poly).into()
+    }
+}
+
+impl From<&SparsePolynomial<Coeff>> for Poly {
+    fn from(poly: &SparsePolynomial<Coeff>) -> Self {
+        DensePolynomial::from(poly.clone()).into()
+    }
+}
+
+impl<'a> From<DenseOrSparsePolynomial<'a, Coeff>> for Poly {
+    fn from(poly: DenseOrSparsePolynomial<'a, Coeff>) -> Self {
+        DensePolynomial::from(poly).into()
+    }
+}
+
+impl<'a> From<&DenseOrSparsePolynomial<'a, Coeff>> for Poly {
+    fn from(poly: &DenseOrSparsePolynomial<'a, Coeff>) -> Self {
+        DensePolynomial::from(poly.clone()).into()
     }
 }
 
@@ -154,6 +185,17 @@ impl IndexMut<usize> for Poly {
         }
 
         self.coeffs.get_mut(index).expect("just resized")
+    }
+}
+
+impl Mul for Poly {
+    type Output = Self;
+
+    /// Multiplies then reduces by [`POLY_MODULUS`](static@POLY_MODULUS).
+    fn mul(self, rhs: Self) -> Self {
+        let mut res = Self(&self.0 * &rhs.0);
+        res.reduce_mod_poly();
+        res
     }
 }
 
