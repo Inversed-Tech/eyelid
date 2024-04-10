@@ -5,7 +5,7 @@
 
 use std::{
     borrow::Borrow,
-    ops::{Add, AddAssign, Sub, SubAssign, Mul},
+    ops::{Add, AddAssign, Mul, Sub, SubAssign},
 };
 
 use ark_ff::{One, Zero};
