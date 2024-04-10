@@ -13,7 +13,7 @@
 
 use std::ops::{Index, IndexMut, Mul};
 
-use ark_ff::Zero;
+use ark_ff::{One, Zero};
 use ark_poly::polynomial::univariate::{
     DenseOrSparsePolynomial, DensePolynomial, SparsePolynomial,
 };
@@ -50,14 +50,26 @@ impl Poly {
 
     /// Converts the `coeffs` vector into a dense polynomial.
     pub fn from_coefficients_vec(coeffs: Vec<Coeff>) -> Self {
-        let mut new = Self(DensePolynomial { coeffs });
-        new.truncate_to_canonical_form();
-        new
+        let mut poly = Self(DensePolynomial { coeffs });
+        poly.truncate_to_canonical_form();
+        poly
     }
 
     /// Converts the `coeffs` slice into a dense polynomial.
     pub fn from_coefficients_slice(coeffs: &[Coeff]) -> Self {
         Self::from_coefficients_vec(coeffs.to_vec())
+    }
+
+    // Efficient Re-Implementations
+
+    /// Returns `X^n` as a polynomial in reduced form.
+    pub fn xn(n: usize) -> Self {
+        let mut poly = Self::zero();
+        poly[n] = Coeff::one();
+
+        poly.reduce_mod_poly();
+
+        poly
     }
 
     // Basic Internal Operations

@@ -4,7 +4,7 @@
 
 use std::ops::{Add, Sub};
 
-use ark_ff::{One, Zero};
+use ark_ff::Zero;
 use ark_poly::polynomial::Polynomial;
 
 pub use fq::{Coeff, MAX_POLY_DEGREE};
@@ -93,10 +93,8 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         res = res.sub(&arbr);
 
         // If `a` is reduced, then `xnb2` will never need to be reduced.
-        // Setting the leading coefficient to 1 also creates a polynomial in the canonical form.
         let halfn = n / 2;
-        let mut xnb2 = Poly::zero();
-        xnb2[halfn] = Coeff::one();
+        let xnb2 = Poly::xn(halfn);
 
         res = cyclotomic_mul(&res.clone(), &xnb2);
         res = res.add(albl);
@@ -107,11 +105,9 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
             // Otherwise proceed as usual
             //
             // Even if `a` is reduced, `n` can still be over the maximum degree.
-            // But setting the leading coefficient to 1 does create a polynomial in the canonical form.
-            let mut xn = Poly::zero();
-            xn[n] = Coeff::one();
-            // This will only reduce in the initial case, when `a` is the maximum reduced degree.
+            // But it will only reduce in the initial case, when `a` is the maximum reduced degree.
             // And the reduction is quick, because it is only a single index.
+            let mut xn = Poly::xn(n);
             xn.reduce_mod_poly();
 
             let aux = cyclotomic_mul(&arbr, &xn);
