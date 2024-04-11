@@ -86,13 +86,7 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
 
         // `res` will be reduced if needed, but that should only happen once in the first loop.
         let halfn = n / 2;
-        let mut xnb2 = zero_poly(halfn);
-        xnb2.coeffs[halfn] = Coeff::one();
-        // TODO: analyze efficiency of next naive_mul,
-        // because in principle this operation should be easy,
-        // since it is a shift in the coefficients vector (filling with zeros)
-        // Analogously for many other multiplications by a power fo X.
-        res = res.naive_mul(&xnb2);
+        res.mul_xn(halfn);
         res = res.add(albl);
         if n >= MAX_POLY_DEGREE {
             // negate ar.br if n is equal to the max degree (edge case)
