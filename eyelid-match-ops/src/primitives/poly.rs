@@ -204,8 +204,8 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     }
 
     debug_assert!(polys_current_layer.len() == 1);
-    let result = mod_poly_manual(&polys_current_layer[0]);
-    result
+    polys_current_layer[0].reduce_mod_poly();
+    polys_current_layer[0]
 }
 
 /// Split the polynomial into left and right parts.
