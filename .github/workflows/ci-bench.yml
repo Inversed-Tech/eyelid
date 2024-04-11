@@ -14,6 +14,18 @@ concurrency:
   group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
   cancel-in-progress: true
 
+# The actions variables and shell env namespaces are different, so we need to import every relevant variable here:
+# <https://github.com/Inversed-Tech/eyelid/settings/variables/actions>
+env:
+  # Logging
+  CARGO_TERM_COLOR: ${{ vars.CARGO_TERM_COLOR }}
+  # For performance reasons, benchmarks have their own log level, which should typically be `off` or `0`.
+  RUST_LOG: ${{ vars.RUST_LOG_BENCHMARKS }}
+  # These backtrace variables are used by the `backtrace` crate to control the backtrace verbosity in binaries and libraries.
+  # We always want them set to the same value in CI. 
+  RUST_BACKTRACE: ${{ vars.RUST_BACKTRACE_BENCHMARKS }}
+  RUST_LIB_BACKTRACE: ${{ vars.RUST_BACKTRACE_BENCHMARKS }}
+
 jobs:
   bench:
     name: Rust Benchmarks
