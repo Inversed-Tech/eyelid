@@ -93,12 +93,9 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
             res = res.sub(&arbr);
         } else {
             // Otherwise proceed as usual
-            let mut xn = zero_poly(n);
-            xn.coeffs[n] = Coeff::one();
-            // TODO: use specific function for this kind of shift, as described above
-            let aux = arbr.naive_mul(&xn);
+            arbr. mul_xn(n);
 
-            res = res.add(aux);
+            res = res.add(arbr);
         }
 
         // After manually modifying the leading coefficients, ensure polynomials are in canonical form.
