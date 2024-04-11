@@ -212,17 +212,7 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
 pub fn poly_split(a: &Poly, k: usize) -> Vec<Poly> {
     // TODO: review performance
     // TODO: k must be a power of 2, check it
-    let res: Vec<&[ark_ff::Fp<ark_ff::MontBackend<fq79::Fq79Config, 2>, 2>]> =
-        a.coeffs.chunks(k).collect();
-    let mut result: Vec<Poly> = vec![];
-    for i in 0..res.len() {
-        let dp = DensePolynomial {
-            coeffs: res[i].to_vec(),
-        };
-
-        result.push(dp);
-    }
-    result
+    a.coeffs.chunks(k).map(Poly::from_coefficients_slice).collect()
 }
 
 /// Split the polynomial into left and right parts.
