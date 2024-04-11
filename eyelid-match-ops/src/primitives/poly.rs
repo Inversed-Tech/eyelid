@@ -84,8 +84,7 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         res = y.sub(&albl);
         res = res.sub(&arbr);
 
-        // If `a` is reduced, then `xnb2` will never need to be reduced.
-        // Setting the leading coefficient to 1 also creates a polynomial in the canonical form.
+        // `res` will be reduced if needed, but that should only happen once in the first loop.
         let halfn = n / 2;
         let mut xnb2 = zero_poly(halfn);
         xnb2.coeffs[halfn] = Coeff::one();
