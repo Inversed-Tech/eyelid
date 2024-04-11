@@ -192,10 +192,8 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
             res.mul_xn(half_chunk_size);
             res = albl.add(&res);
 
-            let mut xip1 = zero_poly(2 * chunk_size);
-            xip1.coeffs[2 * chunk_size] = Fq79::one();
-            let aux = arbr.naive_mul(&xip1);
-            res = res.add(aux);
+            arbr.mul_xn(2 * chunk_size);
+            res = res.add(arbr);
 
             polys_next_layer.push(res);
         }
