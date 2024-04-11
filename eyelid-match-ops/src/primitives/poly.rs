@@ -140,10 +140,7 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         // Compute res = al.bl + (y - al.bl - ar.br)xˆ1 + (ar.br)x^2
         res = res.sub(&albl);
         res = res.sub(&arbr);
-        let mut xnb2 = zero_poly(chunk_size);
-        xnb2.coeffs[chunk_size] = Fq79::one();
-        // TODO: use specific function for this kind of shift, as described above
-        res = res.naive_mul(&xnb2);
+        res.mul_xn(chunk_size);
         res = res.add(albl);
 
         // along the process part:
