@@ -167,8 +167,14 @@ pub fn bench_mod_poly_manual(settings: &mut Criterion) {
         &dividend,
         |benchmark, dividend| {
             benchmark.iter_with_large_drop(|| {
-                // To avoid timing dropping the return value, this line must not end in ';'
-                poly::mod_poly_manual(dividend)
+                // TODO: work out how to avoid timing this clone
+                // (The production code already avoids cloning where possible.)
+                let mut dividend = dividend.clone();
+
+                poly::mod_poly_manual_mut(&mut dividend);
+
+                // To avoid timing dropping dividend, we return it instead
+                dividend
             })
         },
     );
@@ -185,7 +191,7 @@ pub fn bench_mod_poly_ark(settings: &mut Criterion) {
         |benchmark, dividend| {
             benchmark.iter_with_large_drop(|| {
                 // To avoid timing dropping the return value, this line must not end in ';'
-                poly::mod_poly_ark(dividend)
+                poly::mod_poly_ark_ref(dividend)
             })
         },
     );
