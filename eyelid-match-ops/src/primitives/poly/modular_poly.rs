@@ -31,6 +31,13 @@ mod trivial;
 
 /// A modular polynomial with coefficients in [`Coeff`], and maximum degree [`MAX_POLY_DEGREE`].
 /// The un-reduced polynomial modulus is [`POLY_MODULUS`](static@POLY_MODULUS).
+///
+/// In its canonical form, a polynomial is a list of coefficients from the constant term `X^0`
+/// to the degree `X^n`, where the highest coefficient is non-zero. Leading zero coefficients are
+/// not stored.
+///
+/// There is one more coefficient than the degree, because of the constant term. If the polynomial
+/// is the zero polynomial, the degree is `0`, and there are no coefficients.
 #[derive(
     Clone,
     Debug,
@@ -170,15 +177,38 @@ impl<'a> From<&DenseOrSparsePolynomial<'a, Coeff>> for Poly {
 impl Index<usize> for Poly {
     type Output = Coeff;
 
-    /// A trivial index forwarding implementation that panics.
+    /// Read the coefficient at `index`, panicking only when reading a leading zero index above
+    /// the maximum degree.
     ///
-    /// Panics indicate redundant code which should have stopped at the highest non-zero coefficient.
-    /// Using `self.coeffs.iter()` is one way to ensure the code only accesses real indexes.
+    /// Use this method instead of `self.coeffs[index]`, to avoid panics when reading leading zero
+    /// coefficients.
+    /// Use this method instead of `self.get(index)`, to avoid `None` returns when reading leading
+    /// zero coefficients.
+    ///
+    /// # Panics
+    ///
+    /// Only panics if index is:
+    /// - a leading zero coefficient (which is not represented in the underlying data), and
+    /// - above [`MAX_POLY_DEGREE`].
+    ///
+    /// Panics indicate redundant code which should have stopped at the highest non-zero
+    /// coefficient. Using `self.coeffs.iter()` is one way to ensure the code only accesses real
+    /// coefficients.
+    ///
+    /// In FHE, zero coefficients will be rare, because the 79 bits of the random coefficient
+    /// would all have to be zero. But for performance reasons, we still need to panic if the
+    /// coefficient at `index` is zero and above the maximum degree.
     fn index(&self, index: usize) -> &Self::Output {
-        self.coeffs.get(index).expect(
-            "accessed virtual leading zero coefficient: \
-            improve performance by stopping at the highest non-zero coefficient",
-        )
+        match self.coeffs.get(index) {
+            Some(coeff) => coeff,
+            None => {
+                if index <= MAX_POLY_DEGREE {
+                    &super::fq::COEFF_ZERO
+                } else {
+                    panic!("accessed virtual leading zero coefficient: improve performance by stopping at the highest non-zero coefficient")
+                }
+            }
+        }
     }
 }
 
