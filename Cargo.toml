@@ -40,5 +40,18 @@ criterion = { version = "0.5.1", default-features = false, features = ["cargo_be
 lazy_static = "1.4.0"
 rand = "0.8.5"
 
+# Compilation settings for performance
+[profile.release]
+panic = "abort"
+lto = true
+strip = "debuginfo"
+codegen-units = 1
+
+[profile.bench]
+panic = "abort"
+lto = true
+strip = "debuginfo"
+codegen-units = 1
+
 [workspace.lints.rust]
 unsafe_code = "forbid"

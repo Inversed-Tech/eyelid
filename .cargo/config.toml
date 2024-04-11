@@ -1,4 +1,14 @@
-# This file enabled clippy lints
+[build]
+# Low-level performance settings
+rustflags = ["-C", "target-cpu=native"]
+
+# Enable rustdoc lints
+rustdocflags = [
+    # Links in public docs can point to private items.
+    "-Arustdoc::private_intra_doc_links",
+]
+
+# Enable rustc and clippy lints.
 # Lint settings are configured in clippy.toml
 
 # Based on:
@@ -75,8 +85,3 @@ rustflags = [
     "-Wclippy::cast_sign_loss",
 ]
 
-[build]
-rustdocflags = [
-    # Links in public docs can point to private items.
-    "-Arustdoc::private_intra_doc_links",
-]
