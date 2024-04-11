@@ -102,8 +102,8 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         res.truncate_to_canonical_form();
     };
   
-    let result = mod_poly_manual(&res);
-    result
+    res.reduce_mod_poly();
+    res
 }
 
 /// Flat (without recursion) implementation of Karatsuba.
