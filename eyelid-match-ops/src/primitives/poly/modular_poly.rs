@@ -21,11 +21,16 @@ use derive_more::{Add, AsRef, Deref, DerefMut, Div, Into, Neg, Rem};
 
 use crate::primitives::poly::{mod_poly, mul_poly, Coeff};
 
+// Doc links
+#[allow(unused_imports)]
+use crate::primitives::poly::{modular_poly::modulus::POLY_MODULUS, MAX_POLY_DEGREE};
+
 pub(super) mod modulus;
 
 mod trivial;
 
 /// A modular polynomial with coefficients in [`Coeff`], and maximum degree [`MAX_POLY_DEGREE`].
+/// The un-reduced polynomial modulus is [`POLY_MODULUS`](static@POLY_MODULUS).
 #[derive(
     Clone,
     Debug,
