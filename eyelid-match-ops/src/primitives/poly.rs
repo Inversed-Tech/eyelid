@@ -189,13 +189,7 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
             res = res.sub(albl);
             res = res.sub(arbr);
             let half_chunk_size = chunk_size;
-            let mut xnb2 = zero_poly(half_chunk_size);
-            xnb2.coeffs[half_chunk_size] = Fq79::one();
-            // TODO: analyze efficiency of next naive_mul,
-            // because in principle this operation should be easy,
-            // since it is a shift in the coefficients vector (filling with zeros)
-            // Analogously for many other multiplications by a power fo X.
-            res = res.naive_mul(&xnb2);
+            res.mul_xn(half_chunk_size);
             res = albl.add(&res);
 
             let mut xip1 = zero_poly(2 * chunk_size);
