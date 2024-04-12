@@ -33,10 +33,13 @@ jobs:
       # We want to run tiny_poly to completion, so bugs are easier to diagnose
       fail-fast: false      
       matrix:
-        # rustc config options
-        cfg: ["", "--cfg tiny_poly"]
-        # cargo feature options, "--no-default-features" is the same as "" for now
-        features: ["", "--all-features"]
+        # rustc config options:
+        # * "--cfg tiny_poly" is covered by ci-test.yml
+        cfg: [""]
+        # cargo feature options:
+        # * "--no-default-features" is the same as "" for now
+        # * "--all-features" is the same as "--features benchmark" for now, which is covered by ci-bench.yml
+        features: [""]
 
     runs-on: ubuntu-latest
 

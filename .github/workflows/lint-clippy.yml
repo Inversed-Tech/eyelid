@@ -29,7 +29,8 @@ jobs:
       matrix:
         # rustc config options
         cfg: ["", "--cfg tiny_poly"]
-        # cargo feature options: "--all-features" covers "" and "--no-default-features" for now
+        # cargo feature options
+        # * "--all-features" covers "" and "--no-default-features" for now, because our features only add code
         features: ["--all-features"]
 
     runs-on: ubuntu-latest
