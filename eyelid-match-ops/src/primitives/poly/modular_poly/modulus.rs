@@ -1,10 +1,24 @@
-//! Reduction by the polynomial modulus.
+//! Reduction by the polynomial modulus `X^[MAX_POLY_DEGREE] + 1`.
+//!
+//! These are the parameters for full resolution, according to the Inversed Tech report.
+//! N = 2048
+//!
+//! The test parameters are specifically chosen to make failing tests easy to read and diagnose.
+//! N = 5
 
 use ark_ff::{One, Zero};
 use ark_poly::polynomial::{univariate::DenseOrSparsePolynomial, Polynomial};
 use lazy_static::lazy_static;
 
-use crate::primitives::poly::{Coeff, Poly, MAX_POLY_DEGREE};
+use crate::primitives::poly::{Coeff, Poly};
+
+/// The maximum exponent in the polynomial.
+#[cfg(not(tiny_poly))]
+pub const MAX_POLY_DEGREE: usize = 2048;
+
+/// The maximum exponent in the test-only polynomial.
+#[cfg(tiny_poly)]
+pub const MAX_POLY_DEGREE: usize = 5;
 
 lazy_static! {
     /// The polynomial modulus used for the polynomial field, `X^[MAX_POLY_DEGREE] + 1`.

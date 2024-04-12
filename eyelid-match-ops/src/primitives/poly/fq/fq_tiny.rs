@@ -1,14 +1,11 @@
 //! Tiny test-only parameters in 2^4.
 //!
 //! These test parameters are specifically chosen to make failing tests easy to read and diagnose.
-//! q = 2ˆ4, N = 5
+//! q = 2ˆ4
 
 #![cfg_attr(not(tiny_poly), allow(dead_code))]
 
 use ark_ff::{Fp64, MontBackend, MontConfig};
-
-/// The maximum exponent in the test-only polynomial.
-pub const MAX_POLY_DEGREE: usize = 5;
 
 /// The modular field used for test polynomial coefficients, with precomputed primes and generators.
 pub type Coeff = Fq4;

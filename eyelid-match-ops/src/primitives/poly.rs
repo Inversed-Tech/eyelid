@@ -7,9 +7,9 @@ use std::ops::{Add, Sub};
 use ark_ff::Zero;
 use ark_poly::polynomial::Polynomial;
 
-pub use fq::{Coeff, MAX_POLY_DEGREE};
+pub use fq::Coeff;
 pub use modular_poly::{
-    modulus::{mod_poly, POLY_MODULUS},
+    modulus::{mod_poly, MAX_POLY_DEGREE, POLY_MODULUS},
     Poly,
 };
 
