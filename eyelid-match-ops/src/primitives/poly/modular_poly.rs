@@ -171,7 +171,9 @@ impl Poly {
     /// Returns a new `Poly` filled with `n` zeroes.
     /// This is *not* the canonical form.
     fn non_canonical_zeroes(n: usize) -> Self {
-        Self::from_coefficients_vec(vec![Coeff::zero(); n])
+        Self(DensePolynomial {
+            coeffs: vec![Coeff::zero(); n],
+        })
     }
 }
 

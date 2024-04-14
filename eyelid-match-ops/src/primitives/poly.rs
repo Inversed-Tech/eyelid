@@ -188,9 +188,9 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         let b_chunks = poly_split(b, chunk_size);
         let layer_length = polys_current_layer.len();
         // Take 2
-        debug_assert!(a_chunks.len() == MAX_POLY_DEGREE / chunk_size);
-        debug_assert!(a_chunks.len() == b_chunks.len());
-        debug_assert!(a_chunks.len() == polys_current_layer.len());
+        debug_assert_eq!(a_chunks.len(), MAX_POLY_DEGREE / chunk_size);
+        debug_assert_eq!(a_chunks.len(), b_chunks.len());
+        debug_assert_eq!(a_chunks.len(), polys_current_layer.len());
         for j in 0..layer_length / 2 {
             // Take two polynomials each round
 
@@ -229,7 +229,7 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         chunk_size *= 2;
     }
 
-    debug_assert!(polys_current_layer.len() == 1);
+    debug_assert_eq!(polys_current_layer.len(), 1);
     let mut res = polys_current_layer.remove(0);
     res.reduce_mod_poly();
     res
