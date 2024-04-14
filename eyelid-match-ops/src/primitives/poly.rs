@@ -150,12 +150,12 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     // invariant: the number of coefficients is a power of 2
     const_assert_eq!(MAX_POLY_DEGREE.count_ones(), 1);
 
-    let mut first_layer_number = FLAT_KARATSUBA_INITIAL_LAYER; // 3
-    let mut chunk_size = 2usize.pow(first_layer_number - 1); // 4 = 2^(3-1)
-    let first_layer_length = MAX_POLY_DEGREE / chunk_size; // 2 = 8 / 4
+    let mut first_layer_number = FLAT_KARATSUBA_INITIAL_LAYER;
+    let mut chunk_size = 2usize.pow(first_layer_number - 1);
+    let first_layer_length = MAX_POLY_DEGREE / chunk_size;
     let mut polys_current_layer: Vec<Poly> = vec![];
     let mut polys_next_layer: Vec<Poly> = vec![];
-    let a_chunks = poly_split(a, chunk_size); // len = 2, chunk_size = 4
+    let a_chunks = poly_split(a, chunk_size);
     let b_chunks = poly_split(b, chunk_size);
 
     debug_assert_eq!(a_chunks.len(), MAX_POLY_DEGREE / chunk_size);
