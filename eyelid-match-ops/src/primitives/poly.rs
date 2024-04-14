@@ -101,7 +101,7 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
             res = res.sub(&arbr);
         } else {
             // Otherwise proceed as usual
-            arbr. mul_xn(n);
+            arbr.mul_xn(n);
 
             res = res.add(arbr);
         }
@@ -109,7 +109,7 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         // After manually modifying the leading coefficients, ensure polynomials are in canonical form.
         res.truncate_to_canonical_form();
     };
-  
+
     res.reduce_mod_poly();
     res
 }
@@ -217,7 +217,10 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
 pub fn poly_split(a: &Poly, k: usize) -> Vec<Poly> {
     // TODO: review performance
     // TODO: k must be a power of 2, check it
-    a.coeffs.chunks(k).map(Poly::from_coefficients_slice).collect()
+    a.coeffs
+        .chunks(k)
+        .map(Poly::from_coefficients_slice)
+        .collect()
 }
 
 /// Split the polynomial into left and right parts.
