@@ -9,7 +9,7 @@ use ark_poly::polynomial::Polynomial;
 
 pub use fq::Coeff;
 pub use modular_poly::{
-    modulus::{mod_poly, MAX_POLY_DEGREE, POLY_MODULUS},
+    modulus::{mod_poly, FULL_RES_POLY_DEGREE, POLY_MODULUS},
     Poly,
 };
 
@@ -34,8 +34,11 @@ pub use cyclotomic_mul as mul_poly;
 pub const MIN_KARATSUBA_REC_DEGREE: usize = 32; // TODO: fine tune
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1`.
-/// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
-pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
+/// All polynomials have maximum degree `MAX_POLY_DEGREE`.
+pub fn cyclotomic_mul<const MAX_POLY_DEGREE: usize>(
+    a: &Poly<MAX_POLY_DEGREE>,
+    b: &Poly<MAX_POLY_DEGREE>,
+) -> Poly<MAX_POLY_DEGREE> {
     // TODO: change these assertions to debug_assert!() to avoid panics in production code.
     assert!(a.degree() <= MAX_POLY_DEGREE);
     assert!(b.degree() <= MAX_POLY_DEGREE);
@@ -65,8 +68,11 @@ pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
 }
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1` using recursive Karatsuba method.
-/// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
-pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
+/// All polynomials have maximum degree `MAX_POLY_DEGREE`.
+pub fn karatsuba_mul<const MAX_POLY_DEGREE: usize>(
+    a: &Poly<MAX_POLY_DEGREE>,
+    b: &Poly<MAX_POLY_DEGREE>,
+) -> Poly<MAX_POLY_DEGREE> {
     let mut res;
     let n = a.degree() + 1;
 
@@ -122,7 +128,11 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
 }
 
 /// Split the polynomial into left and right parts.
-pub fn poly_split(a: &Poly) -> (Poly, Poly) {
+/// All polynomials have maximum degree `MAX_POLY_DEGREE`. The modulus remains the same even after
+/// the split.
+pub fn poly_split<const MAX_POLY_DEGREE: usize>(
+    a: &Poly<MAX_POLY_DEGREE>,
+) -> (Poly<MAX_POLY_DEGREE>, Poly<MAX_POLY_DEGREE>) {
     // TODO: review performance
     let n = a.degree() + 1;
     let halfn = n / 2;
