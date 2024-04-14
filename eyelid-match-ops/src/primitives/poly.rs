@@ -6,6 +6,7 @@ use std::ops::{Add, Sub};
 
 use ark_ff::Zero;
 use ark_poly::polynomial::Polynomial;
+use static_assertions::const_assert_eq;
 
 pub use fq::{Coeff, MAX_POLY_DEGREE};
 pub use modular_poly::{
@@ -30,15 +31,21 @@ pub mod test;
 /// The fastest available cyclotomic polynomial multiplication operation (multiply then reduce).
 pub use naive_cyclotomic_mul as mul_poly;
 
-/// Minimum degree for recursive Karatsuba calls
-pub const MIN_KARATSUBA_REC_DEGREE: usize = 8; // TODO: fine tune
+/// Minimum degree for recursive Karatsuba calls.
+// TODO: fine tune this constant
+pub const REC_KARATSUBA_MIN_DEGREE: usize = 8;
+
+/// Initial layer parameter for the flat Karatsuba loop.
+/// The initial layer has polynomials with `2ˆ{FLAT_KARATSUBA_FIRST_LAYER - 1}` coefficients.
+//
+// TODO: fine tune this constant
+pub const FLAT_KARATSUBA_INITIAL_LAYER: u32 = 3;
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1`.
 /// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
 pub fn naive_cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
-    // TODO: change these assertions to debug_assert!() to avoid panics in production code.
-    assert!(a.degree() <= MAX_POLY_DEGREE);
-    assert!(b.degree() <= MAX_POLY_DEGREE);
+    debug_assert!(a.degree() <= MAX_POLY_DEGREE);
+    debug_assert!(b.degree() <= MAX_POLY_DEGREE);
 
     let mut res: Poly = a.naive_mul(b);
 
@@ -67,13 +74,19 @@ pub fn naive_cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
 /// Returns `a * b` followed by reduction mod `XˆN + 1` using recursive Karatsuba method.
 /// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
 pub fn rec_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
+    debug_assert!(a.degree() <= MAX_POLY_DEGREE);
+    debug_assert!(b.degree() <= MAX_POLY_DEGREE);
+
     let mut res;
-    let n = a.degree() + 1; // invariant: n is a power of 2
-    debug_assert!(n.count_ones() == 1); // checking the invariant
+    let n = a.degree() + 1;
+
+    // invariant: the number of coefficients is a power of 2, before and after this function runs
+    const_assert_eq!(MAX_POLY_DEGREE.count_ones(), 1);
+    const_assert_eq!(REC_KARATSUBA_MIN_DEGREE.count_ones(), 1);
 
     // if a or b has degree less than min, condition is true
-    let cond_a = a.degree() <= MIN_KARATSUBA_REC_DEGREE;
-    let cond_b = b.degree() <= MIN_KARATSUBA_REC_DEGREE;
+    let cond_a = a.degree() <= REC_KARATSUBA_MIN_DEGREE;
+    let cond_b = b.degree() <= REC_KARATSUBA_MIN_DEGREE;
     let rec_cond = cond_a || cond_b;
     if rec_cond {
         // If degree is less than the recursion minimum, just use the naive version
@@ -118,10 +131,16 @@ pub fn rec_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
 /// This implementation can be parallelized since for each layer
 /// we have that chunks are independent of each other.
 pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
+    debug_assert!(a.degree() <= MAX_POLY_DEGREE);
+    debug_assert!(b.degree() <= MAX_POLY_DEGREE);
+
     let n = a.degree() + 1;
     let recursion_height = usize::ilog2(n);
 
-    let mut first_layer_number = 3; // TODO: fine tune
+    // invariant: the number of coefficients is a power of 2
+    const_assert_eq!(MAX_POLY_DEGREE.count_ones(), 1);
+
+    let mut first_layer_number = FLAT_KARATSUBA_INITIAL_LAYER;
     let mut chunk_size = 2usize.pow(first_layer_number - 1);
     let first_layer_length = MAX_POLY_DEGREE / chunk_size;
     let mut polys_current_layer: Vec<Poly> = vec![];
@@ -214,7 +233,10 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
 /// Split the polynomial into left and right parts.
 pub fn poly_split(a: &Poly, k: usize) -> Vec<Poly> {
     // TODO: review performance
-    // TODO: k must be a power of 2, check it
+
+    // invariant: k must be a power of 2
+    debug_assert_eq!(k.count_ones(), 1);
+
     a.coeffs
         .chunks(k)
         .map(Poly::from_coefficients_slice)
@@ -223,16 +245,8 @@ pub fn poly_split(a: &Poly, k: usize) -> Vec<Poly> {
 
 /// Split the polynomial into left and right parts.
 pub fn poly_split_half(a: &Poly) -> (Poly, Poly) {
-    // TODO: review performance
     let n = a.degree() + 1;
     let halfn = n / 2;
 
-    let mut al = a.clone();
-    let ar = al.coeffs.split_off(halfn);
-
-    // After manually modifying the leading coefficients, ensure polynomials are in canonical form.
-    al.truncate_to_canonical_form();
-    let ar = Poly::from_coefficients_vec(ar);
-
-    (al, ar)
+    a.new_div_xn(halfn)
 }
