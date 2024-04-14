@@ -28,19 +28,19 @@ pub mod test;
 // TODO: move low-level multiplication code to `modular_poly::mul`
 
 /// The fastest available cyclotomic polynomial multiplication operation (multiply then reduce).
-pub use cyclotomic_mul as mul_poly;
+pub use naive_cyclotomic_mul as mul_poly;
 
 /// Minimum degree for recursive Karatsuba calls
 pub const MIN_KARATSUBA_REC_DEGREE: usize = 8; // TODO: fine tune
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1`.
 /// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
-pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
+pub fn naive_cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
     // TODO: change these assertions to debug_assert!() to avoid panics in production code.
     assert!(a.degree() <= MAX_POLY_DEGREE);
     assert!(b.degree() <= MAX_POLY_DEGREE);
 
-    let mut res: Poly = a.naive_mul(b).into();
+    let mut res: Poly = a.naive_mul(b);
 
     // debug_assert_eq!() always needs its arguments, even when the assertion itself is
     // conditionally compiled out using `if cfg!(debug_assertions)`.
@@ -66,7 +66,7 @@ pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1` using recursive Karatsuba method.
 /// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
-pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
+pub fn rec_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     let mut res;
     let n = a.degree() + 1; // invariant: n is a power of 2
     debug_assert!(n.count_ones() == 1); // checking the invariant
@@ -82,12 +82,12 @@ pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         // Otherwise recursively call for al.bl and ar.br
         let (al, ar) = poly_split_half(a);
         let (bl, br) = poly_split_half(b);
-        let albl = karatsuba_mul(&al, &bl);
-        let arbr = karatsuba_mul(&ar, &br);
+        let albl = rec_karatsuba_mul(&al, &bl);
+        let mut arbr = rec_karatsuba_mul(&ar, &br);
         let alpar = al.add(ar);
         let blpbr = bl.add(br);
         // Compute y = (al + ar).(bl + br)
-        let y = karatsuba_mul(&alpar, &blpbr);
+        let y = rec_karatsuba_mul(&alpar, &blpbr);
         // Compute res = al.bl + (y - al.bl - ar.br)xˆn/2 + (ar.br)x^n
         res = y.sub(&albl);
         res = res.sub(&arbr);
@@ -138,8 +138,8 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         let bl = &b_chunks[2 * i];
         let br = &b_chunks[2 * i + 1];
 
-        let albl = al.naive_mul(&bl);
-        let arbr = ar.naive_mul(&br);
+        let albl = al.naive_mul(bl);
+        let mut arbr = ar.naive_mul(br);
         let alpar = al.add(ar);
         let blpbr = bl.add(br);
         // Compute y = (al + ar).(bl + br)
@@ -152,11 +152,8 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         res = res.add(albl);
 
         // along the process part:
-        let mut xip1 = zero_poly(2 * chunk_size);
-        xip1.coeffs[2 * chunk_size] = Fq79::one();
-        // TODO: use specific function for this kind of shift, as described above
-        let aux = arbr.naive_mul(&xip1);
-        res = res.add(aux);
+        arbr.mul_xn(2 * chunk_size);
+        res = res.add(arbr);
 
         polys_current_layer.push(res);
     }
@@ -197,8 +194,8 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
             res.mul_xn(half_chunk_size);
             res = albl.add(&res);
 
-            arbr.mul_xn(2 * chunk_size);
-            res = res.add(arbr);
+            let aux = arbr.new_mul_xn(2 * chunk_size);
+            res = res.add(aux);
 
             polys_next_layer.push(res);
         }
@@ -209,8 +206,9 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     }
 
     debug_assert!(polys_current_layer.len() == 1);
-    polys_current_layer[0].reduce_mod_poly();
-    polys_current_layer[0]
+    let mut res = polys_current_layer.remove(0);
+    res.reduce_mod_poly();
+    res
 }
 
 /// Split the polynomial into left and right parts.

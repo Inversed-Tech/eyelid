@@ -81,7 +81,7 @@ impl Poly {
     pub fn naive_mul(&self, other: &Self) -> Self {
         // Deliberately avoid the modular reduction performed by `From`
         // Removing and replacing type wrappers is zero-cost at runtime.
-        Self(DensePolynomial::naive_mul(&self, other))
+        Self(DensePolynomial::naive_mul(self, other))
     }
 
     // Efficient Re-Implementations
@@ -106,6 +106,18 @@ impl Poly {
         self.coeffs.rotate_right(n);
 
         self.reduce_mod_poly();
+    }
+
+    /// Returns `self * X^n`, reduced if needed.
+    pub fn new_mul_xn(&self, n: usize) -> Self {
+        let mut res = Poly::non_canonical_zeroes(n + self.coeffs.len());
+
+        // Copy `self` into the highest coefficients of the polynomial.
+        res.coeffs.as_mut_slice()[n..].copy_from_slice(&self.coeffs);
+
+        res.reduce_mod_poly();
+
+        res
     }
 
     /// Divides `self` by `X^n`, and returns `(quotient, remainder)`.
@@ -142,6 +154,14 @@ impl Poly {
         while self.coeffs.last() == Some(&Coeff::zero()) {
             self.coeffs.pop();
         }
+    }
+
+    // Private Internal Operations
+
+    /// Returns a new `Poly` filled with `n` zeroes.
+    /// This is *not* the canonical form.
+    fn non_canonical_zeroes(n: usize) -> Self {
+        Self::from_coefficients_vec(vec![Coeff::zero(); n])
     }
 }
 
