@@ -51,6 +51,8 @@ mod trivial;
     Into,
     Neg,
     Add,
+    // We can't derive Sub because the inner type doesn't have the expected impls.
+    //Sub,
     // We don't implement DivAssign and RemAssign, because they have hidden clones.
     Div,
     Rem,

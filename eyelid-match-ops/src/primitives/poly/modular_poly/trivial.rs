@@ -57,12 +57,28 @@ impl One for Poly {
     }
 }
 
-// Poly + Poly is provided by the derive
+// Poly + Poly and similar are provided by the derive
 
 impl Add<&Poly> for Poly {
     type Output = Self;
 
     fn add(self, rhs: &Self) -> Poly {
+        Poly(&self.0 + &rhs.0)
+    }
+}
+
+impl Add<Poly> for &Poly {
+    type Output = Poly;
+
+    fn add(self, rhs: Poly) -> Poly {
+        Poly(&self.0 + &rhs.0)
+    }
+}
+
+impl<'a, 'b> Add<&'a Poly> for &'b Poly {
+    type Output = Poly;
+
+    fn add(self, rhs: &'a Poly) -> Poly {
         Poly(&self.0 + &rhs.0)
     }
 }
@@ -79,6 +95,22 @@ impl Sub<&Poly> for Poly {
     type Output = Self;
 
     fn sub(self, rhs: &Self) -> Poly {
+        Poly(&self.0 - &rhs.0)
+    }
+}
+
+impl Sub<Poly> for &Poly {
+    type Output = Poly;
+
+    fn sub(self, rhs: Poly) -> Poly {
+        Poly(&self.0 - &rhs.0)
+    }
+}
+
+impl<'a, 'b> Sub<&'a Poly> for &'b Poly {
+    type Output = Poly;
+
+    fn sub(self, rhs: &'a Poly) -> Poly {
         Poly(&self.0 - &rhs.0)
     }
 }
@@ -112,6 +144,14 @@ impl Mul<Coeff> for Poly {
     type Output = Self;
 
     fn mul(self, rhs: Coeff) -> Self {
+        Poly(&self.0 * rhs)
+    }
+}
+
+impl Mul<Coeff> for &Poly {
+    type Output = Poly;
+
+    fn mul(self, rhs: Coeff) -> Poly {
         Poly(&self.0 * rhs)
     }
 }
