@@ -72,6 +72,16 @@ impl Poly {
         Self::from_coefficients_vec(coeffs.to_vec())
     }
 
+    // Shadow DensePolynomial methods, so the types are all `Poly`
+
+    /// Perform a naive `O(n^2)` multiplication of `self` by `other`.
+    /// This returns the un-reduced form of the polynomial.
+    pub fn naive_mul(&self, other: &Self) -> Self {
+        // Deliberately avoid the modular reduction performed by `From`
+        // Removing and replacing type wrappers is zero-cost at runtime.
+        Self(DensePolynomial::naive_mul(&self, other))
+    }
+
     // Efficient Re-Implementations
 
     /// Returns `X^n` as a polynomial in reduced form.
