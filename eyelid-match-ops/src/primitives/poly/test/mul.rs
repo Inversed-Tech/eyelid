@@ -18,11 +18,7 @@ fn test_cyclotomic_mul_rand() {
     }
 
     // Xˆ{N-1}, multiplying by it will rotate by N-1 and negate (except the first).
-    //
-    // Since the degree is less than MAX_POLY_DEGREE, this is already reduced.
-    // It is also in canonical form, because the leading coefficient is non-zero.
-    let mut xnm1 = Poly::zero();
-    xnm1[MAX_POLY_DEGREE - 1] = Coeff::one();
+    let xnm1 = Poly::xn(MAX_POLY_DEGREE - 1);
 
     assert_eq!(xnm1.degree(), MAX_POLY_DEGREE - 1);
 
@@ -85,15 +81,16 @@ fn test_cyclotomic_mul_max_degree() {
 
         // X^i * X^{MAX_POLY_DEGREE - i} = X^MAX_POLY_DEGREE
 
-        // `p1` and `p2` are only reduced when i is `1..=(MAX_POLY_DEGREE-1)`.`
-        // But they are always in canonical form, because the leading coefficient is non-zero.
-        let mut p1 = Poly::zero();
-        p1[i] = Coeff::one();
+        // `p1` and `p2` are automatically reduced if needed.
+        let p1 = Poly::xn(i);
+        let p2 = Poly::xn(MAX_POLY_DEGREE - i);
 
-        let mut p2 = Poly::zero();
-        p2[MAX_POLY_DEGREE - i] = Coeff::one();
-
-        assert_eq!(p1.degree() + p2.degree(), MAX_POLY_DEGREE);
+        if i == 0 || i == MAX_POLY_DEGREE {
+            assert_eq!(p1.degree(), 0);
+            assert_eq!(p2.degree(), 0);
+        } else {
+            assert_eq!(p1.degree() + p2.degree(), MAX_POLY_DEGREE);
+        }
 
         let res = cyclotomic_mul(&p1, &p2);
 

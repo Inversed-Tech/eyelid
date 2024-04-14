@@ -14,6 +14,10 @@ concurrency:
   group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
   cancel-in-progress: true
 
+# If this workflow keeps failing, edit eyelid/.codespellrc to add more words to ignore,
+# <https://github.com/codespell-project/actions-codespell#usage>
+# or temporarily disable this workflow using the three dots next to "filter workflow runs" in the Actions tab
+# <https://github.com/Inversed-Tech/eyelid/actions/workflows/lint-spell.yml>
 jobs:
   codespell:
     name: Check Spelling
@@ -28,4 +32,5 @@ jobs:
         with:
           check_filenames: true
           check_hidden: true
-          only_warn: true
+          # setting this to any value will disable errors but keep annotations
+          #only_warn: true
