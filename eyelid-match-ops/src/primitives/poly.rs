@@ -39,7 +39,12 @@ pub const REC_KARATSUBA_MIN_DEGREE: usize = 8;
 /// The initial layer has polynomials with `2ˆ{FLAT_KARATSUBA_FIRST_LAYER - 1}` coefficients.
 //
 // TODO: fine tune this constant
+#[cfg(not(tiny_poly))]
 pub const FLAT_KARATSUBA_INITIAL_LAYER: u32 = 3;
+
+/// Tiny test polynomial initial layer parameter for the flat Karatsuba loop.
+#[cfg(tiny_poly)]
+pub const FLAT_KARATSUBA_INITIAL_LAYER: u32 = 1;
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1`.
 /// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
@@ -131,27 +136,30 @@ pub fn rec_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
 /// Flat (without recursion) implementation of Karatsuba.
 /// This implementation can be parallelized since for each layer
 /// we have that chunks are independent of each other.
+//
+// TODO:
+// - split the `for` and `while` loops into functions, and benchmark the overall performance.
+// - split large code blocks into smaller functions, and benchmark the overall performance.
+#[allow(clippy::cognitive_complexity)]
 pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     debug_assert!(a.degree() <= MAX_POLY_DEGREE);
     debug_assert!(b.degree() <= MAX_POLY_DEGREE);
 
-    let n = a.degree() + 1;
-    let recursion_height = usize::ilog2(n);
+    let recursion_height = usize::ilog2(MAX_POLY_DEGREE);
 
     // invariant: the number of coefficients is a power of 2
     const_assert_eq!(MAX_POLY_DEGREE.count_ones(), 1);
 
-    let mut first_layer_number = FLAT_KARATSUBA_INITIAL_LAYER;
-    let mut chunk_size = 2usize.pow(first_layer_number - 1);
-    let first_layer_length = MAX_POLY_DEGREE / chunk_size;
+    let mut first_layer_number = FLAT_KARATSUBA_INITIAL_LAYER; // 3
+    let mut chunk_size = 2usize.pow(first_layer_number - 1); // 4 = 2^(3-1)
+    let first_layer_length = MAX_POLY_DEGREE / chunk_size; // 2 = 8 / 4
     let mut polys_current_layer: Vec<Poly> = vec![];
     let mut polys_next_layer: Vec<Poly> = vec![];
-    let a_chunks = poly_split(a, chunk_size);
+    let a_chunks = poly_split(a, chunk_size); // len = 2, chunk_size = 4
     let b_chunks = poly_split(b, chunk_size);
 
-    // TODO:
-    // - split the `for` and `while` loops into functions, and benchmark the overall performance.
-    // - split large code blocks into smaller functions, and benchmark the overall performance.
+    debug_assert_eq!(a_chunks.len(), MAX_POLY_DEGREE / chunk_size);
+    debug_assert_eq!(a_chunks.len(), b_chunks.len());
 
     // Take 2 at each step
     for i in 0..first_layer_length / 2 {
@@ -181,6 +189,9 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
 
         polys_current_layer.push(res);
     }
+
+    debug_assert_eq!(a_chunks.len(), polys_current_layer.len());
+
     chunk_size *= 2;
 
     while first_layer_number < recursion_height {
