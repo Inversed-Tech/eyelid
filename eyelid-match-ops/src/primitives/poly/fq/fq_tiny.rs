@@ -8,7 +8,7 @@
 use ark_ff::{Fp64, MontBackend, MontConfig};
 
 /// The maximum exponent in the test-only polynomial.
-pub const MAX_POLY_DEGREE: usize = 5;
+pub const MAX_POLY_DEGREE: usize = 4;
 
 /// The modular field used for test polynomial coefficients, with precomputed primes and generators.
 pub type Coeff = Fq4;
