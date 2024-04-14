@@ -14,6 +14,12 @@ concurrency:
   group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
   cancel-in-progress: true
 
+# The actions variables and shell env namespaces are different, so we need to import every relevant variable here:
+# <https://github.com/Inversed-Tech/eyelid/settings/variables/actions>
+env:
+  # Logging
+  CARGO_TERM_COLOR: ${{ vars.CARGO_TERM_COLOR }}
+
 jobs:
   clippy:
     name: Check Rust Lints
@@ -23,7 +29,8 @@ jobs:
       matrix:
         # rustc config options
         cfg: ["", "--cfg tiny_poly"]
-        # cargo feature options: "--all-features" covers "" and "--no-default-features" for now
+        # cargo feature options
+        # * "--all-features" covers "" and "--no-default-features" for now, because our features only add code
         features: ["--all-features"]
 
     runs-on: ubuntu-latest
