@@ -92,6 +92,9 @@ pub fn rec_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         // If degree is less than the recursion minimum, just use the naive version
         res = a.naive_mul(b);
     } else {
+        // TODO: split this large code block into smaller functions, and benchmark the overall performance.
+        // (Smaller functions can be inlined, and the compiler can optimize better.)
+
         // Otherwise recursively call for al.bl and ar.br
         let (al, ar) = poly_split_half(a);
         let (bl, br) = poly_split_half(b);
@@ -118,11 +121,9 @@ pub fn rec_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
 
             res = res.add(arbr);
         }
-
-        // After manually modifying the leading coefficients, ensure polynomials are in canonical form.
-        res.truncate_to_canonical_form();
     };
 
+    // If reduction isn't needed, this is very cheap.
     res.reduce_mod_poly();
     res
 }
@@ -147,6 +148,10 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     let mut polys_next_layer: Vec<Poly> = vec![];
     let a_chunks = poly_split(a, chunk_size);
     let b_chunks = poly_split(b, chunk_size);
+
+    // TODO:
+    // - split the `for` and `while` loops into functions, and benchmark the overall performance.
+    // - split large code blocks into smaller functions, and benchmark the overall performance.
 
     // Take 2 at each step
     for i in 0..first_layer_length / 2 {
@@ -232,8 +237,6 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
 
 /// Split the polynomial into left and right parts.
 pub fn poly_split(a: &Poly, k: usize) -> Vec<Poly> {
-    // TODO: review performance
-
     // invariant: k must be a power of 2
     debug_assert_eq!(k.count_ones(), 1);
 
