@@ -145,7 +145,10 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     debug_assert!(a.degree() <= MAX_POLY_DEGREE);
     debug_assert!(b.degree() <= MAX_POLY_DEGREE);
 
-    let recursion_height = usize::ilog2(MAX_POLY_DEGREE);
+    /// The final number of layers in the flat Karatsuba `while` loop.
+    /// `FLAT_KARATSUBA_INITIAL_LAYER` skips some layers.
+    const RECURSION_HEIGHT: u32 = usize::ilog2(MAX_POLY_DEGREE);
+    const_assert!(FLAT_KARATSUBA_INITIAL_LAYER <= RECURSION_HEIGHT);
 
     // invariant: the number of coefficients is a power of 2
     const_assert_eq!(MAX_POLY_DEGREE.count_ones(), 1);
@@ -158,8 +161,8 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     let a_chunks = poly_split(a, chunk_size);
     let b_chunks = poly_split(b, chunk_size);
 
-    debug_assert_eq!(a_chunks.len(), MAX_POLY_DEGREE / chunk_size);
     debug_assert_eq!(a_chunks.len(), b_chunks.len());
+    debug_assert_eq!(a_chunks.len(), MAX_POLY_DEGREE / chunk_size);
 
     // Take 2 at each step
     for i in 0..first_layer_length / 2 {
@@ -190,18 +193,20 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         polys_current_layer.push(res);
     }
 
-    debug_assert_eq!(a_chunks.len(), polys_current_layer.len());
+    debug_assert_eq!(polys_current_layer.len(), a_chunks.len() * 2);
 
     chunk_size *= 2;
 
-    while first_layer_number < recursion_height {
+    while first_layer_number < RECURSION_HEIGHT {
         let a_chunks = poly_split(a, chunk_size);
         let b_chunks = poly_split(b, chunk_size);
         let layer_length = polys_current_layer.len();
+
         // Take 2
-        debug_assert_eq!(a_chunks.len(), MAX_POLY_DEGREE / chunk_size);
         debug_assert_eq!(a_chunks.len(), b_chunks.len());
         debug_assert_eq!(a_chunks.len(), polys_current_layer.len());
+        debug_assert_eq!(a_chunks.len(), MAX_POLY_DEGREE / chunk_size);
+
         for j in 0..layer_length / 2 {
             // Take two polynomials each round
 
