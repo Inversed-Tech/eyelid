@@ -166,9 +166,7 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     debug_assert_eq!(
         a_chunks.len(),
         MAX_POLY_DEGREE / chunk_size,
-        "\n\
-        chunks len: {MAX_POLY_DEGREE} / {chunk_size}\n\
-        chunk_size: 2^({FLAT_KARATSUBA_INITIAL_LAYER} - 1)"
+        "{MAX_POLY_DEGREE} / {chunk_size}"
     );
 
     // Take 2 at each step
@@ -262,18 +260,26 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     res
 }
 
-/// Split the polynomial into left and right parts.
+/// Split the polynomial into `MAX_POLY_DEGREE / k` parts.
+/// Any of the polnomials can be zero.
 pub fn poly_split(a: &Poly, k: usize) -> Vec<Poly> {
     // invariant: k must be a power of 2
     debug_assert_eq!(k.count_ones(), 1);
 
-    a.coeffs
+    let mut res: Vec<Poly> = a
+        .coeffs
         .chunks(k)
         .map(Poly::from_coefficients_slice)
-        .collect()
+        .collect();
+
+    // Pad with zeroes if needed.
+    res.resize(MAX_POLY_DEGREE / k, Poly::zero());
+
+    res
 }
 
 /// Split the polynomial into left and right parts.
+/// Either polnomial can be zero.
 pub fn poly_split_half(a: &Poly) -> (Poly, Poly) {
     let n = a.degree() + 1;
     let halfn = n / 2;
