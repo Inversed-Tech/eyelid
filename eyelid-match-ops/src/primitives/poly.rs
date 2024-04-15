@@ -110,28 +110,41 @@ pub fn rec_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         // (Smaller functions can be inlined, and the compiler can optimize better.)
 
         // Otherwise recursively call for al.bl and ar.br
-        let (al, ar) = poly_split_half(a);
-        let (bl, br) = poly_split_half(b);
+        let (mut al, ar) = poly_split_half(a);
+        let (mut bl, br) = poly_split_half(b);
+
         let albl = rec_karatsuba_mul(&al, &bl);
-        let mut arbr = rec_karatsuba_mul(&ar, &br);
-        let alpar = al.add(ar);
-        let blpbr = bl.add(br);
+        let arbr = rec_karatsuba_mul(&ar, &br);
+
+        al += ar;
+        let alpar = al;
+
+        bl += br;
+        let blpbr = bl;
+
         // Compute y = (al + ar).(bl + br)
-        let y = rec_karatsuba_mul(&alpar, &blpbr);
-        // Compute res = al.bl + (y - al.bl - ar.br)xˆn/2 + (ar.br)x^n
-        res = y.sub(&albl);
-        res = res.sub(&arbr);
+        let mut y = rec_karatsuba_mul(&alpar, &blpbr);
+
+        // Compute res = al.bl + (y - al.bl - ar.br)xˆn/2 + (ar.br)x^n,
+        // but in reverse order.
+
+        // + (ar.br)x^n
+        // This negates ar.br if n is equal to the max degree (terminating case),
+        // and negates any terms over the max degree if n is slightly less (leading zeroes edge case).
+        res = arbr.new_mul_xn(n);
+
+        // + (y - al.bl - ar.br)xˆn/2
+        y -= &albl;
+        y -= arbr;
 
         // `res` will be reduced if needed, but that should only happen once in the first loop.
         let halfn = n / 2;
-        res.mul_xn(halfn);
-        res = res.add(albl);
+        y.mul_xn(halfn);
 
-        // This negates ar.br if n is equal to the max degree (terminating case),
-        // and negates any terms over the max degree if n is slightly less (leading zeroes edge case).
-        arbr.mul_xn(n);
+        res += y;
 
-        res = res.add(arbr);
+        // + al.bl
+        res += albl;
     }
 
     // If reduction isn't needed, this is very cheap.
