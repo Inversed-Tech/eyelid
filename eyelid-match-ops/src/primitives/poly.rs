@@ -87,6 +87,16 @@ pub fn naive_cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1` using recursive Karatsuba method.
 /// The returned polynomial has a degree less than [`MAX_POLY_DEGREE`].
+///
+/// # Performance
+///
+/// This implementation should be compiled in release mode without debug checks.
+/// Some debug checks can slow it down by up to 25x:
+/// ```no_run
+/// debug = 2                                                                      
+/// debug-assertions = true                                                        
+/// overflow-checks = true  
+/// ```
 pub fn rec_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     rec_karatsuba_mul_inner(a, b, MAX_POLY_DEGREE)
 }
