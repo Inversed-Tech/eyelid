@@ -162,7 +162,12 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     let b_chunks = poly_split(b, chunk_size);
 
     debug_assert_eq!(a_chunks.len(), b_chunks.len());
-    debug_assert_eq!(a_chunks.len(), MAX_POLY_DEGREE / chunk_size);
+    debug_assert_eq!(
+        a_chunks.len(),
+        MAX_POLY_DEGREE / chunk_size,
+        "chunks len: {MAX_POLY_DEGREE} / {chunk_size}\n\
+        chunk_size: 2^({FLAT_KARATSUBA_INITIAL_LAYER} - 1)"
+    );
 
     // Take 2 at each step
     for i in 0..first_layer_length / 2 {
@@ -205,7 +210,11 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         // Take 2
         debug_assert_eq!(a_chunks.len(), b_chunks.len());
         debug_assert_eq!(a_chunks.len(), polys_current_layer.len());
-        debug_assert_eq!(a_chunks.len(), MAX_POLY_DEGREE / chunk_size);
+        debug_assert_eq!(
+            a_chunks.len(),
+            MAX_POLY_DEGREE / chunk_size,
+            "{MAX_POLY_DEGREE} / {chunk_size}"
+        );
 
         for j in 0..layer_length / 2 {
             // Take two polynomials each round
