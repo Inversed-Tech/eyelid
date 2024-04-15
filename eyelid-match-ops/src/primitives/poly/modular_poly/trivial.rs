@@ -59,6 +59,10 @@ impl One for Poly {
 
 // Poly + Poly and similar are provided by the derive
 
+// TODO:
+// Some missing truncate_leading_zeroes() can cause a panic in degree():
+// <https://github.com/Inversed-Tech/eyelid/issues/43>
+
 impl Add<&Poly> for Poly {
     type Output = Self;
 

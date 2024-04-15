@@ -88,6 +88,20 @@ pub fn naive_cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
 /// Returns `a * b` followed by reduction mod `XˆN + 1` using recursive Karatsuba method.
 /// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
 pub fn rec_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
+    dbg!("call");
+
+    dbg!(a);
+    dbg!(&a.coeffs);
+    dbg!(b);
+    dbg!(&b.coeffs);
+    let naive = a.naive_mul(b);
+    dbg!(&naive);
+    dbg!(&naive.coeffs);
+    let mut reduced = naive;
+    reduced.reduce_mod_poly();
+    dbg!(&reduced);
+    dbg!(&reduced.coeffs);
+
     debug_assert!(a.degree() <= MAX_POLY_DEGREE);
     debug_assert!(b.degree() <= MAX_POLY_DEGREE);
 
@@ -113,16 +127,25 @@ pub fn rec_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         let (mut al, ar) = poly_split_half(a);
         let (mut bl, br) = poly_split_half(b);
 
+        dbg!("albl");
         let albl = rec_karatsuba_mul(&al, &bl);
+        dbg!("arbr");
         let arbr = rec_karatsuba_mul(&ar, &br);
 
+        dbg!("alpar");
+        dbg!(&al);
+        dbg!(&ar);
         al += ar;
         let alpar = al;
 
+        dbg!("blpbr");
+        dbg!(&bl);
+        dbg!(&br);
         bl += br;
         let blpbr = bl;
 
         // Compute y = (al + ar).(bl + br)
+        dbg!("y");
         let mut y = rec_karatsuba_mul(&alpar, &blpbr);
 
         // Compute res = al.bl + (y - al.bl - ar.br)xˆn/2 + (ar.br)x^n,
