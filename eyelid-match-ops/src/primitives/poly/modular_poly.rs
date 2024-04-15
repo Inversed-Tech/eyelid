@@ -98,12 +98,8 @@ impl Poly {
 
     /// Multiplies `self` by `X^n`, then reduces if needed.
     pub fn mul_xn(&mut self, n: usize) {
-        // Puts `n` zeroes as the highest coefficients of the polynomial.
-        let new_len = self.coeffs.len() + n;
-        self.coeffs.resize(new_len, Coeff::zero());
-
-        // Moves those `n` zeroes to the lowest coefficients of the polynomial, and shifts the rest up.
-        self.coeffs.rotate_right(n);
+        // Insert `n` zeroes to the lowest coefficients of the polynomial, and shifts the rest up.
+        self.coeffs.splice(0..0, vec![Coeff::zero(); n]);
 
         self.reduce_mod_poly();
     }
@@ -124,6 +120,7 @@ impl Poly {
     pub fn div_xn(mut self, n: usize) -> (Self, Self) {
         // Make `self` the remainder by splitting off the quotient.
         let quotient = self.coeffs.split_off(n);
+        self.truncate_to_canonical_form();
 
         // TODO: `self` keeps the original capacity, is it more efficient to call `shrink_to_fit()` here?
         (Self::from_coefficients_vec(quotient), self)
