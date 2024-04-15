@@ -126,16 +126,13 @@ pub fn rec_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         let halfn = n / 2;
         res.mul_xn(halfn);
         res = res.add(albl);
-        if n >= MAX_POLY_DEGREE {
-            // negate ar.br if n is equal to the max degree (edge case)
-            res = res.sub(&arbr);
-        } else {
-            // Otherwise proceed as usual
-            arbr.mul_xn(n);
 
-            res = res.add(arbr);
-        }
-    };
+        // This negates ar.br if n is equal to the max degree (terminating case),
+        // and negates any terms over the max degree if n is slightly less (leading zeroes edge case).
+        arbr.mul_xn(n);
+
+        res = res.add(arbr);
+    }
 
     // If reduction isn't needed, this is very cheap.
     res.reduce_mod_poly();
