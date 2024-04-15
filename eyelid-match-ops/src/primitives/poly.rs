@@ -56,7 +56,7 @@ pub const FLAT_KARATSUBA_INITIAL_LAYER: u32 = 2;
 // TODO: move low-level multiplication code to `modular_poly::mul`
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1`.
-/// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
+/// The returned polynomial has a degree less than [`MAX_POLY_DEGREE`].
 pub fn naive_cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
     debug_assert!(a.degree() <= MAX_POLY_DEGREE);
     debug_assert!(b.degree() <= MAX_POLY_DEGREE);
@@ -86,31 +86,24 @@ pub fn naive_cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
 }
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1` using recursive Karatsuba method.
-/// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
+/// The returned polynomial has a degree less than [`MAX_POLY_DEGREE`].
 pub fn rec_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
-    dbg!("call");
+    rec_karatsuba_mul_inner(a, b, MAX_POLY_DEGREE)
+}
 
-    dbg!(a);
-    dbg!(&a.coeffs);
-    dbg!(b);
-    dbg!(&b.coeffs);
-    let naive = a.naive_mul(b);
-    dbg!(&naive);
-    dbg!(&naive.coeffs);
-    let mut reduced = naive;
-    reduced.reduce_mod_poly();
-    dbg!(&reduced);
-    dbg!(&reduced.coeffs);
-
-    debug_assert!(a.degree() <= MAX_POLY_DEGREE);
-    debug_assert!(b.degree() <= MAX_POLY_DEGREE);
-
-    let mut res;
-    let n = a.degree() + 1;
+/// Returns `a * b` followed by reduction mod `XˆN + 1` using recursive Karatsuba method.
+/// The returned polynomial has a degree less than or equal to `chunk`.
+///
+/// At each recusrsion level, polynomials start with maximum degree `chunk`, and are split to maximum degree `chunk/2`.
+fn rec_karatsuba_mul_inner(a: &Poly, b: &Poly, chunk: usize) -> Poly {
+    debug_assert!(a.degree() <= chunk);
+    debug_assert!(b.degree() <= chunk);
 
     // invariant: the number of coefficients is a power of 2, before and after this function runs
-    const_assert_eq!(MAX_POLY_DEGREE.count_ones(), 1);
+    debug_assert_eq!(chunk.count_ones(), 1);
     const_assert_eq!(REC_KARATSUBA_MIN_DEGREE.count_ones(), 1);
+
+    let mut res;
 
     // if a or b has degree less than min, condition is true
     let cond_a = a.degree() <= REC_KARATSUBA_MIN_DEGREE;
@@ -124,50 +117,46 @@ pub fn rec_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         // (Smaller functions can be inlined, and the compiler can optimize better.)
 
         // Otherwise recursively call for al.bl and ar.br
-        let (mut al, ar) = poly_split_half(a);
-        let (mut bl, br) = poly_split_half(b);
+        let (mut al, ar) = poly_split_half(a, chunk);
+        let (mut bl, br) = poly_split_half(b, chunk);
 
-        dbg!("albl");
-        let albl = rec_karatsuba_mul(&al, &bl);
-        dbg!("arbr");
-        let arbr = rec_karatsuba_mul(&ar, &br);
+        let albl = rec_karatsuba_mul_inner(&al, &bl, chunk / 2);
+        let arbr = rec_karatsuba_mul_inner(&ar, &br, chunk / 2);
 
-        dbg!("alpar");
-        dbg!(&al);
-        dbg!(&ar);
         al += ar;
         let alpar = al;
 
-        dbg!("blpbr");
-        dbg!(&bl);
-        dbg!(&br);
         bl += br;
         let blpbr = bl;
 
-        // Compute y = (al + ar).(bl + br)
-        dbg!("y");
-        let mut y = rec_karatsuba_mul(&alpar, &blpbr);
+        // Compute:
+        // y = (al + ar).(bl + br)
+        //   = al.bl + al.br + ar.bl + ar.br
+        let mut y = rec_karatsuba_mul_inner(&alpar, &blpbr, chunk / 2);
 
-        // Compute res = al.bl + (y - al.bl - ar.br)xˆn/2 + (ar.br)x^n,
+        // Compute:
+        // res = al.bl + (y - al.bl - ar.br)xˆn/2 + (ar.br)x^n
+        //     = al.bl + (al.br + ar.bl)xˆn/2 + (ar.br)x^n
         // but in reverse order.
 
         // + (ar.br)x^n
         // This negates ar.br if n is equal to the max degree (terminating case),
         // and negates any terms over the max degree if n is slightly less (leading zeroes edge case).
-        res = arbr.new_mul_xn(n);
+        res = arbr.new_mul_xn(chunk);
 
         // + (y - al.bl - ar.br)xˆn/2
         y -= &albl;
         y -= arbr;
 
         // `res` will be reduced if needed, but that should only happen once in the first loop.
-        let halfn = n / 2;
-        y.mul_xn(halfn);
+        y.mul_xn(chunk / 2);
 
         res += y;
 
         // + al.bl
         res += albl;
+
+        debug_assert_eq!(res, naive_cyclotomic_mul(a, b), "\n{a:?}\n*\n{b:?}\n")
     }
 
     // If reduction isn't needed, this is very cheap.
@@ -175,7 +164,9 @@ pub fn rec_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     res
 }
 
-/// Flat (without recursion) implementation of Karatsuba.
+/// Returns `a * b` followed by reduction mod `XˆN + 1` using flat Karatsuba method.
+/// The returned polynomial has a degree less than [`MAX_POLY_DEGREE`].
+///
 /// This implementation can be parallelized since for each layer
 /// we have that chunks are independent of each other.
 //
@@ -302,7 +293,7 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     res
 }
 
-/// Split the polynomial into `MAX_POLY_DEGREE / k` parts.
+/// Split the polynomial into `MAX_POLY_DEGREE / k` parts, in order from the constant term to the degree.
 /// Any of the polnomials can be zero.
 pub fn poly_split(a: &Poly, k: usize) -> Vec<Poly> {
     // invariant: k must be a power of 2
@@ -320,11 +311,12 @@ pub fn poly_split(a: &Poly, k: usize) -> Vec<Poly> {
     res
 }
 
-/// Split the polynomial into left and right parts.
+/// Split the polynomial into left and right parts of size `chunk / 2`.
 /// Either polnomial can be zero.
-pub fn poly_split_half(a: &Poly) -> (Poly, Poly) {
-    let n = a.degree() + 1;
-    let halfn = n / 2;
+///
+/// Returns `(low, high)`, where `low` contains the constant term.
+pub fn poly_split_half(a: &Poly, chunk: usize) -> (Poly, Poly) {
+    let (quotient, remainder) = a.new_div_xn(chunk / 2);
 
-    a.new_div_xn(halfn)
+    (remainder, quotient)
 }

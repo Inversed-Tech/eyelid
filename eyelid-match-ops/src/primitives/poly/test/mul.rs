@@ -116,7 +116,7 @@ where
         let res = mul_fn(&p1, &p2);
 
         // Make sure it's X^N
-        assert_eq!(res, x_max);
+        assert_eq!(res, x_max, "x^{i} * x^{}", MAX_POLY_DEGREE - i);
     }
 }
 
