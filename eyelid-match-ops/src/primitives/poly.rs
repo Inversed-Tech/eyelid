@@ -44,7 +44,7 @@ pub const FLAT_KARATSUBA_INITIAL_LAYER: u32 = 3;
 
 /// Tiny test polynomial initial layer parameter for the flat Karatsuba loop.
 #[cfg(tiny_poly)]
-pub const FLAT_KARATSUBA_INITIAL_LAYER: u32 = 1;
+pub const FLAT_KARATSUBA_INITIAL_LAYER: u32 = 2;
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1`.
 /// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
@@ -149,6 +149,7 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     /// `FLAT_KARATSUBA_INITIAL_LAYER` skips some layers.
     const RECURSION_HEIGHT: u32 = usize::ilog2(MAX_POLY_DEGREE);
     const_assert!(FLAT_KARATSUBA_INITIAL_LAYER <= RECURSION_HEIGHT);
+    const_assert!(FLAT_KARATSUBA_INITIAL_LAYER > 1);
 
     // invariant: the number of coefficients is a power of 2
     const_assert_eq!(MAX_POLY_DEGREE.count_ones(), 1);
@@ -165,7 +166,8 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     debug_assert_eq!(
         a_chunks.len(),
         MAX_POLY_DEGREE / chunk_size,
-        "chunks len: {MAX_POLY_DEGREE} / {chunk_size}\n\
+        "\n\
+        chunks len: {MAX_POLY_DEGREE} / {chunk_size}\n\
         chunk_size: 2^({FLAT_KARATSUBA_INITIAL_LAYER} - 1)"
     );
 
