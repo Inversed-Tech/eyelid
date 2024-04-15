@@ -119,8 +119,15 @@ impl Poly {
     /// Divides `self` by `X^n`, and returns `(newly allocated quotient, self as remainder)`.
     pub fn div_xn(mut self, n: usize) -> (Self, Self) {
         // Make `self` the remainder by splitting off the quotient.
-        let quotient = self.coeffs.split_off(n);
-        self.truncate_to_canonical_form();
+        let quotient;
+
+        if n <= self.len() {
+            quotient = self.coeffs.split_off(n);
+            self.truncate_to_canonical_form();
+        } else {
+            // Poly::zero()
+            quotient = Vec::new();
+        };
 
         // TODO: `self` keeps the original capacity, is it more efficient to call `shrink_to_fit()` here?
         (Self::from_coefficients_vec(quotient), self)
@@ -128,11 +135,15 @@ impl Poly {
 
     /// Divides `self` by `X^n`, and returns a newly allocated `(quotient, remainder)`.
     pub fn new_div_xn(&self, n: usize) -> (Self, Self) {
-        // The returned vectors have the exact capacity needed, because they are new allocations.
-        let quotient = Poly::from_coefficients_slice(&self.coeffs[n..]);
-        let remainder = Poly::from_coefficients_slice(&self.coeffs[..n]);
+        if n <= self.len() {
+            // The returned vectors have the exact capacity needed, because they are new allocations.
+            let quotient = Poly::from_coefficients_slice(&self.coeffs[n..]);
+            let remainder = Poly::from_coefficients_slice(&self.coeffs[..n]);
 
-        (quotient, remainder)
+            (quotient, remainder)
+        } else {
+            (Poly::zero(), self.clone())
+        }
     }
 
     // Basic Internal Operations
