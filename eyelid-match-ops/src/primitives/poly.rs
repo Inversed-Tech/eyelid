@@ -193,7 +193,7 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         polys_current_layer.push(res);
     }
 
-    debug_assert_eq!(polys_current_layer.len(), a_chunks.len() * 2);
+    debug_assert_eq!(polys_current_layer.len() * 2, a_chunks.len());
 
     chunk_size *= 2;
 
