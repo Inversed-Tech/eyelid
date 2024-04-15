@@ -103,7 +103,7 @@ impl Poly {
         self.coeffs.resize(new_len, Coeff::zero());
 
         // Moves those `n` zeroes to the lowest coefficients of the polynomial, and shifts the rest up.
-        self.coeffs.rotate_right(n);
+        self.coeffs.rotate_left(n);
 
         self.reduce_mod_poly();
     }
