@@ -29,7 +29,7 @@ pub mod test;
 // TODO: move low-level multiplication code to `modular_poly::mul`
 
 /// The fastest available cyclotomic polynomial multiplication operation (multiply then reduce).
-pub use naive_cyclotomic_mul as mul_poly;
+pub use rec_karatsuba_mul as mul_poly;
 
 // TODO: move these constants to fq.rs?
 
