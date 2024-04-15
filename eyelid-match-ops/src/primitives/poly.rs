@@ -31,9 +31,16 @@ pub mod test;
 /// The fastest available cyclotomic polynomial multiplication operation (multiply then reduce).
 pub use naive_cyclotomic_mul as mul_poly;
 
+// TODO: move these constants to fq.rs?
+
 /// Minimum degree for recursive Karatsuba calls.
 // TODO: fine tune this constant
+#[cfg(not(tiny_poly))]
 pub const REC_KARATSUBA_MIN_DEGREE: usize = 8;
+
+/// Tiny test polynomial minimum degree for recursive Karatsuba calls.
+#[cfg(tiny_poly)]
+pub const REC_KARATSUBA_MIN_DEGREE: usize = 2;
 
 /// Initial layer parameter for the flat Karatsuba loop.
 /// The initial layer has polynomials with `2ˆ{FLAT_KARATSUBA_FIRST_LAYER - 1}` coefficients.
@@ -45,6 +52,8 @@ pub const FLAT_KARATSUBA_INITIAL_LAYER: u32 = 3;
 /// Tiny test polynomial initial layer parameter for the flat Karatsuba loop.
 #[cfg(tiny_poly)]
 pub const FLAT_KARATSUBA_INITIAL_LAYER: u32 = 2;
+
+// TODO: move low-level multiplication code to `modular_poly::mul`
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1`.
 /// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
