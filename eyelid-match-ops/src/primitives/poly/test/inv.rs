@@ -18,12 +18,7 @@ fn sample() -> Poly {
 
 #[test]
 fn test_inverse() {
-    loop {
-        let f = sample();
-        let out = inverse(&f);
-        if !out.is_err() {
-            out.unwrap();
-            break;
-        }
-    }
+    let f = sample();
+    let out = inverse(&f);
+    assert!(out.is_ok());
 }

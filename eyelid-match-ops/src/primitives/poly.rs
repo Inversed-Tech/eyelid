@@ -168,7 +168,7 @@ pub fn inverse(a: &Poly) -> Result<Poly, String> {
     let y = extended_gcd(&mod_pol, a);
     let mul_both = a.clone().mul(y.clone());
     if mul_both.is_one() {
-        Ok(y.into())
+        Ok(y)
     } else {
         Err("No inverse in the ring.".to_owned())
     }
@@ -203,7 +203,7 @@ pub fn extended_gcd(a: &Poly, b: &Poly) -> Poly {
     // yi+1 = yi-1 - q.yi
     let mut y_aux = y_cur.clone();
     let mul_res_y = y_cur.mul(&q.into());
-    y_cur = y_prev.sub(&mul_res_y.into());
+    y_cur = y_prev.sub(&mul_res_y);
     y_prev = y_aux;
     // loop until ri_cur = 0
     while !(ri_cur.is_zero()) {
@@ -228,7 +228,7 @@ pub fn extended_gcd(a: &Poly, b: &Poly) -> Poly {
     let divisor_inv = divisor[0].inverse();
     // y_cur / ri_prev
     let mut final_result = y_prev.clone();
-    for i in 0..y_prev.degree() + 1 {
+    for i in 0..=y_prev.degree() {
         final_result[i] = final_result[i].mul(divisor_inv.unwrap());
     }
     final_result
