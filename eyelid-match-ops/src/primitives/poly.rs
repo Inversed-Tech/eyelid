@@ -159,6 +159,7 @@ pub fn poly_split(a: &Poly) -> (Poly, Poly) {
 }
 
 /// Returns the inverse in the cyclotomic ring, if it exists.
+/// Otherwise, returns an error.
 pub fn inverse(a: &Poly) -> Result<Poly, String> {
     let mut mod_pol = Poly::zero();
 
@@ -174,62 +175,61 @@ pub fn inverse(a: &Poly) -> Result<Poly, String> {
     }
 }
 
-/// Returns polynomials x, y, d such that a.x + a.y = d.
+/// Helps to calculate the equation `cur = prev - q.cur`.
+fn update_diophantine(prev: Poly, cur: Poly, q: Poly) -> (Poly, Poly) {
+    let aux = cur.clone();
+    let mul_res = cur.mul(&q.clone());
+    let new_cur = prev.sub(&mul_res).clone();
+    let new_prev = aux.clone();
+
+    (new_cur, new_prev)
+}
+
+/// Returns polynomials x, y, d such that a.x + b.y = d.
 /// When d=1 we have that x is the multiplicative inverse of a.
 pub fn extended_gcd(a: &Poly, b: &Poly) -> Poly {
     // Invariant a.xi + b.yi = ri
 
     // init with x0=1, y0=0, r0=a
-    let mut x_prev = Poly::zero();
-    x_prev[0] = Coeff::one();
+    let mut x_prev = Poly::one();
     let mut y_prev = Poly::zero();
     let mut ri_prev = a.clone();
     // next:     x1=0, y1=1, r1=b
     let mut x_cur = Poly::zero();
-    let mut y_cur = Poly::zero();
-    y_cur[0] = Coeff::one();
+    let mut y_cur = Poly::one();
     let ri_cur = b.clone();
 
     let ri_aux = ri_cur.clone();
+    // TODO: q is just a monomial, then we can optimize the next computation
     let (mut q, mut ri_cur) = DenseOrSparsePolynomial::from(ri_prev.clone())
         .divide_with_q_and_r(&ri_cur.into())
-        .expect("divisor is not zero");
+        .expect("init divisor is not zero");
     ri_prev = ri_aux;
-    // xi+1 = xi-1 - q.xi
-    let mut x_aux = x_cur.clone();
-    let mul_res_x = x_cur.mul(&q.clone().into());
-    x_cur = x_prev.sub(&mul_res_x);
-    x_prev = x_aux;
-    // yi+1 = yi-1 - q.yi
-    let mut y_aux = y_cur.clone();
-    let mul_res_y = y_cur.mul(&q.into());
-    y_cur = y_prev.sub(&mul_res_y);
-    y_prev = y_aux;
+    // x_cur = x_prev - q.x_cur
+    (x_cur, x_prev) = update_diophantine(x_prev, x_cur, q.clone().into());
+    // y_cur = y_prev - q.y_cur
+    (y_cur, y_prev) = update_diophantine(y_prev, y_cur, q.clone().into());
     // loop until ri_cur = 0
     while !(ri_cur.is_zero()) {
         let ri_aux = ri_cur.clone();
+        // TODO: q is just a monomial, then we can optimize the next computation
         (q, ri_cur) = DenseOrSparsePolynomial::from(ri_prev.clone())
             .divide_with_q_and_r(&ri_cur.into())
-            .expect("divisor is not zero");
+            .expect("loop divisor is not zero");
         ri_prev = ri_aux.into();
-        // xi+1 = xi-1 - q.xi
-        x_aux = x_cur.clone();
-        let mul_res_x = q.naive_mul(&x_cur);
-        x_cur = x_prev.sub(&mul_res_x.into());
-        x_prev = x_aux;
-        // yi+1 = yi-1 - q.yi
-        y_aux = y_cur.clone();
-        let mul_res_y = q.naive_mul(&y_cur);
-        y_cur = y_prev.sub(&mul_res_y.into());
-        y_prev = y_aux;
+        // x_cur = x_prev - q.x_cur
+        (x_cur, x_prev) = update_diophantine(x_prev, x_cur, q.clone().into());
+        // y_cur = y_)prev - q.y_cur
+        (y_cur, y_prev) = update_diophantine(y_prev, y_cur, q.clone().into());
     }
-    // save ri_prev
-    let divisor = ri_prev.clone(); // TODO: check it is a constant
-    let divisor_inv = divisor[0].inverse();
+    // compute ri_prev inverse to calculate the final result
+    let divisor = ri_prev.clone();
+    debug_assert!(divisor.degree() == 0);
+    let divisor_inv = divisor[0].inverse().unwrap();
     // y_cur / ri_prev
     let mut final_result = y_prev.clone();
     for i in 0..=y_prev.degree() {
-        final_result[i] = final_result[i].mul(divisor_inv.unwrap());
+        final_result[i] = final_result[i].mul(divisor_inv);
     }
     final_result
 }

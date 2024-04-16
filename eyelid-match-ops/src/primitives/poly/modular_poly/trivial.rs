@@ -44,7 +44,7 @@ impl Zero for Poly {
 impl One for Poly {
     fn one() -> Self {
         let mut poly = Self::zero();
-        poly.coeffs[0] = Coeff::one();
+        poly[0] = Coeff::one();
         poly
     }
 

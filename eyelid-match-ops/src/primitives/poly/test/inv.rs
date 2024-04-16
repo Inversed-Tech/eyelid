@@ -3,6 +3,8 @@
 use super::super::*;
 use rand::Rng;
 
+/// This sampling is similar to what will be necessary for YASHE KeyGen
+/// TODO: generate Gaussian distribution instead of "uniform"
 fn sample() -> Poly {
     let mut rng = rand::thread_rng();
     let mut res = Poly::zero();
@@ -19,6 +21,9 @@ fn sample() -> Poly {
 #[test]
 fn test_inverse() {
     let f = sample();
+    // REMARK: For our parameter choices it is very likely to find
+    // the inverse in the first attempt.
+    // For small degree and coefficient modulus, the situation may change.
     let out = inverse(&f);
     assert!(out.is_ok());
 }
