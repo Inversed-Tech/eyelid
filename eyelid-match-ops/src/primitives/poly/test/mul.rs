@@ -4,13 +4,14 @@ use ark_ff::{One, Zero};
 use ark_poly::{univariate::DenseOrSparsePolynomial, Polynomial};
 
 use crate::primitives::poly::{
-    cyclotomic_mul, karatsuba_mul, test::gen::rand_poly, Coeff, Poly, FULL_RES_POLY_DEGREE,
+    cyclotomic_mul, karatsuba_mul, modular_poly::modulus::poly_modulus, test::gen::rand_poly,
+    Coeff, Poly, FULL_RES_POLY_DEGREE,
 };
 
 /// Test cyclotomic multiplication of a random polynomial by `X^{[MAX_POLY_DEGREE] - 1}`.
 #[test]
 fn test_cyclotomic_mul_rand() {
-    let p1 = rand_poly(FULL_RES_POLY_DEGREE - 1);
+    let p1: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE - 1);
 
     #[allow(clippy::int_plus_one)]
     {
@@ -44,13 +45,13 @@ fn test_cyclotomic_mul_max_degree() {
     //
     // Since the degree is equal to MAX_POLY_DEGREE, this is not reduced.
     // But it is in canonical form, because the leading coefficient is non-zero.
-    let mut x_max = Poly::zero();
+    let mut x_max: Poly<FULL_RES_POLY_DEGREE> = Poly::zero();
     x_max[FULL_RES_POLY_DEGREE] = Coeff::one();
 
     // Manually calculate the reduced representation of X^N as the constant `MODULUS - 1`.
     let x_max = DenseOrSparsePolynomial::from(x_max);
     let (q, x_max) = x_max
-        .divide_with_q_and_r(&*POLY_MODULUS)
+        .divide_with_q_and_r(&poly_modulus::<FULL_RES_POLY_DEGREE>())
         .expect("is divisible by X^MAX_POLY_DEGREE");
     let q: Poly<FULL_RES_POLY_DEGREE> = q.into();
     let x_max: Poly<FULL_RES_POLY_DEGREE> = x_max.into();
@@ -102,8 +103,8 @@ fn test_cyclotomic_mul_max_degree() {
 /// Test karatsuba and cyclotomic multiplication of two random polynomials produce the same result.
 #[test]
 fn test_karatsuba_mul_rand() {
-    let p1 = rand_poly(FULL_RES_POLY_DEGREE - 1);
-    let p2 = rand_poly(FULL_RES_POLY_DEGREE - 1);
+    let p1: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE - 1);
+    let p2: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE - 1);
 
     #[allow(clippy::int_plus_one)]
     {

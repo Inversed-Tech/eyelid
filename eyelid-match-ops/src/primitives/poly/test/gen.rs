@@ -10,7 +10,7 @@ use crate::primitives::poly::Poly;
 use crate::primitives::poly::Coeff;
 
 /// Returns an un-reduced cyclotomic polynomial of `degree`, with random coefficients in [`Coeff`].
-/// `degree` must be less than or equal to [`MAX_POLY_DEGREE`].
+/// `degree` must be less than or equal to `MAX_POLY_DEGREE`.
 ///
 /// In rare cases, the degree can be less than `degree`,
 /// because the random coefficient of `X^[MAX_POLY_DEGREE]` is zero.

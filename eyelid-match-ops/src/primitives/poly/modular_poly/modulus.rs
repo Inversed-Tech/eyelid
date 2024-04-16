@@ -2,7 +2,6 @@
 
 use ark_ff::{One, Zero};
 use ark_poly::polynomial::{univariate::DenseOrSparsePolynomial, Polynomial};
-use lazy_static::lazy_static;
 
 use crate::primitives::poly::{Coeff, Poly};
 
@@ -70,31 +69,11 @@ pub fn mod_poly_manual_ref<const MAX_POLY_DEGREE: usize>(
 pub fn mod_poly_ark_ref<const MAX_POLY_DEGREE: usize>(
     dividend: &Poly<MAX_POLY_DEGREE>,
 ) -> Poly<MAX_POLY_DEGREE> {
-    lazy_static! {
-        /// The polynomial modulus used for the polynomial field, `X^[MAX_POLY_DEGREE] + 1`.
-        /// This means that `X^[MAX_POLY_DEGREE] = -1`.
-        ///
-        /// This is the canonical but un-reduced form of the modulus, because the reduced form is the zero polynomial.
-        pub static ref POLY_MODULUS: DenseOrSparsePolynomial<'static, Coeff> = {
-            let mut poly = Poly::zero();
-
-            // Since the leading coefficient is non-zero, this is in canonical form.
-            // Resize to the maximum size first, to avoid repeated reallocations.
-            poly[MAX_POLY_DEGREE] = Coeff::one();
-            poly[0] = Coeff::one();
-
-            // Check canonicity and degree.
-            assert_eq!(poly.degree(), MAX_POLY_DEGREE);
-
-            poly.into()
-        };
-    }
-
     let dividend: DenseOrSparsePolynomial<'_, _> = dividend.into();
 
     // The DenseOrSparsePolynomial implementation ensures canonical form.
     let (_quotient, remainder) = dividend
-        .divide_with_q_and_r(&*POLY_MODULUS)
+        .divide_with_q_and_r(&poly_modulus::<MAX_POLY_DEGREE>())
         .expect("POLY_MODULUS is not zero");
 
     remainder.into()
@@ -107,4 +86,30 @@ pub fn mod_poly_ark_ref<const MAX_POLY_DEGREE: usize>(
 pub fn mod_poly_ark_mut<const MAX_POLY_DEGREE: usize>(dividend: &mut Poly<MAX_POLY_DEGREE>) {
     let remainder = mod_poly_ark_ref(dividend);
     *dividend = remainder;
+}
+
+/// The polynomial modulus used for the polynomial field, `X^[MAX_POLY_DEGREE] + 1`.
+/// This means that `X^[MAX_POLY_DEGREE] = -1`.
+///
+/// This is the canonical but un-reduced form of the modulus, because the reduced form is the zero polynomial.
+pub fn poly_modulus<const MAX_POLY_DEGREE: usize>() -> DenseOrSparsePolynomial<'static, Coeff> {
+    new_poly_modulus::<MAX_POLY_DEGREE>().into()
+}
+
+/// Constructs and returns a new polynomial modulus for the polynomial field, `X^[MAX_POLY_DEGREE] + 1`,
+/// in canonical but un-reduced form.
+///
+/// See [`poly_modulus()`] for details.
+fn new_poly_modulus<const MAX_POLY_DEGREE: usize>() -> Poly<MAX_POLY_DEGREE> {
+    let mut poly = Poly::zero();
+
+    // Since the leading coefficient is non-zero, this is in canonical form.
+    // Resize to the maximum size first, to avoid repeated reallocations.
+    poly[MAX_POLY_DEGREE] = Coeff::one();
+    poly[0] = Coeff::one();
+
+    // Check canonicity and degree.
+    assert_eq!(poly.degree(), MAX_POLY_DEGREE);
+
+    poly
 }
