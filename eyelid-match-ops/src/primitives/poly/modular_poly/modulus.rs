@@ -66,6 +66,7 @@ pub fn mod_poly_manual_ref<const MAX_POLY_DEGREE: usize>(
 /// Returns the remainder of `dividend % [POLY_MODULUS]`, as a polynomial.
 ///
 /// This uses an [`ark-poly`] library implementation, which always creates a new polynomial.
+#[cfg(any(test, feature = "benchmark"))]
 pub fn mod_poly_ark_ref<const MAX_POLY_DEGREE: usize>(
     dividend: &Poly<MAX_POLY_DEGREE>,
 ) -> Poly<MAX_POLY_DEGREE> {
@@ -73,7 +74,7 @@ pub fn mod_poly_ark_ref<const MAX_POLY_DEGREE: usize>(
 
     // The DenseOrSparsePolynomial implementation ensures canonical form.
     let (_quotient, remainder) = dividend
-        .divide_with_q_and_r(&poly_modulus::<MAX_POLY_DEGREE>())
+        .divide_with_q_and_r(&slow_new_poly_modulus::<MAX_POLY_DEGREE>().into())
         .expect("POLY_MODULUS is not zero");
 
     remainder.into()
@@ -88,19 +89,15 @@ pub fn mod_poly_ark_mut<const MAX_POLY_DEGREE: usize>(dividend: &mut Poly<MAX_PO
     *dividend = remainder;
 }
 
-/// The polynomial modulus used for the polynomial field, `X^[MAX_POLY_DEGREE] + 1`.
+/// Constructs and returns a new polynomial modulus used for the polynomial field, `X^[MAX_POLY_DEGREE] + 1`.
 /// This means that `X^[MAX_POLY_DEGREE] = -1`.
 ///
 /// This is the canonical but un-reduced form of the modulus, because the reduced form is the zero polynomial.
-pub fn poly_modulus<const MAX_POLY_DEGREE: usize>() -> DenseOrSparsePolynomial<'static, Coeff> {
-    new_poly_modulus::<MAX_POLY_DEGREE>().into()
-}
-
-/// Constructs and returns a new polynomial modulus for the polynomial field, `X^[MAX_POLY_DEGREE] + 1`,
-/// in canonical but un-reduced form.
 ///
-/// See [`poly_modulus()`] for details.
-fn new_poly_modulus<const MAX_POLY_DEGREE: usize>() -> Poly<MAX_POLY_DEGREE> {
+/// TODO: work out how to generically make this a lazy static.
+/// Crates like `interned` or `lazy_static` might help, but we'll have to expand their macros and make them generic.
+#[cfg(any(test, feature = "benchmark"))]
+pub fn slow_new_poly_modulus<const MAX_POLY_DEGREE: usize>() -> Poly<MAX_POLY_DEGREE> {
     let mut poly = Poly::zero();
 
     // Since the leading coefficient is non-zero, this is in canonical form.
