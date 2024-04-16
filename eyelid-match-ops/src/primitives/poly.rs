@@ -2,21 +2,19 @@
 //!
 //! This module contains the base implementations of complex polynomial operations, such as multiplication and reduction.
 
+use ark_ff::Field;
 use std::ops::{Add, Sub};
- use ark_ff::Field;
 
-use std::ops::Mul;
 use ark_ff::One;
 use ark_ff::Zero;
 use ark_poly::polynomial::Polynomial;
 use ark_poly::univariate::DenseOrSparsePolynomial;
-use ark_poly::univariate::DensePolynomial;
-
 pub use fq::{Coeff, MAX_POLY_DEGREE};
 pub use modular_poly::{
     modulus::{mod_poly, POLY_MODULUS},
     Poly,
 };
+use std::ops::Mul;
 
 // Use `mod_poly` outside this module, it is set to the fastest modulus operation.
 #[cfg(not(any(test, feature = "benchmark")))]
@@ -55,7 +53,6 @@ pub fn one_poly(degree: usize) -> Poly {
     poly.coeffs[0] = Coeff::one();
     poly
 }
-
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1`.
 /// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
@@ -161,6 +158,7 @@ pub fn poly_split(a: &Poly) -> (Poly, Poly) {
     (al, ar)
 }
 
+/// Returns the inverse in the cyclotomic ring, if it exists.
 pub fn inverse(a: &Poly) -> Result<Poly, String> {
     let mut mod_pol = Poly::zero();
 
@@ -182,7 +180,7 @@ pub fn extended_gcd(a: &Poly, b: &Poly) -> Poly {
     // Invariant a.xi + b.yi = ri
 
     // init with x0=1, y0=0, r0=a
-    let mut x_prev =  Poly::zero();
+    let mut x_prev = Poly::zero();
     x_prev[0] = Coeff::one();
     let mut y_prev = Poly::zero();
     let mut ri_prev = a.clone();
@@ -196,7 +194,7 @@ pub fn extended_gcd(a: &Poly, b: &Poly) -> Poly {
     let (mut q, mut ri_cur) = DenseOrSparsePolynomial::from(ri_prev.clone())
         .divide_with_q_and_r(&ri_cur.into())
         .expect("divisor is not zero");
-    ri_prev  = ri_aux;
+    ri_prev = ri_aux;
     // xi+1 = xi-1 - q.xi
     let mut x_aux = x_cur.clone();
     let mul_res_x = x_cur.mul(&q.clone().into());
@@ -213,7 +211,7 @@ pub fn extended_gcd(a: &Poly, b: &Poly) -> Poly {
         (q, ri_cur) = DenseOrSparsePolynomial::from(ri_prev.clone())
             .divide_with_q_and_r(&ri_cur.into())
             .expect("divisor is not zero");
-        ri_prev  = ri_aux.into();
+        ri_prev = ri_aux.into();
         // xi+1 = xi-1 - q.xi
         x_aux = x_cur.clone();
         let mul_res_x = q.naive_mul(&x_cur);
@@ -230,7 +228,7 @@ pub fn extended_gcd(a: &Poly, b: &Poly) -> Poly {
     let divisor_inv = divisor[0].inverse();
     // y_cur / ri_prev
     let mut final_result = y_prev.clone();
-    for i in 0..y_prev.degree()+1 {
+    for i in 0..y_prev.degree() + 1 {
         final_result[i] = final_result[i].mul(divisor_inv.unwrap());
     }
     final_result
