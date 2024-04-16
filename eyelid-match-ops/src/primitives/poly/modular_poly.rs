@@ -21,10 +21,6 @@ use derive_more::{Add, AsRef, Deref, DerefMut, Div, Into, Neg, Rem};
 
 use crate::primitives::poly::{mod_poly, mul_poly, Coeff};
 
-// Doc links
-#[allow(unused_imports)]
-use crate::primitives::poly::modular_poly::modulus::POLY_MODULUS;
-
 pub(super) mod modulus;
 
 mod trivial;

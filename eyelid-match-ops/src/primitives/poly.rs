@@ -9,7 +9,7 @@ use ark_poly::polynomial::Polynomial;
 
 pub use fq::Coeff;
 pub use modular_poly::{
-    modulus::{mod_poly, FULL_RES_POLY_DEGREE, POLY_MODULUS},
+    modulus::{mod_poly, FULL_RES_POLY_DEGREE},
     Poly,
 };
 
@@ -43,7 +43,7 @@ pub fn cyclotomic_mul<const MAX_POLY_DEGREE: usize>(
     assert!(a.degree() <= MAX_POLY_DEGREE);
     assert!(b.degree() <= MAX_POLY_DEGREE);
 
-    let mut res: Poly = a.naive_mul(b).into();
+    let mut res: Poly<MAX_POLY_DEGREE> = a.naive_mul(b).into();
 
     // debug_assert_eq!() always needs its arguments, even when the assertion itself is
     // conditionally compiled out using `if cfg!(debug_assertions)`.

@@ -16,9 +16,9 @@ pub const FULL_RES_POLY_DEGREE: usize = 2048;
 /// The maximum exponent in the test-only polynomial.
 ///
 /// The test parameters are specifically chosen to make failing tests easy to read and diagnose.
-/// N = 5
+/// N = 8
 #[cfg(tiny_poly)]
-pub const FULL_RES_POLY_DEGREE: usize = 5;
+pub const FULL_RES_POLY_DEGREE: usize = 8;
 
 /// The fastest available modular polynomial operation.
 pub use mod_poly_manual_mut as mod_poly;
