@@ -1,4 +1,4 @@
-name: 'Rust Clippy Lints'
+name: 'Clippy Lints'
 
 on:
   workflow_dispatch:
@@ -14,15 +14,32 @@ concurrency:
   group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
   cancel-in-progress: true
 
+# The actions variables and shell env namespaces are different, so we need to import every relevant variable here:
+# <https://github.com/Inversed-Tech/eyelid/settings/variables/actions>
+env:
+  # Logging
+  CARGO_TERM_COLOR: ${{ vars.CARGO_TERM_COLOR }}
+
 jobs:
   clippy:
+    name: Check Rust Lints
+
+    strategy:
+      # Most clippy errors will be duplicates, so we don't need to run to completion here
+      matrix:
+        # rustc config options
+        cfg: ["", "--cfg tiny_poly"]
+        # cargo feature options
+        # * "--all-features" covers "" and "--no-default-features" for now, because our features only add code
+        features: ["--all-features"]
+
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Clippy Lints
         uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features --all-targets -- -D warnings
+          args: --all-targets ${{ matrix.features}} -- -D warnings ${{ matrix.cfg}}

@@ -1,5 +1,14 @@
 # eyelid
+
 Private iris matching
+
+## Testing
+
+Temporarily switch to a tiny field to make test errors easier to debug:
+```sh
+RUSTFLAGS="--cfg tiny_poly" cargo test
+RUSTFLAGS="--cfg tiny_poly" cargo bench --features benchmark
+```
 
 ## Future Work
 

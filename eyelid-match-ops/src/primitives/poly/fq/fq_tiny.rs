@@ -1,30 +1,34 @@
-//! Tiny test-only parameters in 2^8.
+//! Tiny test-only parameters in 2^4.
 //!
 //! These test parameters are specifically chosen to make failing tests easy to read and diagnose.
-//! q = 2ˆ8, N = 4
+//! q = 2ˆ4, N = 5
+
+#![cfg_attr(not(tiny_poly), allow(dead_code))]
 
 use ark_ff::{Fp64, MontBackend, MontConfig};
 
 /// The maximum exponent in the test-only polynomial.
-pub const MAX_POLY_DEGREE: usize = 4;
+pub const MAX_POLY_DEGREE: usize = 5;
 
 /// The modular field used for test polynomial coefficients, with precomputed primes and generators.
-pub type Coeff = Fq8;
+pub type Coeff = Fq4;
 
 /// The configuration of the test-only modular field, used for polynomial coefficients.
+///
+/// Deliberately set to extremely small values, so that random polynomials are likely to have zeroes, ones, and minus ones.
 //
-// Sage commands:
-// random_prime(2**8)
-// 239
-// ff = GF(239)
-// ff.multiplicative_generator()
+// Sage commands, results from <https://sagecell.sagemath.org/>:
+// random_prime(2**4)
 // 7
+// ff = GF(7)
+// ff.multiplicative_generator()
+// 3
 //
 // We could also consider generating primes dynamically, but this could impact performance.
 #[derive(MontConfig)]
-#[modulus = "239"]
-#[generator = "7"]
-pub struct Fq8Config;
+#[modulus = "7"]
+#[generator = "3"]
+pub struct Fq4Config;
 
 /// The modular field used for test polynomial coefficients, with precomputed primes and generators.
-pub type Fq8 = Fp64<MontBackend<Fq8Config, 1>>;
+pub type Fq4 = Fp64<MontBackend<Fq4Config, 1>>;

@@ -1,8 +1,12 @@
 [package]
 name = "eyelid-match-ops"
+description = "Iris matching operations"
 
 # Configure in eyelid/Cargo.toml
+authors.workspace = true
 edition.workspace = true
+homepage.workspace = true
+license.workspace = true
 readme.workspace = true
 publish.workspace = true
 repository.workspace = true
@@ -16,12 +20,16 @@ benchmark = [
     "rand",
 ]
 
+# Temporarily switch to a tiny field to make test errors easier to debug:
+# RUSTFLAGS="--cfg tiny_poly" cargo test
+# RUSTFLAGS="--cfg tiny_poly" cargo bench --features benchmark
+
 [dependencies]
 ark-ff.workspace = true
 ark-poly.workspace = true
-ark-std.workspace = true
 
 bitvec.workspace = true
+derive_more.workspace = true
 lazy_static.workspace = true
 
 static_assertions.workspace = true

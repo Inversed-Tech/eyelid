@@ -1,4 +1,4 @@
-name: 'Rust Tests'
+name: 'Tests'
 
 on:
   workflow_dispatch:
@@ -14,25 +14,50 @@ concurrency:
   group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
   cancel-in-progress: true
 
+# The actions variables and shell env namespaces are different, so we need to import every relevant variable here:
+# <https://github.com/Inversed-Tech/eyelid/settings/variables/actions>
+env:
+  # Logging
+  CARGO_TERM_COLOR: ${{ vars.CARGO_TERM_COLOR }}
+  RUST_LOG: ${{ vars.RUST_LOG }}
+  # These backtrace variables are used by the `backtrace` crate to control the backtrace verbosity in binaries and libraries.
+  # We always want them set to the same value in CI. 
+  RUST_BACKTRACE: ${{ vars.RUST_BACKTRACE }}
+  RUST_LIB_BACKTRACE: ${{ vars.RUST_BACKTRACE }}
+
 jobs:
   test:
+    name: Rust Tests
+
+    strategy:
+      # We want to run tiny_poly to completion, so bugs are easier to diagnose
+      fail-fast: false      
+      matrix:
+        # rustc config options
+        cfg: ["", "--cfg tiny_poly"]
+        # cargo feature options:
+        # * "--no-default-features" is the same as "" for now
+        # * "--all-features" is the same as "--features benchmark" for now, which is covered by ci-bench.yml
+        features: [""]
+    
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: r7kamura/rust-problem-matchers@v1
 
       - name: Build Tests
         run: |
-          export RUSTFLAGS="-D warnings"
-          cargo test --no-run --all-features --all-targets
+          export RUSTFLAGS="-D warnings ${{ matrix.cfg}}"
+          cargo test --no-run --all-targets ${{ matrix.features}}
 
       - name: Run Tests
         run: |
-          export RUSTFLAGS="-D warnings"
-          cargo test --all-features --all-targets
+          export RUSTFLAGS="-D warnings ${{ matrix.cfg}}"
+          cargo test --all-targets ${{ matrix.features}}
 
       # For historical reasons, Rust documentation tests are not run by `cargo test`.
       - name: Run Doc Tests
         run: |
-          export RUSTFLAGS="-D warnings"
-          cargo test --doc --all-features
+          export RUSTFLAGS="-D warnings ${{ matrix.cfg}}"
+          cargo test --doc ${{ matrix.features}}

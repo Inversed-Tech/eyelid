@@ -1,55 +1,42 @@
-//! Cyclotomic polynomial operations using ark-poly
+//! Cyclotomic polynomial operations using ark-poly.
+//!
+//! This module contains the base implementations of complex polynomial operations, such as multiplication and reduction.
 
-use ark_ff::{One, Zero};
-use ark_poly::polynomial::{
-    univariate::{DenseOrSparsePolynomial, DensePolynomial},
-    Polynomial,
+use std::ops::{Add, Sub};
+ use ark_ff::Field;
+
+use std::ops::Mul;
+use ark_ff::One;
+use ark_ff::Zero;
+use ark_poly::polynomial::Polynomial;
+use ark_poly::univariate::DenseOrSparsePolynomial;
+use ark_poly::univariate::DensePolynomial;
+
+pub use fq::{Coeff, MAX_POLY_DEGREE};
+pub use modular_poly::{
+    modulus::{mod_poly, POLY_MODULUS},
+    Poly,
 };
-use lazy_static::lazy_static;
-use std::ops::Sub;
 
-pub mod fq79;
-pub mod fq8;
+// Use `mod_poly` outside this module, it is set to the fastest modulus operation.
+#[cfg(not(any(test, feature = "benchmark")))]
+use modular_poly::modulus::{mod_poly_ark_ref, mod_poly_manual_mut};
+#[cfg(any(test, feature = "benchmark"))]
+pub use modular_poly::modulus::{mod_poly_ark_ref, mod_poly_manual_mut};
+
+pub mod fq;
+pub mod modular_poly;
 
 #[cfg(any(test, feature = "benchmark"))]
 pub mod test;
 
-pub use fq79::{Coeff, MAX_POLY_DEGREE};
-// Temporarily switch to this tiny field to make test errors easier to debug.
-//pub use fq8::{Coeff, MAX_POLY_DEGREE};
+// TODO: move low-level multiplication code to `modular_poly::mul`
 
-/// A modular polynomial with coefficients in [`Coeff`],
-/// and maximum degree [`MAX_POLY_DEGREE`].
-//
-// TODO: replace this with a type wrapper that uses the constant degree MAX_POLY_DEGREE.
-pub type Poly = DensePolynomial<Coeff>;
+/// The fastest available cyclotomic polynomial multiplication operation (multiply then reduce).
+pub use cyclotomic_mul as mul_poly;
 
-lazy_static! {
-    /// The polynomial modulus used for the polynomial field, `X^[MAX_POLY_DEGREE] + 1`.
-    /// This means that `X^[MAX_POLY_DEGREE] = -1`.
-    pub static ref POLY_MODULUS: DenseOrSparsePolynomial<'static, Coeff> = {
-        let mut poly = zero_poly(MAX_POLY_DEGREE);
-
-        poly[MAX_POLY_DEGREE] = Coeff::one();
-        poly[0] = Coeff::one();
-
-        assert_eq!(poly.degree(), MAX_POLY_DEGREE);
-
-        poly.into()
-    };
-}
-
-/// Returns the zero polynomial with `degree`.
-///
-/// This is not the canonical form, but it's useful for creating other polynomials.
-/// (Non-canonical polynomials will panic when `degree()` is called on them.)
-pub fn zero_poly(degree: usize) -> Poly {
-    assert!(degree <= MAX_POLY_DEGREE);
-
-    let mut poly = Poly::zero();
-    poly.coeffs = vec![Coeff::zero(); degree + 1];
-    poly
-}
+/// Minimum degree for recursive Karatsuba calls
+pub const MIN_KARATSUBA_REC_DEGREE: usize = 32; // TODO: fine tune
 
 /// Returns a Boolean indicating if the input is equal or not to the additive
 /// identity in the polynomial ring
@@ -74,112 +61,177 @@ pub fn one_poly(degree: usize) -> Poly {
 /// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
 pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
     // TODO: change these assertions to debug_assert!() to avoid panics in production code.
-    dbg!("bug after");
     assert!(a.degree() <= MAX_POLY_DEGREE);
-    dbg!("bug before");
     assert!(b.degree() <= MAX_POLY_DEGREE);
 
-    let dividend = a.naive_mul(b);
+    let mut res: Poly = a.naive_mul(b).into();
 
-    // Use the fastest benchmark between mod_poly_manual() and mod_poly_ark() here,
+    // debug_assert_eq!() always needs its arguments, even when the assertion itself is
+    // conditionally compiled out using `if cfg!(debug_assertions)`.
+    // But when the assertion isn't compiled, the values of the arguments don't matter.
+    let dividend = if cfg!(debug_assertions) {
+        res.clone()
+    } else {
+        Poly::zero()
+    };
+
+    // Manually ensure the polynomial is reduced and in canonical form,
+    // so that we can check the alternate implementation in tests.
+    //
+    // Use the faster operation between mod_poly_manual*() and mod_poly_ark*() here,
     // and debug_assert_eq!() the other one.
-    let res = mod_poly_manual(&dividend);
-    debug_assert_eq!(res, mod_poly_ark(&dividend));
+    mod_poly_manual_mut(&mut res);
+    debug_assert_eq!(res, mod_poly_ark_ref(&dividend));
 
     assert!(res.degree() <= MAX_POLY_DEGREE);
 
     res
 }
 
-/// Returns the remainder of `dividend % [POLY_MODULUS]`, as a polynomial.
-///
-/// This is a manual implementation.
-pub fn mod_poly_manual(dividend: &Poly) -> Poly {
-    let mut res = dividend.clone();
+/// Returns `a * b` followed by reduction mod `XˆN + 1` using recursive Karatsuba method.
+/// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
+pub fn karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
+    let mut res;
+    let n = a.degree() + 1;
 
-    let mut i = MAX_POLY_DEGREE;
-    while i < res.coeffs.len() {
-        // In the cyclotomic ring we have that XˆN = -1,
-        // therefore all elements from N to 2N-1 are negated.
+    // if a or b has degree less than min, condition is true
+    let cond_a = a.degree() + 1 < MIN_KARATSUBA_REC_DEGREE;
+    let cond_b = b.degree() + 1 < MIN_KARATSUBA_REC_DEGREE;
+    let rec_cond = cond_a || cond_b;
+    if rec_cond {
+        // If degree is less than the recursion minimum, just use the naive version
+        res = cyclotomic_mul(a, b);
+    } else {
+        // Otherwise recursively call for al.bl and ar.br
+        let (al, ar) = poly_split(a);
+        let (bl, br) = poly_split(b);
+        let albl = karatsuba_mul(&al, &bl);
+        let arbr = karatsuba_mul(&ar, &br);
+        let alpar = al.add(ar);
+        let blpbr = bl.add(br);
+        // Compute y = (al + ar).(bl + br)
+        let y = karatsuba_mul(&alpar, &blpbr);
+        // Compute res = al.bl + (y - al.bl - ar.br)xˆn/2 + (ar.br)x^n
+        res = y.clone();
+        res = res.sub(&albl);
+        res = res.sub(&arbr);
 
-        let q = i / MAX_POLY_DEGREE;
-        let r = i % MAX_POLY_DEGREE;
-        if q % 2 == 1 {
-            res[r] = res[r] - res[i];
+        // If `a` is reduced, then `xnb2` will never need to be reduced.
+        let halfn = n / 2;
+        let xnb2 = Poly::xn(halfn);
+
+        res = cyclotomic_mul(&res.clone(), &xnb2);
+        res = res.add(albl);
+        if n >= MAX_POLY_DEGREE {
+            // negate ar.br if n is equal to the max degree (edge case)
+            res = res.sub(&arbr);
         } else {
-            res[r] = res[r] + res[i];
+            // Otherwise proceed as usual
+            //
+            // Even if `a` is reduced, `n` can still be over the maximum degree.
+            // But it will only reduce in the initial case, when `a` is the maximum reduced degree.
+            // And the reduction is quick, because it is only a single index.
+            let mut xn = Poly::xn(n);
+            xn.reduce_mod_poly();
+
+            let aux = cyclotomic_mul(&arbr, &xn);
+            res = res.add(aux);
         }
-        i += 1;
-    }
 
-    // These elements have already been negated and summed above.
-    res.coeffs.truncate(MAX_POLY_DEGREE);
-
-    // Leading elements might be zero, so make sure the polynomial is in the canonical form.
-    while res.coeffs.last() == Some(&Coeff::zero()) {
-        res.coeffs.pop();
-    }
+        // After manually modifying the leading coefficients, ensure polynomials are in canonical form.
+        res.truncate_to_canonical_form();
+    };
 
     res
 }
 
-/// Returns the remainder of `dividend % [POLY_MODULUS]`, as a polynomial.
-///
-/// This uses an [`ark-poly`] library implementation.
-pub fn mod_poly_ark(dividend: &Poly) -> Poly {
-    let dividend: DenseOrSparsePolynomial<'_, _> = dividend.into();
+/// Split the polynomial into left and right parts.
+pub fn poly_split(a: &Poly) -> (Poly, Poly) {
+    // TODO: review performance
+    let n = a.degree() + 1;
+    let halfn = n / 2;
 
-    let (_quotient, remainder) = dividend
-        .divide_with_q_and_r(&*POLY_MODULUS)
-        .expect("POLY_MODULUS is not zero");
+    let mut al = a.clone();
+    let ar = al.coeffs.split_off(halfn);
 
-    remainder
+    // After manually modifying the leading coefficients, ensure polynomials are in canonical form.
+    al.truncate_to_canonical_form();
+    let ar = Poly::from_coefficients_vec(ar);
+
+    (al, ar)
+}
+
+pub fn inverse(a: &Poly) -> Result<Poly, String> {
+    let mut mod_pol = Poly::zero();
+
+    mod_pol[MAX_POLY_DEGREE] = Coeff::one();
+    mod_pol[0] = Coeff::one();
+
+    let y = extended_gcd(&mod_pol, a);
+    let mul_both = a.clone().mul(y.clone());
+    if mul_both.is_one() {
+        Ok(y.into())
+    } else {
+        Err("No inverse in the ring.".to_owned())
+    }
 }
 
 /// Returns polynomials x, y, d such that a.x + a.y = d.
 /// When d=1 we have that x is the multiplicative inverse of a.
-pub fn extended_gcd(a: &Poly, b: Poly) -> (Poly, Poly, Poly) {
+pub fn extended_gcd(a: &Poly, b: &Poly) -> Poly {
     // Invariant a.xi + b.yi = ri
 
     // init with x0=1, y0=0, r0=a
-    let mut x_prev = one_poly(MAX_POLY_DEGREE);
-    let mut y_prev = zero_poly(MAX_POLY_DEGREE);
-    let ri_prev = a.clone();
+    let mut x_prev =  Poly::zero();
+    x_prev[0] = Coeff::one();
+    let mut y_prev = Poly::zero();
+    let mut ri_prev = a.clone();
     // next:     x1=0, y1=1, r1=b
-    // FIXME: we need a way to create the zero polynomial, whose degree is zero
-    // But right now if we use the zero_poly function, the program will panic when
-    // degree() is called inside cyclotomic_mul
-    // See Issue #13
-    let mut x_cur = zero_poly(0);
-    let mut y_cur = one_poly(0);
+    let mut x_cur = Poly::zero();
+    let mut y_cur = Poly::zero();
+    y_cur[0] = Coeff::one();
     let ri_cur = b.clone();
 
-    let mut dividend: DenseOrSparsePolynomial<'_, _> = ri_prev.clone().into();
-    let (mut ri_cur, mut q) = dividend
+    let ri_aux = ri_cur.clone();
+    let (mut q, mut ri_cur) = DenseOrSparsePolynomial::from(ri_prev.clone())
         .divide_with_q_and_r(&ri_cur.into())
-        .expect("POLY_MODULUS is not zero");
+        .expect("divisor is not zero");
+    ri_prev  = ri_aux;
     // xi+1 = xi-1 - q.xi
     let mut x_aux = x_cur.clone();
-    x_cur = x_prev.sub(&cyclotomic_mul(&q, &x_cur));
+    let mul_res_x = x_cur.mul(&q.clone().into());
+    x_cur = x_prev.sub(&mul_res_x);
     x_prev = x_aux;
     // yi+1 = yi-1 - q.yi
     let mut y_aux = y_cur.clone();
-    y_cur = y_prev.sub(&cyclotomic_mul(&q, &y_cur));
+    let mul_res_y = y_cur.mul(&q.into());
+    y_cur = y_prev.sub(&mul_res_y.into());
     y_prev = y_aux;
     // loop until ri_cur = 0
-    while !is_zero_poly(ri_cur.clone()) {
-        dividend = ri_prev.clone().into();
-        (ri_cur, q) = dividend
-            .divide_with_q_and_r(&*POLY_MODULUS)
-            .expect("POLY_MODULUS is not zero");
+    while !(ri_cur.is_zero()) {
+        let ri_aux = ri_cur.clone();
+        (q, ri_cur) = DenseOrSparsePolynomial::from(ri_prev.clone())
+            .divide_with_q_and_r(&ri_cur.into())
+            .expect("divisor is not zero");
+        ri_prev  = ri_aux.into();
         // xi+1 = xi-1 - q.xi
         x_aux = x_cur.clone();
-        x_cur = x_prev.sub(&cyclotomic_mul(&q, &x_cur));
+        let mul_res_x = q.naive_mul(&x_cur);
+        x_cur = x_prev.sub(&mul_res_x.into());
         x_prev = x_aux;
         // yi+1 = yi-1 - q.yi
         y_aux = y_cur.clone();
-        y_cur = y_prev.sub(&cyclotomic_mul(&q, &y_cur));
+        let mul_res_y = q.naive_mul(&y_cur);
+        y_cur = y_prev.sub(&mul_res_y.into());
         y_prev = y_aux;
     }
-    (x_cur, y_cur, ri_cur)
+    // save ri_prev
+    let divisor = ri_prev.clone(); // TODO: check it is a constant
+    let divisor_inv = divisor[0].inverse();
+    // y_cur / ri_prev
+    let mut final_result = y_prev.clone();
+    for i in 0..y_prev.degree()+1 {
+        final_result[i] = final_result[i].mul(divisor_inv.unwrap());
+    }
+    final_result
 }

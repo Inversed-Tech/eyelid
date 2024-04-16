@@ -1,0 +1,55 @@
+name: 'Rust Dependencies'
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+
+  pull_request:
+
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+# Based on https://github.com/ZcashFoundation/zebra/blob/49fca309cfe51b6a23a94e6404bd9036bd812588/.github/workflows/ci-unit-tests-os.yml#L201-L302
+jobs:
+  # Check Cargo.lock is up to date with Cargo.toml
+  lockfile:
+    name: Check Lockfile
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: r7kamura/rust-problem-matchers@v1
+
+      - name: Check Cargo.lock is up to date
+        # We don't need a matrix, because Cargo.lock includes all features and targets.
+        # (And we don't have different dependencies for --cfg.)
+        run: |
+          cargo check --locked --all-features --all-targets
+
+  unused-deps:
+    name: Check unused dependencies
+
+    # Dependencies need to be up to date before we check them.
+    needs: lockfile
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r7kamura/rust-problem-matchers@v1
+
+      - name: Install cargo-machete
+        uses: baptiste0928/cargo-install@v3
+        with:
+          crate: cargo-machete
+
+      - name: Check unused dependencies
+        run: |
+          cargo machete --skip-target-dir

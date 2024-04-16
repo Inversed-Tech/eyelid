@@ -1,18 +1,21 @@
 //! Test data generation for polynomials.
 
-use super::super::*;
+use ark_poly::{univariate::DensePolynomial, DenseUVPolynomial, Polynomial};
+use rand::Rng;
 
-/// Returns a cyclotomic polynomial of `degree`, with random coefficients in Fq79.
+use crate::primitives::poly::Poly;
+
+// Doc links only
+#[allow(unused_imports)]
+use crate::primitives::poly::{Coeff, MAX_POLY_DEGREE};
+
+/// Returns an un-reduced cyclotomic polynomial of `degree`, with random coefficients in [`Coeff`].
 /// `degree` must be less than or equal to [`MAX_POLY_DEGREE`].
 ///
 /// In rare cases, the degree can be less than `degree`,
 /// because the random coefficient of `X^[MAX_POLY_DEGREE]` is zero.
 pub fn rand_poly(degree: usize) -> Poly {
-    use ark_poly::DenseUVPolynomial;
     use rand::thread_rng;
-
-    // We need larger degrees in the polynomial modulus tests.
-    //assert!(degree <= MAX_POLY_DEGREE);
 
     // We can't use test_rng() here, because a deterministic RNG can make benchmarks inaccurate.
     let mut rng = thread_rng();
@@ -23,4 +26,14 @@ pub fn rand_poly(degree: usize) -> Poly {
     assert!(poly.degree() <= degree);
 
     poly
+}
+
+impl Poly {
+    // Shadow DenseUVPolynomial methods, but only make the method available in test code.
+
+    /// Returns a random polynomial with degree `d`.
+    /// Only for use in tests and benchmarks.
+    pub fn rand<R: Rng>(d: usize, rng: &mut R) -> Self {
+        DensePolynomial::rand(d, rng).into()
+    }
 }
