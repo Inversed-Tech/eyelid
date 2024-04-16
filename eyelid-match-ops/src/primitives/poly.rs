@@ -15,6 +15,7 @@ pub use modular_poly::{
     Poly,
 };
 use std::ops::Mul;
+use rand::Rng;
 
 // Use `mod_poly` outside this module, it is set to the fastest modulus operation.
 #[cfg(not(any(test, feature = "benchmark")))]
@@ -232,4 +233,19 @@ pub fn extended_gcd(a: &Poly, b: &Poly) -> Poly {
         final_result[i] = final_result[i].mul(divisor_inv);
     }
     final_result
+}
+
+/// This sampling is similar to what will be necessary for YASHE KeyGen
+/// TODO: generate Gaussian distribution instead of "uniform"
+pub fn sample() -> Poly {
+    let mut rng = rand::thread_rng();
+    let mut res = Poly::zero();
+    let max_coeff = 8;
+    let t = 2;
+    for i in 0..MAX_POLY_DEGREE {
+        let coeff_rand = rng.gen_range(1..max_coeff);
+        res[i] = Coeff::from(t * coeff_rand);
+    }
+    res[0] += Coeff::one();
+    res
 }

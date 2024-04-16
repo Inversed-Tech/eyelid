@@ -1,22 +1,6 @@
 //! Tests for polynomial inverse.
 
 use super::super::*;
-use rand::Rng;
-
-/// This sampling is similar to what will be necessary for YASHE KeyGen
-/// TODO: generate Gaussian distribution instead of "uniform"
-fn sample() -> Poly {
-    let mut rng = rand::thread_rng();
-    let mut res = Poly::zero();
-    let max_coeff = 8;
-    let t = 2;
-    for i in 0..MAX_POLY_DEGREE {
-        let coeff_rand = rng.gen_range(1..max_coeff);
-        res[i] = Coeff::from(t * coeff_rand);
-    }
-    res[0] += Coeff::one();
-    res
-}
 
 #[test]
 fn test_inverse() {

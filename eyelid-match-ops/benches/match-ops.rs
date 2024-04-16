@@ -14,6 +14,7 @@ use eyelid_match_ops::{
     },
     primitives::poly::{self, test::gen::rand_poly, MAX_POLY_DEGREE},
 };
+use eyelid_match_ops::primitives::poly::sample;
 
 // Configure Criterion:
 // Define one group for each equivalent operation, so we can compare their times.
@@ -49,12 +50,21 @@ criterion_group! {
     targets = bench_mod_poly_manual, bench_mod_poly_ark
 }
 
+criterion_group! {
+    name = bench_inverse;
+    // This can be any expression that returns a `Criterion` object.
+    config = Criterion::default();
+    // List polynomial modulus implementations here.
+    targets = bench_inv
+}
+
 // List groups here.
 criterion_main!(
     bench_full_match,
     bench_cyclotomic_multiplication,
     bench_poly_split_karatsuba,
-    bench_polynomial_modulus
+    bench_polynomial_modulus,
+    bench_inverse
 );
 
 /// Run [`plaintext::is_iris_match()`] as a Criterion benchmark with random data.
@@ -171,6 +181,26 @@ pub fn bench_mod_poly_ark(settings: &mut Criterion) {
             benchmark.iter_with_large_drop(|| {
                 // To avoid timing dropping the return value, this line must not end in ';'
                 poly::mod_poly_ark_ref(dividend)
+            })
+        },
+    );
+}
+
+/// Run [`poly::karatsuba_mul()`] as a Criterion benchmark with random data.
+pub fn bench_inv(settings: &mut Criterion) {
+    // Setup: generate random cyclotomic polynomials
+    let p = sample();
+
+    settings.bench_with_input(
+        BenchmarkId::new(
+            "Cyclotomic inverse: polynomial",
+            "1 relatively small random poly of degree N",
+        ),
+        &(p),
+        |benchmark, p| {
+            benchmark.iter_with_large_drop(|| {
+                // To avoid timing dropping the return value, this line must not end in ';'
+                poly::inverse(p)
             })
         },
     );
