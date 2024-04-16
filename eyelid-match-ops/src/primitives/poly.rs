@@ -92,10 +92,10 @@ pub fn naive_cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
 ///
 /// This implementation should be compiled in release mode without debug checks.
 /// Some debug checks can slow it down by up to 25x:
-/// ```no_run
-/// debug = 2                                                                      
-/// debug-assertions = true                                                        
-/// overflow-checks = true  
+/// ```text
+/// debug = 2
+/// debug-assertions = true
+/// overflow-checks = true
 /// ```
 pub fn rec_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
     rec_karatsuba_mul_inner(a, b, MAX_POLY_DEGREE)
