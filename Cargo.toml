@@ -28,8 +28,8 @@ ark-ff = "0.4.2"
 ark-poly = "0.4.2"
 ark-std = "0.4.0"
 bitvec = "1.0.1"
-# Full list at https://github.com/JelteF/derive_more/blob/v0.99.17/Cargo.toml#L42
-# When we upgrade to 1.0.0, it will be at https://github.com/JelteF/derive_more/blob/master/Cargo.toml#L49
+# Full list at <https://github.com/JelteF/derive_more/blob/v0.99.17/Cargo.toml#L42>
+# When we upgrade to 1.0.0, it will be at <https://github.com/JelteF/derive_more/blob/master/Cargo.toml#L49>
 derive_more = { version = "0.99.17", default-features = false, features = ["add", "add_assign", "as_ref", "deref", "deref_mut", "into", "mul", "mul_assign", "not"] }
 
 # Compile-time checks of production code
@@ -39,6 +39,14 @@ static_assertions = "1.1.0"
 criterion = { version = "0.5.1", default-features = false, features = ["cargo_bench_support", "rayon"] }
 lazy_static = "1.4.0"
 rand = "0.8.5"
+
+[patch.crates-io]
+# We need the AddAssign fix in <https://github.com/arkworks-rs/algebra/pull/638>, which was merged just after 0.4.2
+ark-poly = { git = "https://github.com/arkworks-rs/algebra", rev = "8233e9a3fc63370aef65ed24e0c7f6e07dac43e6" }
+ark-ff = { git = "https://github.com/arkworks-rs/algebra", rev = "8233e9a3fc63370aef65ed24e0c7f6e07dac43e6" }
+ark-ff-asm = { git = "https://github.com/arkworks-rs/algebra", rev = "8233e9a3fc63370aef65ed24e0c7f6e07dac43e6" }
+ark-serialize = { git = "https://github.com/arkworks-rs/algebra", rev = "8233e9a3fc63370aef65ed24e0c7f6e07dac43e6" }
+ark-serialize-derive = { git = "https://github.com/arkworks-rs/algebra", rev = "8233e9a3fc63370aef65ed24e0c7f6e07dac43e6" }
 
 # Compilation settings for performance
 [profile.release]
