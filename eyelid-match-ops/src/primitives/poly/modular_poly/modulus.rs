@@ -66,8 +66,7 @@ pub fn mod_poly_manual_ref<const MAX_POLY_DEGREE: usize>(
 /// Returns the remainder of `dividend % [POLY_MODULUS]`, as a polynomial.
 ///
 /// This uses an [`ark-poly`] library implementation, which always creates a new polynomial.
-#[cfg(any(debug, test, feature = "benchmark"))]
-pub fn mod_poly_ark_ref<const MAX_POLY_DEGREE: usize>(
+pub fn mod_poly_ark_ref_slow<const MAX_POLY_DEGREE: usize>(
     dividend: &Poly<MAX_POLY_DEGREE>,
 ) -> Poly<MAX_POLY_DEGREE> {
     use ark_poly::polynomial::univariate::DenseOrSparsePolynomial;

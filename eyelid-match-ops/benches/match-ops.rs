@@ -191,7 +191,7 @@ pub fn bench_mod_poly_ark(settings: &mut Criterion) {
         |benchmark, dividend| {
             benchmark.iter_with_large_drop(|| {
                 // To avoid timing dropping the return value, this line must not end in ';'
-                poly::mod_poly_ark_ref(dividend)
+                poly::mod_poly_ark_ref_slow(dividend)
             })
         },
     );

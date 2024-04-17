@@ -10,15 +10,17 @@ use static_assertions::const_assert_eq;
 
 pub use fq::Coeff;
 pub use modular_poly::{
-    modulus::{mod_poly, new_unreduced_poly_modulus_slow, FULL_RES_POLY_DEGREE},
+    modulus::{
+        mod_poly, mod_poly_ark_ref_slow, new_unreduced_poly_modulus_slow, FULL_RES_POLY_DEGREE,
+    },
     Poly,
 };
 
 // Use `mod_poly` outside this module, it is set to the fastest modulus operation.
-#[cfg(not(any(debug, test, feature = "benchmark")))]
+#[cfg(not(any(test, feature = "benchmark")))]
 use modular_poly::modulus::mod_poly_manual_mut;
-#[cfg(any(debug, test, feature = "benchmark"))]
-pub use modular_poly::modulus::{mod_poly_ark_ref, mod_poly_manual_mut};
+#[cfg(any(test, feature = "benchmark"))]
+pub use modular_poly::modulus::mod_poly_manual_mut;
 
 pub mod fq;
 pub mod modular_poly;
@@ -81,7 +83,7 @@ pub fn naive_cyclotomic_mul<const MAX_POLY_DEGREE: usize>(
     // Use the faster operation between mod_poly_manual*() and mod_poly_ark*() here,
     // and debug_assert_eq!() the other one.
     mod_poly_manual_mut(&mut res);
-    debug_assert_eq!(res, mod_poly_ark_ref(&dividend));
+    debug_assert_eq!(res, mod_poly_ark_ref_slow(&dividend));
 
     assert!(res.degree() <= MAX_POLY_DEGREE);
 
