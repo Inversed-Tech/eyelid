@@ -75,18 +75,20 @@ impl<const MAX_POLY_DEGREE: usize> Add<&Poly<MAX_POLY_DEGREE>> for Poly<MAX_POLY
     }
 }
 
-impl Add<Poly> for &Poly {
-    type Output = Poly;
+impl<const MAX_POLY_DEGREE: usize> Add<Poly<MAX_POLY_DEGREE>> for &Poly<MAX_POLY_DEGREE> {
+    type Output = Poly<MAX_POLY_DEGREE>;
 
-    fn add(self, rhs: Poly) -> Poly {
+    fn add(self, rhs: Poly<MAX_POLY_DEGREE>) -> Self::Output {
         Poly(&self.0 + &rhs.0)
     }
 }
 
-impl<'a, 'b> Add<&'a Poly> for &'b Poly {
-    type Output = Poly;
+impl<'a, 'b, const MAX_POLY_DEGREE: usize> Add<&'a Poly<MAX_POLY_DEGREE>>
+    for &'b Poly<MAX_POLY_DEGREE>
+{
+    type Output = Poly<MAX_POLY_DEGREE>;
 
-    fn add(self, rhs: &'a Poly) -> Poly {
+    fn add(self, rhs: &'a Poly<MAX_POLY_DEGREE>) -> Self::Output {
         Poly(&self.0 + &rhs.0)
     }
 }
@@ -107,18 +109,20 @@ impl<const MAX_POLY_DEGREE: usize> Sub<&Poly<MAX_POLY_DEGREE>> for Poly<MAX_POLY
     }
 }
 
-impl Sub<Poly> for &Poly {
-    type Output = Poly;
+impl<const MAX_POLY_DEGREE: usize> Sub<Poly<MAX_POLY_DEGREE>> for &Poly<MAX_POLY_DEGREE> {
+    type Output = Poly<MAX_POLY_DEGREE>;
 
-    fn sub(self, rhs: Poly) -> Poly {
+    fn sub(self, rhs: Poly<MAX_POLY_DEGREE>) -> Self::Output {
         Poly(&self.0 - &rhs.0)
     }
 }
 
-impl<'a, 'b> Sub<&'a Poly> for &'b Poly {
-    type Output = Poly;
+impl<'a, 'b, const MAX_POLY_DEGREE: usize> Sub<&'a Poly<MAX_POLY_DEGREE>>
+    for &'b Poly<MAX_POLY_DEGREE>
+{
+    type Output = Poly<MAX_POLY_DEGREE>;
 
-    fn sub(self, rhs: &'a Poly) -> Poly {
+    fn sub(self, rhs: &'a Poly<MAX_POLY_DEGREE>) -> Self::Output {
         Poly(&self.0 - &rhs.0)
     }
 }
@@ -156,10 +160,10 @@ impl<const MAX_POLY_DEGREE: usize> Mul<Coeff> for Poly<MAX_POLY_DEGREE> {
     }
 }
 
-impl Mul<Coeff> for &Poly {
-    type Output = Poly;
+impl<const MAX_POLY_DEGREE: usize> Mul<Coeff> for &Poly<MAX_POLY_DEGREE> {
+    type Output = Poly<MAX_POLY_DEGREE>;
 
-    fn mul(self, rhs: Coeff) -> Poly {
+    fn mul(self, rhs: Coeff) -> Self::Output {
         Poly(&self.0 * rhs)
     }
 }

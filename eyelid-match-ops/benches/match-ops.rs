@@ -122,8 +122,8 @@ pub fn bench_rec_karatsuba_mul(settings: &mut Criterion) {
 /// Run [`poly::flat_karatsuba_mul()`] as a Criterion benchmark with random data.
 pub fn bench_flat_karatsuba_mul(settings: &mut Criterion) {
     // Setup: generate random cyclotomic polynomials
-    let p1 = rand_poly(MAX_POLY_DEGREE);
-    let p2 = rand_poly(MAX_POLY_DEGREE);
+    let p1: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE);
+    let p2: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE);
 
     settings.bench_with_input(
         BenchmarkId::new(
@@ -151,7 +151,7 @@ pub fn bench_poly_split_half(settings: &mut Criterion) {
         |benchmark, p| {
             benchmark.iter_with_large_drop(|| {
                 // To avoid timing dropping the return value, this line must not end in ';'
-                poly::poly_split_half(p, MAX_POLY_DEGREE)
+                poly::poly_split_half(p, FULL_RES_POLY_DEGREE)
             })
         },
     );
