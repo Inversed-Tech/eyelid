@@ -10,17 +10,15 @@ use static_assertions::const_assert_eq;
 
 pub use fq::Coeff;
 pub use modular_poly::{
-    modulus::{mod_poly, FULL_RES_POLY_DEGREE},
+    modulus::{mod_poly, new_unreduced_poly_modulus_slow, FULL_RES_POLY_DEGREE},
     Poly,
 };
 
 // Use `mod_poly` outside this module, it is set to the fastest modulus operation.
-#[cfg(any(test, feature = "benchmark"))]
-pub use modular_poly::modulus::{
-    mod_poly_ark_ref, mod_poly_manual_mut, new_unreduced_poly_modulus_slow,
-};
-#[cfg(not(any(test, feature = "benchmark")))]
-use modular_poly::modulus::{mod_poly_manual_mut, new_unreduced_poly_modulus_slow};
+#[cfg(not(any(debug, test, feature = "benchmark")))]
+use modular_poly::modulus::mod_poly_manual_mut;
+#[cfg(any(debug, test, feature = "benchmark"))]
+pub use modular_poly::modulus::{mod_poly_ark_ref, mod_poly_manual_mut};
 
 pub mod fq;
 pub mod modular_poly;
