@@ -111,7 +111,11 @@ pub fn rec_karatsuba_mul<const MAX_POLY_DEGREE: usize>(
 /// The returned polynomial has a degree less than or equal to `chunk`.
 ///
 /// At each recusrsion level, polynomials start with maximum degree `chunk`, and are split to maximum degree `chunk/2`.
-fn rec_karatsuba_mul_inner<const MAX_POLY_DEGREE: usize>(a: &Poly<MAX_POLY_DEGREE>, b: &Poly<MAX_POLY_DEGREE>, chunk: usize) -> Poly<MAX_POLY_DEGREE> {
+fn rec_karatsuba_mul_inner<const MAX_POLY_DEGREE: usize>(
+    a: &Poly<MAX_POLY_DEGREE>,
+    b: &Poly<MAX_POLY_DEGREE>,
+    chunk: usize,
+) -> Poly<MAX_POLY_DEGREE> {
     debug_assert!(a.degree() <= chunk);
     debug_assert!(b.degree() <= chunk);
 
@@ -190,7 +194,10 @@ fn rec_karatsuba_mul_inner<const MAX_POLY_DEGREE: usize>(a: &Poly<MAX_POLY_DEGRE
 // - split the `for` and `while` loops into functions, and benchmark the overall performance.
 // - split large code blocks into smaller functions, and benchmark the overall performance.
 #[allow(clippy::cognitive_complexity)]
-pub fn flat_karatsuba_mul<const MAX_POLY_DEGREE: usize>(a: &Poly<MAX_POLY_DEGREE>, b: &Poly<MAX_POLY_DEGREE>) -> Poly<MAX_POLY_DEGREE> {
+pub fn flat_karatsuba_mul<const MAX_POLY_DEGREE: usize>(
+    a: &Poly<MAX_POLY_DEGREE>,
+    b: &Poly<MAX_POLY_DEGREE>,
+) -> Poly<MAX_POLY_DEGREE> {
     debug_assert!(a.degree() <= MAX_POLY_DEGREE);
     debug_assert!(b.degree() <= MAX_POLY_DEGREE);
 
@@ -308,7 +315,10 @@ pub fn flat_karatsuba_mul<const MAX_POLY_DEGREE: usize>(a: &Poly<MAX_POLY_DEGREE
 
 /// Split the polynomial into `MAX_POLY_DEGREE / k` parts, in order from the constant term to the degree.
 /// Any of the polnomials can be zero.
-pub fn poly_split<const MAX_POLY_DEGREE: usize>(a: &Poly<MAX_POLY_DEGREE>, k: usize) -> Vec<Poly<MAX_POLY_DEGREE>> {
+pub fn poly_split<const MAX_POLY_DEGREE: usize>(
+    a: &Poly<MAX_POLY_DEGREE>,
+    k: usize,
+) -> Vec<Poly<MAX_POLY_DEGREE>> {
     // invariant: k must be a power of 2
     debug_assert_eq!(k.count_ones(), 1);
 
