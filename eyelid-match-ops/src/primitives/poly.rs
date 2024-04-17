@@ -234,7 +234,6 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
         res.mul_xn(chunk_size);
         res = res.add(albl);
 
-        // along the process part:
         arbr.mul_xn(2 * chunk_size);
         res = res.add(arbr);
 
@@ -259,9 +258,8 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
             "{MAX_POLY_DEGREE} / {chunk_size}"
         );
 
+        // Take two polynomials each round
         for j in 0..layer_length / 2 {
-            // Take two polynomials each round
-
             // al, ar
             let al = &a_chunks[2 * j];
             let ar = &a_chunks[2 * j + 1];
@@ -269,10 +267,7 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
             let bl = &b_chunks[2 * j];
             let br = &b_chunks[2 * j + 1];
 
-            // NOT NEEDED, SINCE IT COMES FROM PREVIOUS LAYER
-            //let albl = al.naive_mul(&bl);
             let albl = &polys_current_layer[2 * j];
-            //let arbr = ar.naive_mul(&br);
             let arbr = &polys_current_layer[2 * j + 1];
             let alpar = al.add(ar);
             let blpbr = bl.add(br);
@@ -299,6 +294,7 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
 
     debug_assert_eq!(polys_current_layer.len(), 1);
     let mut res = polys_current_layer.remove(0);
+    // Just one final reduction is better than reducing along the computation
     res.reduce_mod_poly();
     res
 }
