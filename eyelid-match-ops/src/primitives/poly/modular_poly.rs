@@ -47,6 +47,8 @@ mod trivial;
     Into,
     Neg,
     Add,
+    // We can't derive Sub because the inner type doesn't have the expected impls.
+    //Sub,
     // We don't implement DivAssign and RemAssign, because they have hidden clones.
     Div,
     Rem,
@@ -71,6 +73,16 @@ impl<const MAX_POLY_DEGREE: usize> Poly<MAX_POLY_DEGREE> {
         Self::from_coefficients_vec(coeffs.to_vec())
     }
 
+    // Shadow DensePolynomial methods, so the types are all `Poly`
+
+    /// Perform a naive `O(n^2)` multiplication of `self` by `other`.
+    /// This returns the un-reduced form of the polynomial.
+    pub fn naive_mul(&self, other: &Self) -> Self {
+        // Deliberately avoid the modular reduction performed by `From`
+        // Removing and replacing type wrappers is zero-cost at runtime.
+        Self(DensePolynomial::naive_mul(self, other))
+    }
+
     // Efficient Re-Implementations
 
     /// Returns `X^n` as a polynomial in reduced form.
@@ -85,22 +97,52 @@ impl<const MAX_POLY_DEGREE: usize> Poly<MAX_POLY_DEGREE> {
 
     /// Multiplies `self` by `X^n`, then reduces if needed.
     pub fn mul_xn(&mut self, n: usize) {
-        // Puts `n` zeroes as the highest coefficients of the polynomial.
-        let new_len = self.coeffs.len() + n;
-        self.coeffs.resize(new_len, Coeff::zero());
-
-        // Moves those `n` zeroes to the lowest coefficients of the polynomial, and shifts the rest up.
-        self.coeffs.rotate_right(n);
+        // Insert `n` zeroes to the lowest coefficients of the polynomial, and shifts the rest up.
+        self.coeffs.splice(0..0, vec![Coeff::zero(); n]);
 
         self.reduce_mod_poly();
     }
 
-    /// Divides `self` by `X^n`, and returns `(quotient, remainder)`.
+    /// Returns `self * X^n`, reduced if needed.
+    pub fn new_mul_xn(&self, n: usize) -> Self {
+        let mut res = Poly::non_canonical_zeroes(n + self.coeffs.len());
+
+        // Copy `self` into the highest coefficients of the polynomial.
+        res.coeffs.as_mut_slice()[n..].copy_from_slice(&self.coeffs);
+
+        res.reduce_mod_poly();
+
+        res
+    }
+
+    /// Divides `self` by `X^n`, and returns `(newly allocated quotient, self as remainder)`.
     pub fn div_xn(mut self, n: usize) -> (Self, Self) {
         // Make `self` the remainder by splitting off the quotient.
-        let quotient = self.coeffs.split_off(n);
+        let quotient;
 
+        if n <= self.len() {
+            quotient = self.coeffs.split_off(n);
+            self.truncate_to_canonical_form();
+        } else {
+            // Poly::zero()
+            quotient = Vec::new();
+        };
+
+        // TODO: `self` keeps the original capacity, is it more efficient to call `shrink_to_fit()` here?
         (Self::from_coefficients_vec(quotient), self)
+    }
+
+    /// Divides `self` by `X^n`, and returns a newly allocated `(quotient, remainder)`.
+    pub fn new_div_xn(&self, n: usize) -> (Self, Self) {
+        if n <= self.len() {
+            // The returned vectors have the exact capacity needed, because they are new allocations.
+            let quotient = Poly::from_coefficients_slice(&self.coeffs[n..]);
+            let remainder = Poly::from_coefficients_slice(&self.coeffs[..n]);
+
+            (quotient, remainder)
+        } else {
+            (Poly::zero(), self.clone())
+        }
     }
 
     // Basic Internal Operations
@@ -129,6 +171,16 @@ impl<const MAX_POLY_DEGREE: usize> Poly<MAX_POLY_DEGREE> {
         while self.coeffs.last() == Some(&Coeff::zero()) {
             self.coeffs.pop();
         }
+    }
+
+    // Private Internal Operations
+
+    /// Returns a new `Poly` filled with `n` zeroes.
+    /// This is *not* the canonical form.
+    fn non_canonical_zeroes(n: usize) -> Self {
+        Self(DensePolynomial {
+            coeffs: vec![Coeff::zero(); n],
+        })
     }
 }
 
