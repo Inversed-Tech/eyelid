@@ -223,7 +223,7 @@ pub fn extended_gcd(a: &Poly, b: &Poly) -> Poly {
         (y_cur, y_prev) = update_diophantine(y_prev, y_cur, q.clone().into());
     }
     // compute ri_prev inverse to calculate the final result
-    let mut divisor = ri_prev.clone();
+    let divisor = ri_prev.clone();
     // FIXME: if b is not invertible mod a the assert is not going to pass.
     // Since the test is probabilistic, we have a small chance of failure.
     // It fails after a small number of executions.
