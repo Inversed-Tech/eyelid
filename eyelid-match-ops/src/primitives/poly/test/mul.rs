@@ -4,8 +4,8 @@ use ark_ff::{One, Zero};
 use ark_poly::{univariate::DenseOrSparsePolynomial, Polynomial};
 
 use crate::primitives::poly::{
-    flat_karatsuba_mul, modular_poly::modulus::slow_new_poly_modulus, naive_cyclotomic_mul,
-    rec_karatsuba_mul, test::gen::rand_poly, Coeff, Poly, FULL_RES_POLY_DEGREE,
+    flat_karatsuba_mul, naive_cyclotomic_mul, new_unreduced_poly_modulus_slow, rec_karatsuba_mul,
+    test::gen::rand_poly, Coeff, Poly, FULL_RES_POLY_DEGREE,
 };
 
 /// Test cyclotomic multiplication of a random polynomial by `X^{[MAX_POLY_DEGREE] - 1}`.
@@ -71,7 +71,7 @@ where
     // Manually calculate the reduced representation of X^N as the constant `MODULUS - 1`.
     let x_max = DenseOrSparsePolynomial::from(x_max);
     let (q, x_max) = x_max
-        .divide_with_q_and_r(&slow_new_poly_modulus::<MAX_POLY_DEGREE>().into())
+        .divide_with_q_and_r(&new_unreduced_poly_modulus_slow::<MAX_POLY_DEGREE>().into())
         .expect("is divisible by X^MAX_POLY_DEGREE");
     let q: Poly<MAX_POLY_DEGREE> = q.into();
     let x_max: Poly<MAX_POLY_DEGREE> = x_max.into();

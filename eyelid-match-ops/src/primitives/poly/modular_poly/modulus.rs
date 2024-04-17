@@ -1,9 +1,9 @@
 //! Reduction by the polynomial modulus `X^[MAX_POLY_DEGREE] + 1`.
 
 use ark_ff::{One, Zero};
-use ark_poly::polynomial::{univariate::DenseOrSparsePolynomial, Polynomial};
 
 use crate::primitives::poly::{Coeff, Poly};
+use ark_poly::polynomial::Polynomial;
 
 /// The maximum exponent in the polynomial.
 ///
@@ -70,11 +70,13 @@ pub fn mod_poly_manual_ref<const MAX_POLY_DEGREE: usize>(
 pub fn mod_poly_ark_ref<const MAX_POLY_DEGREE: usize>(
     dividend: &Poly<MAX_POLY_DEGREE>,
 ) -> Poly<MAX_POLY_DEGREE> {
+    use ark_poly::polynomial::univariate::DenseOrSparsePolynomial;
+
     let dividend: DenseOrSparsePolynomial<'_, _> = dividend.into();
 
     // The DenseOrSparsePolynomial implementation ensures canonical form.
     let (_quotient, remainder) = dividend
-        .divide_with_q_and_r(&slow_new_poly_modulus::<MAX_POLY_DEGREE>().into())
+        .divide_with_q_and_r(&new_unreduced_poly_modulus_slow::<MAX_POLY_DEGREE>().into())
         .expect("POLY_MODULUS is not zero");
 
     remainder.into()
@@ -96,8 +98,7 @@ pub fn mod_poly_ark_mut<const MAX_POLY_DEGREE: usize>(dividend: &mut Poly<MAX_PO
 ///
 /// TODO: work out how to generically make this a lazy static.
 /// Crates like `interned` or `lazy_static` might help, but we'll have to expand their macros and make them generic.
-#[cfg(any(test, feature = "benchmark"))]
-pub fn slow_new_poly_modulus<const MAX_POLY_DEGREE: usize>() -> Poly<MAX_POLY_DEGREE> {
+pub fn new_unreduced_poly_modulus_slow<const MAX_POLY_DEGREE: usize>() -> Poly<MAX_POLY_DEGREE> {
     let mut poly = Poly::zero();
 
     // Since the leading coefficient is non-zero, this is in canonical form.

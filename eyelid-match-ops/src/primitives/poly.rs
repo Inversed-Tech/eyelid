@@ -15,10 +15,12 @@ pub use modular_poly::{
 };
 
 // Use `mod_poly` outside this module, it is set to the fastest modulus operation.
-#[cfg(not(any(test, feature = "benchmark")))]
-use modular_poly::modulus::{mod_poly_ark_ref, mod_poly_manual_mut};
 #[cfg(any(test, feature = "benchmark"))]
-pub use modular_poly::modulus::{mod_poly_ark_ref, mod_poly_manual_mut};
+pub use modular_poly::modulus::{
+    mod_poly_ark_ref, mod_poly_manual_mut, new_unreduced_poly_modulus_slow,
+};
+#[cfg(not(any(test, feature = "benchmark")))]
+use modular_poly::modulus::{mod_poly_manual_mut, new_unreduced_poly_modulus_slow};
 
 pub mod fq;
 pub mod modular_poly;
