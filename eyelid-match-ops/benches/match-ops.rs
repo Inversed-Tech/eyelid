@@ -12,9 +12,8 @@ use eyelid_match_ops::{
         self,
         test::gen::{random_iris_code, random_iris_mask},
     },
-    primitives::poly::{self, test::gen::rand_poly, MAX_POLY_DEGREE},
+    primitives::poly::{self, test::gen::rand_poly, test::inv::sample, MAX_POLY_DEGREE},
 };
-use eyelid_match_ops::primitives::poly::sample;
 
 // Configure Criterion:
 // Define one group for each equivalent operation, so we can compare their times.
