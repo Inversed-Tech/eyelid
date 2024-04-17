@@ -219,11 +219,19 @@ pub fn extended_gcd(a: &Poly, b: &Poly) -> Poly {
         ri_prev = ri_aux.into();
         // x_cur = x_prev - q.x_cur
         (x_cur, x_prev) = update_diophantine(x_prev, x_cur, q.clone().into());
-        // y_cur = y_)prev - q.y_cur
+        // y_cur = y_prev - q.y_cur
         (y_cur, y_prev) = update_diophantine(y_prev, y_cur, q.clone().into());
     }
     // compute ri_prev inverse to calculate the final result
-    let divisor = ri_prev.clone();
+    let mut divisor = ri_prev.clone();
+    // FIXME: if b is not invertible mod a the assert is not going to pass.
+    // Since the test is probabilistic, we have a small chance of failure.
+    // It fails after a small number of executions.
+    // Sometimes it fails with a different error, meaning there is another
+    // problem happening.
+    // It occasionally fails when we do the following:
+    // export RUSTFLAGS="-D warnings --cfg tiny_poly"
+    // cargo test --all-targets -- --nocapture inv
     debug_assert!(divisor.degree() == 0);
     let divisor_inv = divisor[0].inverse().unwrap();
     // y_cur / ri_prev
