@@ -308,7 +308,7 @@ pub fn flat_karatsuba_mul<const MAX_POLY_DEGREE: usize>(
 }
 
 /// Split the polynomial into `MAX_POLY_DEGREE / k` parts, in order from the constant term to the degree.
-/// Any of the polnomials can be zero.
+/// Any of the polynomials can be zero.
 #[cfg(any(test, feature = "benchmark"))]
 pub fn poly_split<const MAX_POLY_DEGREE: usize>(
     a: &Poly<MAX_POLY_DEGREE>,
@@ -330,7 +330,7 @@ pub fn poly_split<const MAX_POLY_DEGREE: usize>(
 }
 
 /// Split the polynomial into left and right parts of size `chunk / 2`.
-/// Either polnomial can be zero.
+/// Either polynomial can be zero.
 ///
 /// Returns `(low, high)`, where `low` contains the constant term.
 ///
