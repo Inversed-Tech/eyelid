@@ -36,24 +36,6 @@ pub use cyclotomic_mul as mul_poly;
 /// Minimum degree for recursive Karatsuba calls
 pub const MIN_KARATSUBA_REC_DEGREE: usize = 32; // TODO: fine tune
 
-/// Returns a Boolean indicating if the input is equal or not to the additive
-/// identity in the polynomial ring
-pub fn is_zero_poly(a: Poly) -> bool {
-    let mut poly = Poly::zero();
-    poly.coeffs = vec![Coeff::zero(); MAX_POLY_DEGREE + 1];
-    poly == a
-}
-
-/// Returns the multiplicative element of the polynomial ring.
-pub fn one_poly(degree: usize) -> Poly {
-    assert!(degree <= MAX_POLY_DEGREE);
-
-    let mut poly = Poly::zero();
-    poly.coeffs = vec![Coeff::zero(); degree + 1];
-    poly.coeffs[0] = Coeff::one();
-    poly
-}
-
 /// Returns `a * b` followed by reduction mod `XˆN + 1`.
 /// The returned polynomial has maximum degree [`MAX_POLY_DEGREE`].
 pub fn cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
