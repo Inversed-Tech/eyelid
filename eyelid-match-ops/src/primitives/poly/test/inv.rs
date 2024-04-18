@@ -26,4 +26,5 @@ fn test_inverse() {
     // For small degree and coefficient modulus, the situation may change.
     let out = inverse(&f);
     assert!(out.is_ok());
+    assert_eq!(f * out.expect("just checked ok"), Poly::one());
 }
