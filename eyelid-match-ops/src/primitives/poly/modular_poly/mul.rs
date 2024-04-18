@@ -6,7 +6,9 @@ use ark_ff::Zero;
 use ark_poly::polynomial::Polynomial;
 use static_assertions::const_assert_eq;
 
-use crate::primitives::poly::{mod_poly_ark_ref_slow, mod_poly_manual_mut, Poly};
+use crate::primitives::poly::{
+    mod_poly, mod_poly_manual_mut, modular_poly::modulus::mod_poly_ark_ref_slow, Poly,
+};
 
 /// The fastest available cyclotomic polynomial multiplication operation (multiply then reduce).
 pub use rec_karatsuba_mul as mul_poly;
@@ -57,6 +59,14 @@ pub fn naive_cyclotomic_mul<const MAX_POLY_DEGREE: usize>(
     // Use the faster operation between mod_poly_manual*() and mod_poly_ark*() here,
     // and debug_assert_eq!() the other one.
     mod_poly_manual_mut(&mut res);
+
+    #[allow(clippy::fn_to_numeric_cast_any)]
+    {
+        debug_assert_eq!(
+            mod_poly_manual_mut::<MAX_POLY_DEGREE> as usize, mod_poly::<MAX_POLY_DEGREE> as usize,
+            "this code assumes that mod_poly_manual_mut() is the fastest modulus function"
+        );
+    }
     debug_assert_eq!(res, mod_poly_ark_ref_slow(&dividend));
 
     assert!(res.degree() <= MAX_POLY_DEGREE);
