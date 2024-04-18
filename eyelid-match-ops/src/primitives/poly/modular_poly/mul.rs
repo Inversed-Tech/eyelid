@@ -7,7 +7,9 @@ use ark_poly::polynomial::Polynomial;
 use static_assertions::const_assert_eq;
 
 use crate::primitives::poly::{
-    mod_poly, mod_poly_manual_mut, modular_poly::modulus::mod_poly_ark_ref_slow, Poly,
+    mod_poly,
+    modular_poly::modulus::{mod_poly_ark_ref_slow, mod_poly_manual_mut},
+    Poly,
 };
 
 /// The fastest available cyclotomic polynomial multiplication operation (multiply then reduce).
