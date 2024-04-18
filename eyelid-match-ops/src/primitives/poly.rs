@@ -215,7 +215,7 @@ pub fn extended_gcd(a: &Poly, b: &Poly) -> Poly {
         // TODO: q is just a monomial, then we can optimize the next computation
         (q, ri_cur) = DenseOrSparsePolynomial::from(ri_prev.clone())
             .divide_with_q_and_r(&ri_cur.into())
-            .expect("loop divisor is not zero");
+            .expect("just checked that the loop divisor is not zero");
         ri_prev = ri_aux.into();
         // x_cur = x_prev - q.x_cur
         (x_cur, x_prev) = update_diophantine(x_prev, x_cur, q.clone().into());
