@@ -1,7 +1,5 @@
 //! Efficient polynomial multiplication.
 
-use std::ops::{Add, Sub};
-
 use ark_ff::Zero;
 use ark_poly::polynomial::Polynomial;
 use static_assertions::const_assert_eq;
@@ -29,10 +27,12 @@ pub const REC_KARATSUBA_MIN_DEGREE: usize = 2;
 //
 // TODO: fine tune this constant
 #[cfg(not(tiny_poly))]
+#[cfg(any(test, feature = "benchmark"))]
 pub const FLAT_KARATSUBA_INITIAL_LAYER: u32 = 3;
 
 /// Tiny test polynomial initial layer parameter for the flat Karatsuba loop.
 #[cfg(tiny_poly)]
+#[cfg(any(test, feature = "benchmark"))]
 pub const FLAT_KARATSUBA_INITIAL_LAYER: u32 = 2;
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1`.
@@ -187,6 +187,8 @@ pub fn flat_karatsuba_mul<const MAX_POLY_DEGREE: usize>(
     a: &Poly<MAX_POLY_DEGREE>,
     b: &Poly<MAX_POLY_DEGREE>,
 ) -> Poly<MAX_POLY_DEGREE> {
+    use std::ops::{Add, Sub};
+
     debug_assert!(a.degree() <= MAX_POLY_DEGREE);
     debug_assert!(b.degree() <= MAX_POLY_DEGREE);
 
