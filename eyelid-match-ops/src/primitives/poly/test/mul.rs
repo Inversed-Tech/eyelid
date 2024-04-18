@@ -1,4 +1,4 @@
-//! Tests for basic polynomial operations.
+//! Tests for polynomial multiplication.
 
 use ark_ff::{One, Zero};
 use ark_poly::{univariate::DenseOrSparsePolynomial, Polynomial};
