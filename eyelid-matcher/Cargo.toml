@@ -21,5 +21,8 @@ eyelid-match-ops.workspace = true
 [dev-dependencies]
 eyelid-test.workspace = true
 
+[lib]
+bench = false
+
 [lints]
 workspace = true
