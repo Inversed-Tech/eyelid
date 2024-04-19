@@ -16,5 +16,8 @@ version.workspace = true
 
 [dev-dependencies]
 
+[lib]
+bench = false
+
 [lints]
 workspace = true
