@@ -21,6 +21,11 @@ eyelid-match-ops.workspace = true
 [dev-dependencies]
 eyelid-test.workspace = true
 
+[[bin]]
+name = "eyelid-matcher"
+path = "src/main.rs"
+bench = false
+
 [lib]
 bench = false
 
