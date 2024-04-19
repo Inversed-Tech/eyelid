@@ -26,6 +26,13 @@ env:
   RUST_BACKTRACE: ${{ vars.RUST_BACKTRACE_BENCHMARKS }}
   RUST_LIB_BACKTRACE: ${{ vars.RUST_BACKTRACE_BENCHMARKS }}
 
+permissions:
+  # When we enable performance graphs (#53):
+  # Writing results to the gh-pages branch
+  #contents: write
+  # Performance comments on PRs
+  pull-requests: write
+
 jobs:
   bench-monitor:
     name: Performance regression check
@@ -75,8 +82,10 @@ jobs:
          fail-threshold: "150%"
          # Workflow will always comment on the PR, even if there is no performance change
          comment-always: true
+         # Access token to post comments on PRs
+         github-token: ${{ secrets.GITHUB_TOKEN }}
          
          # Upload the updated cache file for the next job by actions/cache,
          # if it's for the main branch. But don't record PR or manual workflow results. 
-         save-data-file: github.event_name == 'push'
+         save-data-file: ${{ github.event_name == 'push' }}
   
