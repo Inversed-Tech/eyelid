@@ -1,0 +1,82 @@
+name: Monitor Benchmark Changes
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+
+  # Security: this workflow runs on all PRs, but only writes results for local branches
+  pull_request:
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+# The actions variables and shell env namespaces are different, so we need to import every relevant variable here:
+# <https://github.com/Inversed-Tech/eyelid/settings/variables/actions>
+env:
+  # Logging
+  CARGO_TERM_COLOR: ${{ vars.CARGO_TERM_COLOR }}
+  # For performance reasons, benchmarks have their own log level, which should typically be `off` or `0`.
+  RUST_LOG: ${{ vars.RUST_LOG_BENCHMARKS }}
+  # These backtrace variables are used by the `backtrace` crate to control the backtrace verbosity in binaries and libraries.
+  # We always want them set to the same value in CI. 
+  RUST_BACKTRACE: ${{ vars.RUST_BACKTRACE_BENCHMARKS }}
+  RUST_LIB_BACKTRACE: ${{ vars.RUST_BACKTRACE_BENCHMARKS }}
+
+jobs:
+  bench-monitor:
+    name: Performance regression check
+    runs-on: ubuntu-latest
+    steps:
+     - uses: actions/checkout@v4
+     - uses: r7kamura/rust-problem-matchers@v1
+
+     - name: Build Benchmarks
+       run: |
+         export RUSTFLAGS="-D warnings"
+         cargo bench --no-run --features benchmark --all-targets
+
+     # Only run important benchmarks, and store their output to a file
+     # We just need to run high-level functions here, because their benchmark will capture any significant changes in low-level operations
+     - name: Run Important Benchmarks
+       run: |
+         export RUSTFLAGS="-D warnings"
+         echo "Warning: benchmark timings are unreliable in CI due to virtualization"
+         cargo bench --features benchmark --all-targets -- 'bench.*full_match' 'bench.*mul' --output-format bencher | tee output.txt
+         echo "Warning: benchmark timings are unreliable in CI due to virtualization"
+
+     # Download previous benchmark result from cache (if exists)
+     - name: Download previous benchmark data
+       uses: actions/cache@v4
+       with:
+         path: ./cache
+         key: ${{ runner.os }}-benchmark
+  
+     # Run `github-action-benchmark` action
+     - name: Store benchmark result
+       uses: benchmark-action/github-action-benchmark@v1
+       with:
+         # What benchmark tool the output.txt came from
+         tool: 'cargo'
+         # Where the output from the benchmark tool is stored
+         output-file-path: output.txt
+  
+         # Where the previous data file is stored
+         external-data-json-path: ./cache/benchmark-data.json
+
+         # Post an alert comment if performance gets this much worse. (Rather than an info comment.)
+         # Because GitHub uses virtualization and shared machines, this is higher than we might want.
+         # These values must be above 100%, because that means "no performance change".
+         alert-threshold: "130%"
+         # Workflow will fail if performance gets this much worse.
+         fail-threshold: "150%"
+         # Workflow will always comment on the PR, even if there is no performance change
+         comment-always: true
+         
+         # Upload the updated cache file for the next job by actions/cache,
+         # if it's for the main branch. But don't record PR or manual workflow results. 
+         save-data-file: github.event_name == 'push'
+  
