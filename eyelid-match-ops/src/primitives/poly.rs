@@ -336,16 +336,11 @@ pub fn poly_split_half(a: &Poly, chunk: usize) -> (Poly, Poly) {
 pub fn inverse(a: &Poly) -> Result<Poly, String> {
     let mut mod_pol = Poly::zero();
 
+    // TODO: don't recompute the modulus here
     mod_pol[MAX_POLY_DEGREE] = Coeff::one();
     mod_pol[0] = Coeff::one();
 
-    let y = extended_gcd(&mod_pol, a);
-    let mul_both = a.clone().mul(y.clone());
-    if mul_both.is_one() {
-        Ok(y)
-    } else {
-        Err("No inverse in the ring.".to_owned())
-    }
+    extended_gcd(&mod_pol, a)
 }
 
 /// Helps to calculate the equation `cur = prev - q.cur`.
@@ -360,7 +355,7 @@ fn update_diophantine(prev: Poly, cur: Poly, q: Poly) -> (Poly, Poly) {
 
 /// Returns polynomials x, y, d such that a.x + b.y = d.
 /// When d=1 we have that x is the multiplicative inverse of a.
-pub fn extended_gcd(a: &Poly, b: &Poly) -> Poly {
+pub fn extended_gcd(a: &Poly, b: &Poly) -> Result<Poly, String> {
     // Invariant a.xi + b.yi = ri
 
     // init with x0=1, y0=0, r0=a
@@ -396,21 +391,15 @@ pub fn extended_gcd(a: &Poly, b: &Poly) -> Poly {
         (y_cur, y_prev) = update_diophantine(y_prev, y_cur, q.clone().into());
     }
     // compute ri_prev inverse to calculate the final result
-    let divisor = ri_prev.clone();
-    // FIXME: if b is not invertible mod a the assert is not going to pass.
-    // Since the test is probabilistic, we have a small chance of failure.
-    // It fails after a small number of executions.
-    // Sometimes it fails with a different error, meaning there is another
-    // problem happening.
-    // It occasionally fails when we do the following:
-    // export RUSTFLAGS="-D warnings --cfg tiny_poly"
-    // cargo test --all-targets -- --nocapture inv
-    debug_assert!(divisor.degree() == 0);
-    let divisor_inv = divisor[0].inverse().unwrap();
-    // y_cur / ri_prev
-    let mut final_result = y_prev.clone();
-    for i in 0..=y_prev.degree() {
-        final_result[i] = final_result[i].mul(divisor_inv);
+    if ri_prev.degree() == 0 {
+        let divisor_inv = ri_prev[0].inverse().unwrap();
+        // y_cur / ri_prev
+        let mut final_result = y_prev.clone();
+        for i in 0..=y_prev.degree() {
+            final_result[i] = final_result[i].mul(divisor_inv);
+        }
+        Ok(final_result)
+    } else {
+        Err("Can't invert b, invalid divisor".to_owned())
     }
-    final_result
 }
