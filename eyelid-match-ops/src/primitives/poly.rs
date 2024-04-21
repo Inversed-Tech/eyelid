@@ -8,17 +8,19 @@ use ark_ff::Zero;
 use ark_poly::polynomial::Polynomial;
 use static_assertions::const_assert_eq;
 
-pub use fq::{Coeff, MAX_POLY_DEGREE};
+pub use fq::Coeff;
 pub use modular_poly::{
-    modulus::{mod_poly, POLY_MODULUS},
+    modulus::{
+        mod_poly, mod_poly_ark_ref_slow, new_unreduced_poly_modulus_slow, FULL_RES_POLY_DEGREE,
+    },
     Poly,
 };
 
 // Use `mod_poly` outside this module, it is set to the fastest modulus operation.
 #[cfg(not(any(test, feature = "benchmark")))]
-use modular_poly::modulus::{mod_poly_ark_ref, mod_poly_manual_mut};
+use modular_poly::modulus::mod_poly_manual_mut;
 #[cfg(any(test, feature = "benchmark"))]
-pub use modular_poly::modulus::{mod_poly_ark_ref, mod_poly_manual_mut};
+pub use modular_poly::modulus::mod_poly_manual_mut;
 
 pub mod fq;
 pub mod modular_poly;
@@ -56,12 +58,15 @@ pub const FLAT_KARATSUBA_INITIAL_LAYER: u32 = 2;
 // TODO: move low-level multiplication code to `modular_poly::mul`
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1`.
-/// The returned polynomial has a degree less than [`MAX_POLY_DEGREE`].
-pub fn naive_cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
+/// All polynomials have maximum degree `MAX_POLY_DEGREE`.
+pub fn naive_cyclotomic_mul<const MAX_POLY_DEGREE: usize>(
+    a: &Poly<MAX_POLY_DEGREE>,
+    b: &Poly<MAX_POLY_DEGREE>,
+) -> Poly<MAX_POLY_DEGREE> {
     debug_assert!(a.degree() <= MAX_POLY_DEGREE);
     debug_assert!(b.degree() <= MAX_POLY_DEGREE);
 
-    let mut res: Poly = a.naive_mul(b);
+    let mut res: Poly<MAX_POLY_DEGREE> = a.naive_mul(b);
 
     // debug_assert_eq!() always needs its arguments, even when the assertion itself is
     // conditionally compiled out using `if cfg!(debug_assertions)`.
@@ -78,7 +83,7 @@ pub fn naive_cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
     // Use the faster operation between mod_poly_manual*() and mod_poly_ark*() here,
     // and debug_assert_eq!() the other one.
     mod_poly_manual_mut(&mut res);
-    debug_assert_eq!(res, mod_poly_ark_ref(&dividend));
+    debug_assert_eq!(res, mod_poly_ark_ref_slow(&dividend));
 
     assert!(res.degree() <= MAX_POLY_DEGREE);
 
@@ -86,7 +91,7 @@ pub fn naive_cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
 }
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1` using recursive Karatsuba method.
-/// The returned polynomial has a degree less than [`MAX_POLY_DEGREE`].
+/// All polynomials have maximum degree `MAX_POLY_DEGREE`.
 ///
 /// # Performance
 ///
@@ -97,7 +102,10 @@ pub fn naive_cyclotomic_mul(a: &Poly, b: &Poly) -> Poly {
 /// debug-assertions = true
 /// overflow-checks = true
 /// ```
-pub fn rec_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
+pub fn rec_karatsuba_mul<const MAX_POLY_DEGREE: usize>(
+    a: &Poly<MAX_POLY_DEGREE>,
+    b: &Poly<MAX_POLY_DEGREE>,
+) -> Poly<MAX_POLY_DEGREE> {
     rec_karatsuba_mul_inner(a, b, MAX_POLY_DEGREE)
 }
 
@@ -105,7 +113,11 @@ pub fn rec_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
 /// The returned polynomial has a degree less than or equal to `chunk`.
 ///
 /// At each recusrsion level, polynomials start with maximum degree `chunk`, and are split to maximum degree `chunk/2`.
-fn rec_karatsuba_mul_inner(a: &Poly, b: &Poly, chunk: usize) -> Poly {
+fn rec_karatsuba_mul_inner<const MAX_POLY_DEGREE: usize>(
+    a: &Poly<MAX_POLY_DEGREE>,
+    b: &Poly<MAX_POLY_DEGREE>,
+    chunk: usize,
+) -> Poly<MAX_POLY_DEGREE> {
     debug_assert!(a.degree() <= chunk);
     debug_assert!(b.degree() <= chunk);
 
@@ -175,7 +187,7 @@ fn rec_karatsuba_mul_inner(a: &Poly, b: &Poly, chunk: usize) -> Poly {
 }
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1` using flat Karatsuba method.
-/// The returned polynomial has a degree less than [`MAX_POLY_DEGREE`].
+/// The returned polynomial has a degree less than `MAX_POLY_DEGREE`.
 ///
 /// This implementation can be parallelized since for each layer
 /// we have that chunks are independent of each other.
@@ -184,24 +196,28 @@ fn rec_karatsuba_mul_inner(a: &Poly, b: &Poly, chunk: usize) -> Poly {
 // - split the `for` and `while` loops into functions, and benchmark the overall performance.
 // - split large code blocks into smaller functions, and benchmark the overall performance.
 #[allow(clippy::cognitive_complexity)]
-pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
+pub fn flat_karatsuba_mul<const MAX_POLY_DEGREE: usize>(
+    a: &Poly<MAX_POLY_DEGREE>,
+    b: &Poly<MAX_POLY_DEGREE>,
+) -> Poly<MAX_POLY_DEGREE> {
     debug_assert!(a.degree() <= MAX_POLY_DEGREE);
     debug_assert!(b.degree() <= MAX_POLY_DEGREE);
 
-    /// The final number of layers in the flat Karatsuba `while` loop.
-    /// `FLAT_KARATSUBA_INITIAL_LAYER` skips some layers.
-    const RECURSION_HEIGHT: u32 = usize::ilog2(MAX_POLY_DEGREE);
-    const_assert!(FLAT_KARATSUBA_INITIAL_LAYER <= RECURSION_HEIGHT);
+    // The final number of layers in the flat Karatsuba `while` loop.
+    // `FLAT_KARATSUBA_INITIAL_LAYER` skips some layers.
+    let recursion_height: u32 = usize::ilog2(MAX_POLY_DEGREE);
+
+    debug_assert!(FLAT_KARATSUBA_INITIAL_LAYER <= recursion_height);
     const_assert!(FLAT_KARATSUBA_INITIAL_LAYER > 1);
 
     // invariant: the number of coefficients is a power of 2
-    const_assert_eq!(MAX_POLY_DEGREE.count_ones(), 1);
+    debug_assert_eq!(MAX_POLY_DEGREE.count_ones(), 1);
 
     let mut first_layer_number = FLAT_KARATSUBA_INITIAL_LAYER;
     let mut chunk_size = 2usize.pow(first_layer_number - 1);
     let first_layer_length = MAX_POLY_DEGREE / chunk_size;
-    let mut polys_current_layer: Vec<Poly> = vec![];
-    let mut polys_next_layer: Vec<Poly> = vec![];
+    let mut polys_current_layer: Vec<Poly<MAX_POLY_DEGREE>> = vec![];
+    let mut polys_next_layer: Vec<Poly<MAX_POLY_DEGREE>> = vec![];
     let a_chunks = poly_split(a, chunk_size);
     let b_chunks = poly_split(b, chunk_size);
 
@@ -244,7 +260,7 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
 
     chunk_size *= 2;
 
-    while first_layer_number < RECURSION_HEIGHT {
+    while first_layer_number < recursion_height {
         let a_chunks = poly_split(a, chunk_size);
         let b_chunks = poly_split(b, chunk_size);
         let layer_length = polys_current_layer.len();
@@ -301,11 +317,14 @@ pub fn flat_karatsuba_mul(a: &Poly, b: &Poly) -> Poly {
 
 /// Split the polynomial into `MAX_POLY_DEGREE / k` parts, in order from the constant term to the degree.
 /// Any of the polnomials can be zero.
-pub fn poly_split(a: &Poly, k: usize) -> Vec<Poly> {
+pub fn poly_split<const MAX_POLY_DEGREE: usize>(
+    a: &Poly<MAX_POLY_DEGREE>,
+    k: usize,
+) -> Vec<Poly<MAX_POLY_DEGREE>> {
     // invariant: k must be a power of 2
     debug_assert_eq!(k.count_ones(), 1);
 
-    let mut res: Vec<Poly> = a
+    let mut res: Vec<Poly<MAX_POLY_DEGREE>> = a
         .coeffs
         .chunks(k)
         .map(Poly::from_coefficients_slice)
@@ -321,7 +340,15 @@ pub fn poly_split(a: &Poly, k: usize) -> Vec<Poly> {
 /// Either polnomial can be zero.
 ///
 /// Returns `(low, high)`, where `low` contains the constant term.
-pub fn poly_split_half(a: &Poly, chunk: usize) -> (Poly, Poly) {
+///
+/// All polynomials have maximum degree `MAX_POLY_DEGREE`. The modulus remains the same even after
+/// the split.
+pub fn poly_split_half<const MAX_POLY_DEGREE: usize>(
+    a: &Poly<MAX_POLY_DEGREE>,
+    chunk: usize,
+) -> (Poly<MAX_POLY_DEGREE>, Poly<MAX_POLY_DEGREE>) {
+    debug_assert!(chunk <= MAX_POLY_DEGREE);
+
     let (quotient, remainder) = a.new_div_xn(chunk / 2);
 
     (remainder, quotient)

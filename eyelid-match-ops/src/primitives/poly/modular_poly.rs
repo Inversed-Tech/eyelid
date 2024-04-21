@@ -21,16 +21,12 @@ use derive_more::{Add, AsRef, Deref, DerefMut, Div, Into, Neg, Rem};
 
 use crate::primitives::poly::{mod_poly, mul_poly, Coeff};
 
-// Doc links
-#[allow(unused_imports)]
-use crate::primitives::poly::{modular_poly::modulus::POLY_MODULUS, MAX_POLY_DEGREE};
-
 pub(super) mod modulus;
 
 mod trivial;
 
-/// A modular polynomial with coefficients in [`Coeff`], and maximum degree [`MAX_POLY_DEGREE`].
-/// The un-reduced polynomial modulus is [`POLY_MODULUS`](static@POLY_MODULUS).
+/// A modular polynomial with coefficients in [`Coeff`], and a generic maximum degree
+/// `MAX_POLY_DEGREE`. The un-reduced polynomial modulus is the polynomial modulus. TODO
 ///
 /// In its canonical form, a polynomial is a list of coefficients from the constant term `X^0`
 /// to the degree `X^n`, where the highest coefficient is non-zero. Leading zero coefficients are
@@ -57,9 +53,12 @@ mod trivial;
     Div,
     Rem,
 )]
-pub struct Poly(DensePolynomial<Coeff>);
+pub struct Poly<const MAX_POLY_DEGREE: usize>(DensePolynomial<Coeff>);
 
-impl Poly {
+impl<const MAX_POLY_DEGREE: usize> Poly<MAX_POLY_DEGREE> {
+    /// The constant maximum degree of this monomorphized polynomial type.
+    pub const N: usize = MAX_POLY_DEGREE;
+
     // Shadow DenseUVPolynomial methods, so we don't have to implement Polynomial and all its supertraits.
 
     /// Converts the `coeffs` vector into a dense polynomial.
@@ -151,12 +150,12 @@ impl Poly {
     /// Multiplies two polynomials, and returns the result in reduced form.
     ///
     /// This operation can be called using the `*` operator, this method is only needed to disambiguate.
-    pub fn mul_reduce(&self, rhs: &Self) -> Poly {
+    pub fn mul_reduce(&self, rhs: &Self) -> Self {
         mul_poly(self, rhs)
     }
 
-    /// Reduce this polynomial so it is less than [`POLY_MODULUS`](static@POLY_MODULUS).
-    /// This also ensures its degree is less than [`MAX_POLY_DEGREE`].
+    /// Reduce this polynomial so it is less than the polynomial modulus.
+    /// This also ensures its degree is less than [`MAX_POLY_DEGREE`](Self::N).
     ///
     /// This operation should be performed after every [`Poly`] method that increases the degree of the polynomial.
     /// [`DensePolynomial`] methods *do not* do this reduction.
@@ -185,7 +184,7 @@ impl Poly {
     }
 }
 
-impl From<DensePolynomial<Coeff>> for Poly {
+impl<const MAX_POLY_DEGREE: usize> From<DensePolynomial<Coeff>> for Poly<MAX_POLY_DEGREE> {
     fn from(poly: DensePolynomial<Coeff>) -> Self {
         let mut poly = Self(poly);
         poly.reduce_mod_poly();
@@ -193,7 +192,7 @@ impl From<DensePolynomial<Coeff>> for Poly {
     }
 }
 
-impl From<&DensePolynomial<Coeff>> for Poly {
+impl<const MAX_POLY_DEGREE: usize> From<&DensePolynomial<Coeff>> for Poly<MAX_POLY_DEGREE> {
     fn from(poly: &DensePolynomial<Coeff>) -> Self {
         let mut poly = Self(poly.clone());
         poly.reduce_mod_poly();
@@ -202,31 +201,35 @@ impl From<&DensePolynomial<Coeff>> for Poly {
 }
 
 // These are less likely to be called, so it's ok to have sub-optimal performance.
-impl From<SparsePolynomial<Coeff>> for Poly {
+impl<const MAX_POLY_DEGREE: usize> From<SparsePolynomial<Coeff>> for Poly<MAX_POLY_DEGREE> {
     fn from(poly: SparsePolynomial<Coeff>) -> Self {
         DensePolynomial::from(poly).into()
     }
 }
 
-impl From<&SparsePolynomial<Coeff>> for Poly {
+impl<const MAX_POLY_DEGREE: usize> From<&SparsePolynomial<Coeff>> for Poly<MAX_POLY_DEGREE> {
     fn from(poly: &SparsePolynomial<Coeff>) -> Self {
         DensePolynomial::from(poly.clone()).into()
     }
 }
 
-impl<'a> From<DenseOrSparsePolynomial<'a, Coeff>> for Poly {
+impl<'a, const MAX_POLY_DEGREE: usize> From<DenseOrSparsePolynomial<'a, Coeff>>
+    for Poly<MAX_POLY_DEGREE>
+{
     fn from(poly: DenseOrSparsePolynomial<'a, Coeff>) -> Self {
         DensePolynomial::from(poly).into()
     }
 }
 
-impl<'a> From<&DenseOrSparsePolynomial<'a, Coeff>> for Poly {
+impl<'a, const MAX_POLY_DEGREE: usize> From<&DenseOrSparsePolynomial<'a, Coeff>>
+    for Poly<MAX_POLY_DEGREE>
+{
     fn from(poly: &DenseOrSparsePolynomial<'a, Coeff>) -> Self {
         DensePolynomial::from(poly.clone()).into()
     }
 }
 
-impl Index<usize> for Poly {
+impl<const MAX_POLY_DEGREE: usize> Index<usize> for Poly<MAX_POLY_DEGREE> {
     type Output = Coeff;
 
     /// Read the coefficient at `index`, panicking only when reading a leading zero index above
@@ -241,7 +244,7 @@ impl Index<usize> for Poly {
     ///
     /// Only panics if index is:
     /// - a leading zero coefficient (which is not represented in the underlying data), and
-    /// - above [`MAX_POLY_DEGREE`].
+    /// - above [`MAX_POLY_DEGREE`](Self::N).
     ///
     /// Panics indicate redundant code which should have stopped at the highest non-zero
     /// coefficient. Using `self.coeffs.iter()` is one way to ensure the code only accesses real
@@ -264,7 +267,7 @@ impl Index<usize> for Poly {
     }
 }
 
-impl IndexMut<usize> for Poly {
+impl<const MAX_POLY_DEGREE: usize> IndexMut<usize> for Poly<MAX_POLY_DEGREE> {
     /// An auto-expanding index implementation that can set any coefficient without panicking.
     /// Use this implementation via `poly[index]`.
     ///
@@ -285,28 +288,28 @@ impl IndexMut<usize> for Poly {
 }
 
 // We don't implement operators for SparsePolynomial or DenseOrSparsePolynomial, they are rare and can use .into() to convert first.
-impl Mul for Poly {
+impl<const MAX_POLY_DEGREE: usize> Mul for Poly<MAX_POLY_DEGREE> {
     type Output = Self;
 
-    /// Multiplies then reduces by [`POLY_MODULUS`](static@POLY_MODULUS).
+    /// Multiplies then reduces by the polynomial modulus.
     fn mul(self, rhs: Self) -> Self {
         mul_poly(&self, &rhs)
     }
 }
 
-impl Mul<&Poly> for Poly {
+impl<const MAX_POLY_DEGREE: usize> Mul<&Poly<MAX_POLY_DEGREE>> for Poly<MAX_POLY_DEGREE> {
     type Output = Self;
 
-    /// Multiplies then reduces by [`POLY_MODULUS`](static@POLY_MODULUS).
+    /// Multiplies then reduces by the polynomial modulus.
     fn mul(self, rhs: &Self) -> Self {
         mul_poly(&self, rhs)
     }
 }
 
-impl Mul<DensePolynomial<Coeff>> for Poly {
+impl<const MAX_POLY_DEGREE: usize> Mul<DensePolynomial<Coeff>> for Poly<MAX_POLY_DEGREE> {
     type Output = Self;
 
-    /// Multiplies then reduces by [`POLY_MODULUS`](static@POLY_MODULUS).
+    /// Multiplies then reduces by the polynomial modulus.
     fn mul(self, rhs: DensePolynomial<Coeff>) -> Self {
         mul_poly(&self, &Self(rhs))
     }
@@ -314,10 +317,10 @@ impl Mul<DensePolynomial<Coeff>> for Poly {
 
 // TODO: if we need this method, remove the clone() using unsafe code
 #[cfg(inefficient)]
-impl Mul<&DensePolynomial<Coeff>> for Poly {
+impl<const MAX_POLY_DEGREE: usize> Mul<&DensePolynomial<Coeff>> for Poly<MAX_POLY_DEGREE> {
     type Output = Self;
 
-    /// Multiplies then reduces by [`POLY_MODULUS`](static@POLY_MODULUS).
+    /// Multiplies then reduces by the polynomial modulus.
     fn mul(self, rhs: &DensePolynomial<Coeff>) -> Self {
         mul_poly(&self, &Self(rhs.clone()))
     }
