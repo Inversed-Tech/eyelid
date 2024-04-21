@@ -20,6 +20,14 @@ env:
   # Logging
   CARGO_TERM_COLOR: ${{ vars.CARGO_TERM_COLOR }}
 
+permissions:
+  # Leaving clippy annotations on commits...
+  contents: write
+  # And on PRs
+  pull-requests: write
+  # Updating commit and PR statuses
+  checks: write
+
 jobs:
   clippy:
     name: Check Rust Lints
@@ -42,4 +50,5 @@ jobs:
         uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-targets ${{ matrix.features}} -- -D warnings ${{ matrix.cfg}}
+          args: --all-targets ${{matrix.features}} -- -D warnings ${{matrix.cfg}}
+          name: Clippy ${{matrix.cfg}} ${{matrix.features}}
