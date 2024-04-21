@@ -22,6 +22,7 @@ use derive_more::{Add, AsRef, Deref, DerefMut, Div, Into, Neg, Rem};
 use crate::primitives::poly::{mod_poly, mul_poly, Coeff};
 
 pub(super) mod modulus;
+pub(super) mod mul;
 
 mod trivial;
 
