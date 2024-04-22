@@ -108,7 +108,6 @@ pub fn extended_gcd<const MAX_POLY_DEGREE: usize>(
     // Sometimes the inputs can be non-canonical.
     ri_cur.truncate_to_canonical_form();
 
-
     // loop until ri_cur = 0
     while !(ri_cur.is_zero()) {
         let ri_aux = ri_cur.clone();
