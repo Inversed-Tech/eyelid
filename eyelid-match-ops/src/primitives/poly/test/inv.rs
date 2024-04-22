@@ -1,29 +1,14 @@
 //! Tests for polynomial inverse.
 
+use crate::primitives::poly::sample;
 use ark_ff::{One, Zero};
-use rand::Rng;
 
-use crate::primitives::poly::{Coeff, Poly};
+use crate::primitives::poly::Poly;
 
 #[cfg(test)]
 use crate::primitives::poly::{extended_gcd, inverse, FULL_RES_POLY_DEGREE};
 #[cfg(test)]
 use ark_poly::Polynomial;
-
-/// This sampling is similar to what will be necessary for YASHE KeyGen
-/// TODO: generate Gaussian distribution instead of "uniform"
-pub fn sample<const MAX_POLY_DEGREE: usize>() -> Poly<MAX_POLY_DEGREE> {
-    let mut rng = rand::thread_rng();
-    let mut res = Poly::zero();
-    let max_coeff = 8;
-    let t = 2;
-    for i in 0..MAX_POLY_DEGREE {
-        let coeff_rand = rng.gen_range(1..max_coeff);
-        res[i] = Coeff::from(t * coeff_rand);
-    }
-    res[0] += Coeff::one();
-    res
-}
 
 #[test]
 fn test_inverse() {

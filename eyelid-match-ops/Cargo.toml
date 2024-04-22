@@ -17,7 +17,6 @@ version.workspace = true
 # Benchmark-only dependencies
 benchmark = [
     "criterion",
-    "rand",
 ]
 
 # Temporarily switch to a tiny field to make test errors easier to debug:
@@ -33,11 +32,13 @@ bitvec.workspace = true
 derive_more.workspace = true
 
 lazy_static.workspace = true
+
+rand.workspace = true
+
 static_assertions.workspace = true
 
 # Benchmark-only dependencies
 criterion = {workspace = true, optional = true}
-rand = {workspace = true, optional = true}
 
 [dev-dependencies]
 eyelid-test.workspace = true
