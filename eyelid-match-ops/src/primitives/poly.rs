@@ -32,8 +32,16 @@ pub mod test;
 // Do not add code here.
 // Add functions or trait impls to modular_poly/*.rs and inherent method impls to modular_poly.rs.
 
-/// Returns the monic inverse of `a` in the cyclotomic ring, if it exists.
-/// Otherwise, returns an error.
+/// Implementation based on Algorithm 3.3.1 (Page 118) from
+/// "A Course in Computational Algebraic Number Theory", Henri Cohen.
+/// We don't divide by content of a and b every time,
+/// just in the end of the algorithm.
+/// Returns the primitive polynomial which is the inverse of `a` in the
+/// cyclotomic ring, if it exists. Otherwise, returns an error.
+///
+/// When `d` is a constant polynomial and `a` is the polynomial modulus
+/// (which reduces to `0`), we have that `b/cont(d)` is the primitive
+/// multiplicative inverse of `y`. Otherwise, returns an error.
 pub fn inverse<const MAX_POLY_DEGREE: usize>(
     a: &Poly<MAX_POLY_DEGREE>,
 ) -> Result<Poly<MAX_POLY_DEGREE>, String> {
@@ -42,17 +50,18 @@ pub fn inverse<const MAX_POLY_DEGREE: usize>(
     let (_x, y, d) = extended_gcd(&unreduced_mod_pol, a);
 
     // If `d` is a non-zero constant, we can compute the inverse of `d`,
-    // and calculate the final inverse.
+    // and calculate the final primitive inverse.
     if d.is_zero() {
         Err("Can't invert the zero polynomial".to_string())
     } else if d.degree() > 0 {
         Err("Non-invertible polynomial".to_string())
     } else {
-        // Reduce to a monic polynomial.
+        // Reduce to a primitive polynomial.
         let mut inv: Poly<MAX_POLY_DEGREE> = y;
-        let divisor_inv: Coeff = d[0].inverse().expect("just checked for zero");
+        // Compute the inverse of the content
+        let content_inv: Coeff = d[0].inverse().expect("just checked for zero");
 
-        inv *= divisor_inv;
+        inv *= content_inv;
 
         Ok(inv)
     }
@@ -74,11 +83,6 @@ fn update_diophantine<const MAX_POLY_DEGREE: usize>(
 }
 
 /// Returns polynomials `(x, y, d)` such that `a.x + b.y = d`.
-///
-/// Calculates polynomials such that `a.x + b.y = d`.
-/// When `d=1` and `a` is the polynomial modulus (which reduces to `0`),
-/// we have that `b` is the multiplicative inverse of `y`.
-/// Otherwise, returns an error.
 pub fn extended_gcd<const MAX_POLY_DEGREE: usize>(
     a: &Poly<MAX_POLY_DEGREE>,
     b: &Poly<MAX_POLY_DEGREE>,
