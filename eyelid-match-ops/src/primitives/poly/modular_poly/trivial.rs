@@ -151,7 +151,7 @@ impl<const MAX_POLY_DEGREE: usize> SubAssign<&Poly<MAX_POLY_DEGREE>> for Poly<MA
     }
 }
 
-// Multiplying by a polynomial is a trivial wrapper can't increase the degree, so it is trivial.
+// Multiplying by a scalar can't increase the degree, so it is trivial.
 impl<const MAX_POLY_DEGREE: usize> Mul<Coeff> for Poly<MAX_POLY_DEGREE> {
     type Output = Self;
 
