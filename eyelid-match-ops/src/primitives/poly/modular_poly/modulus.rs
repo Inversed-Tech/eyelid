@@ -69,16 +69,12 @@ pub fn mod_poly_manual_ref<const MAX_POLY_DEGREE: usize>(
 pub fn mod_poly_ark_ref_slow<const MAX_POLY_DEGREE: usize>(
     dividend: &Poly<MAX_POLY_DEGREE>,
 ) -> Poly<MAX_POLY_DEGREE> {
-    use ark_poly::polynomial::univariate::DenseOrSparsePolynomial;
-
-    let dividend: DenseOrSparsePolynomial<'_, _> = dividend.into();
-
     // The DenseOrSparsePolynomial implementation ensures canonical form.
     let (_quotient, remainder) = dividend
-        .divide_with_q_and_r(&new_unreduced_poly_modulus_slow::<MAX_POLY_DEGREE>().into())
+        .divide_with_q_and_r(&new_unreduced_poly_modulus_slow::<MAX_POLY_DEGREE>())
         .expect("POLY_MODULUS is not zero");
 
-    remainder.into()
+    remainder
 }
 
 /// Reduces `dividend` to `dividend % [POLY_MODULUS]`.

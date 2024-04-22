@@ -84,6 +84,16 @@ impl<const MAX_POLY_DEGREE: usize> Poly<MAX_POLY_DEGREE> {
         Self(DensePolynomial::naive_mul(self, other))
     }
 
+    // Re-Implement DenseOrSparsePolynomial methods, so the types are all `Poly`
+
+    /// Divide `self`` by another polynomial, and return `(quotient, remainder)`.
+    pub fn divide_with_q_and_r(&self, divisor: &Self) -> Option<(Self, Self)> {
+        let (quotient, remainder) =
+            DenseOrSparsePolynomial::from(self).divide_with_q_and_r(&divisor.into())?;
+
+        Some((quotient.into(), remainder.into()))
+    }
+
     // Efficient Re-Implementations
 
     /// Returns `X^n` as a polynomial in reduced form.

@@ -1,7 +1,7 @@
 //! Tests for polynomial multiplication.
 
 use ark_ff::{One, Zero};
-use ark_poly::{univariate::DenseOrSparsePolynomial, Polynomial};
+use ark_poly::Polynomial;
 
 use crate::primitives::poly::{
     flat_karatsuba_mul, naive_cyclotomic_mul, new_unreduced_poly_modulus_slow, rec_karatsuba_mul,
@@ -63,18 +63,16 @@ where
 {
     // X^MAX_POLY_DEGREE
     //
-    // Since the degree is equal to MAX_POLY_DEGREE, this is not reduced.
+    // Create a polynomial with degree equal to MAX_POLY_DEGREE.
+    // We can't use the standard methods, because we want an un-reduced polynomial.
     // But it is in canonical form, because the leading coefficient is non-zero.
     let mut x_max: Poly<MAX_POLY_DEGREE> = Poly::zero();
     x_max[MAX_POLY_DEGREE] = Coeff::one();
 
     // Manually calculate the reduced representation of X^N as the constant `MODULUS - 1`.
-    let x_max = DenseOrSparsePolynomial::from(x_max);
     let (q, x_max) = x_max
-        .divide_with_q_and_r(&new_unreduced_poly_modulus_slow::<MAX_POLY_DEGREE>().into())
+        .divide_with_q_and_r(&new_unreduced_poly_modulus_slow::<MAX_POLY_DEGREE>())
         .expect("is divisible by X^MAX_POLY_DEGREE");
-    let q: Poly<MAX_POLY_DEGREE> = q.into();
-    let x_max: Poly<MAX_POLY_DEGREE> = x_max.into();
 
     assert_eq!(q, Poly::from_coefficients_vec(vec![Coeff::one()]));
     assert_eq!(

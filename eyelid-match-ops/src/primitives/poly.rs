@@ -3,10 +3,8 @@
 //! - [`Poly`] is in [`modular_poly`] and its submodules,
 //! - [`Coeff`] is in [`fq`] and submodules.
 
-use std::ops::{Mul, Sub};
-
 use ark_ff::{Field, One, Zero};
-use ark_poly::{polynomial::Polynomial, univariate::DenseOrSparsePolynomial};
+use ark_poly::polynomial::Polynomial;
 
 pub use fq::Coeff;
 pub use modular_poly::{
@@ -45,18 +43,20 @@ pub fn inverse<const MAX_POLY_DEGREE: usize>(
 fn update_diophantine<const MAX_POLY_DEGREE: usize>(
     prev: Poly<MAX_POLY_DEGREE>,
     cur: Poly<MAX_POLY_DEGREE>,
-    q: Poly<MAX_POLY_DEGREE>,
+    q: &Poly<MAX_POLY_DEGREE>,
 ) -> (Poly<MAX_POLY_DEGREE>, Poly<MAX_POLY_DEGREE>) {
-    let aux = cur.clone();
-    let mul_res = cur.mul(&q.clone());
-    let new_cur = prev.sub(&mul_res).clone();
-    let new_prev = aux.clone();
+    let new_prev = cur.clone();
+    let mul_res = cur * q;
+    let new_cur = prev - mul_res;
 
     (new_cur, new_prev)
 }
 
-/// Returns polynomials x, y, d such that a.x + b.y = d.
-/// When d=1 we have that x is the multiplicative inverse of a.
+/// Returns the multiplicative inverse of `b`.
+///
+/// Calculates polynomials such that `a.x + b.y = d`.
+/// When `d=0` and `a` is the polynomial modulus, we have that `b` is the multiplicative inverse of `y`.
+/// Otherwise, returns an error.
 pub fn extended_gcd<const MAX_POLY_DEGREE: usize>(
     a: &Poly<MAX_POLY_DEGREE>,
     b: &Poly<MAX_POLY_DEGREE>,
@@ -70,30 +70,21 @@ pub fn extended_gcd<const MAX_POLY_DEGREE: usize>(
     // next:     x1=0, y1=1, r1=b
     let mut x_cur = Poly::zero();
     let mut y_cur = Poly::one();
-    let ri_cur = b.clone();
+    let mut ri_cur = b.clone();
+    let mut q;
 
-    let ri_aux = ri_cur.clone();
-    // TODO: q is just a monomial, then we can optimize the next computation
-    let (mut q, mut ri_cur) = DenseOrSparsePolynomial::from(ri_prev.clone())
-        .divide_with_q_and_r(&ri_cur.into())
-        .expect("init divisor is not zero");
-    ri_prev = ri_aux;
-    // x_cur = x_prev - q.x_cur
-    (x_cur, x_prev) = update_diophantine(x_prev, x_cur, q.clone().into());
-    // y_cur = y_prev - q.y_cur
-    (y_cur, y_prev) = update_diophantine(y_prev, y_cur, q.clone().into());
     // loop until ri_cur = 0
     while !(ri_cur.is_zero()) {
         let ri_aux = ri_cur.clone();
         // TODO: q is just a monomial, then we can optimize the next computation
-        (q, ri_cur) = DenseOrSparsePolynomial::from(ri_prev.clone())
-            .divide_with_q_and_r(&ri_cur.into())
+        (q, ri_cur) = ri_prev
+            .divide_with_q_and_r(&ri_cur)
             .expect("just checked that the loop divisor is not zero");
-        ri_prev = ri_aux.into();
+        ri_prev = ri_aux;
         // x_cur = x_prev - q.x_cur
-        (x_cur, x_prev) = update_diophantine(x_prev, x_cur, q.clone().into());
+        (x_cur, x_prev) = update_diophantine(x_prev, x_cur, &q);
         // y_cur = y_prev - q.y_cur
-        (y_cur, y_prev) = update_diophantine(y_prev, y_cur, q.clone().into());
+        (y_cur, y_prev) = update_diophantine(y_prev, y_cur, &q);
     }
     // compute ri_prev inverse to calculate the final result
     if ri_prev.degree() == 0 {
