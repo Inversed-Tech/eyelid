@@ -105,6 +105,10 @@ pub fn extended_gcd<const MAX_POLY_DEGREE: usize>(
 
     let mut q: Poly<MAX_POLY_DEGREE>;
 
+    // Sometimes the inputs can be non-canonical.
+    ri_cur.truncate_to_canonical_form();
+
+
     // loop until ri_cur = 0
     while !(ri_cur.is_zero()) {
         let ri_aux = ri_cur.clone();
@@ -112,6 +116,8 @@ pub fn extended_gcd<const MAX_POLY_DEGREE: usize>(
         (q, ri_cur) = ri_prev
             .divide_with_q_and_r(&ri_cur)
             .expect("just checked that the loop divisor is not zero");
+        // Sometimes divide_with_q_and_r() might be returning a non-canonical polynomial
+        ri_cur.truncate_to_canonical_form();
         ri_prev = ri_aux;
 
         // x_cur = x_prev - q.x_cur
