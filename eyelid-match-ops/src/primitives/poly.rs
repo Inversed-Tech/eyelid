@@ -35,14 +35,14 @@ pub mod test;
 
 /// Implementation based on Algorithm 3.3.1 (Page 118) from
 /// "A Course in Computational Algebraic Number Theory", Henri Cohen.
-/// We don't divide by content of a and b every time,
+/// We don't divide by content of `a` and `b` every time,
 /// just in the end of the algorithm.
 /// Returns the primitive polynomial which is the inverse of `a` in the
 /// cyclotomic ring, if it exists. Otherwise, returns an error.
 ///
 /// When `d` is a constant polynomial and `a` is the polynomial modulus
 /// (which reduces to `0`), we have that `b/cont(d)` is the primitive
-/// multiplicative inverse of `y`. Otherwise, returns an error.
+/// multiplicative inverse of `y`.
 pub fn inverse<const MAX_POLY_DEGREE: usize>(
     a: &Poly<MAX_POLY_DEGREE>,
 ) -> Result<Poly<MAX_POLY_DEGREE>, String> {
