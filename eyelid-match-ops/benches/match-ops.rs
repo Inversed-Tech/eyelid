@@ -226,7 +226,10 @@ pub fn bench_mod_poly_ark(settings: &mut Criterion) {
 /// Run [`poly::inverse()`] as a Criterion benchmark with random data.
 pub fn bench_inv(settings: &mut Criterion) {
     // Setup: generate random cyclotomic polynomials
-    let p = sample::<FULL_RES_POLY_DEGREE>();
+
+    let rng = rand::thread_rng();
+
+    let p = sample::<FULL_RES_POLY_DEGREE>(rng);
 
     settings.bench_with_input(
         BenchmarkId::new(

@@ -5,7 +5,7 @@
 
 use ark_ff::{Field, One, Zero};
 use ark_poly::polynomial::Polynomial;
-use rand::Rng;
+use rand::{rngs::ThreadRng, Rng};
 
 pub use fq::Coeff;
 pub use modular_poly::{
@@ -123,10 +123,9 @@ pub fn extended_gcd<const MAX_POLY_DEGREE: usize>(
     (x_prev, y_prev, ri_prev)
 }
 
-/// This sampling is similar to what will be necessary for YASHE KeyGen
-/// TODO: generate Gaussian distribution instead of "uniform"
-pub fn sample<const MAX_POLY_DEGREE: usize>() -> Poly<MAX_POLY_DEGREE> {
-    let mut rng = rand::thread_rng();
+/// This sampling is similar to what will be necessary for YASHE KeyGen.
+/// The purpose is to obtain a polynomial with small random coefficients.
+pub fn sample<const MAX_POLY_DEGREE: usize>(mut rng: ThreadRng) -> Poly<MAX_POLY_DEGREE> {
     let mut res = Poly::zero();
     let max_coeff = 8;
     let t = 2;

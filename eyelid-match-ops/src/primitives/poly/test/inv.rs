@@ -12,7 +12,8 @@ use ark_poly::Polynomial;
 
 #[test]
 fn test_inverse() {
-    let f = sample::<FULL_RES_POLY_DEGREE>();
+    let rng = rand::thread_rng();
+    let f = sample::<FULL_RES_POLY_DEGREE>(rng);
 
     // REMARK: For our parameter choices it is very likely to find
     // the inverse in the first attempt.
