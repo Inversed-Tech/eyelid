@@ -12,7 +12,7 @@ use eyelid_match_ops::{
         self,
         test::gen::{random_iris_code, random_iris_mask},
     },
-    primitives::poly::{self, test::gen::rand_poly, Poly, FULL_RES_POLY_DEGREE},
+    primitives::poly::{self, sample, test::gen::rand_poly, Poly, FULL_RES_POLY_DEGREE},
 };
 
 // Configure Criterion:
@@ -49,12 +49,21 @@ criterion_group! {
     targets = bench_mod_poly_manual, bench_mod_poly_ark
 }
 
+criterion_group! {
+    name = bench_inverse;
+    // This can be any expression that returns a `Criterion` object.
+    config = Criterion::default();
+    // List polynomial modulus implementations here.
+    targets = bench_inv
+}
+
 // List groups here.
 criterion_main!(
     bench_full_match,
     bench_cyclotomic_multiplication,
     bench_poly_split_karatsuba,
-    bench_polynomial_modulus
+    bench_polynomial_modulus,
+    bench_inverse
 );
 
 /// Run [`plaintext::is_iris_match()`] as a Criterion benchmark with random data.
@@ -209,6 +218,29 @@ pub fn bench_mod_poly_ark(settings: &mut Criterion) {
             benchmark.iter_with_large_drop(|| {
                 // To avoid timing dropping the return value, this line must not end in ';'
                 poly::mod_poly_ark_ref_slow(dividend)
+            })
+        },
+    );
+}
+
+/// Run [`poly::inverse()`] as a Criterion benchmark with random data.
+pub fn bench_inv(settings: &mut Criterion) {
+    // Setup: generate random cyclotomic polynomials
+
+    let rng = rand::thread_rng();
+
+    let p = sample::<FULL_RES_POLY_DEGREE>(rng);
+
+    settings.bench_with_input(
+        BenchmarkId::new(
+            "Cyclotomic inverse: polynomial",
+            "1 relatively small random poly of degree N",
+        ),
+        &(p),
+        |benchmark, p| {
+            benchmark.iter_with_large_drop(|| {
+                // To avoid timing dropping the return value, this line must not end in ';'
+                poly::inverse(p)
             })
         },
     );

@@ -19,7 +19,7 @@ use ark_poly::polynomial::univariate::{
 };
 use derive_more::{Add, AsRef, Deref, DerefMut, Div, Into, Neg, Rem};
 
-use crate::primitives::poly::{mod_poly, mul_poly, Coeff};
+use crate::primitives::poly::{mod_poly, mul_poly, new_unreduced_poly_modulus_slow, Coeff};
 
 pub(super) mod modulus;
 pub(super) mod mul;
@@ -82,6 +82,16 @@ impl<const MAX_POLY_DEGREE: usize> Poly<MAX_POLY_DEGREE> {
         // Deliberately avoid the modular reduction performed by `From`
         // Removing and replacing type wrappers is zero-cost at runtime.
         Self(DensePolynomial::naive_mul(self, other))
+    }
+
+    // Re-Implement DenseOrSparsePolynomial methods, so the types are all `Poly`
+
+    /// Divide `self`` by another polynomial, and return `(quotient, remainder)`.
+    pub fn divide_with_q_and_r(&self, divisor: &Self) -> Option<(Self, Self)> {
+        let (quotient, remainder) =
+            DenseOrSparsePolynomial::from(self).divide_with_q_and_r(&divisor.into())?;
+
+        Some((quotient.into(), remainder.into()))
     }
 
     // Efficient Re-Implementations
@@ -147,6 +157,12 @@ impl<const MAX_POLY_DEGREE: usize> Poly<MAX_POLY_DEGREE> {
     }
 
     // Basic Internal Operations
+
+    /// Constructs and returns a new polynomial modulus used for the polynomial field, `X^[MAX_POLY_DEGREE] + 1`.
+    /// This is the canonical but un-reduced form of the modulus, because the reduced form is the zero polynomial.
+    pub fn new_unreduced_poly_modulus_slow() -> Self {
+        new_unreduced_poly_modulus_slow()
+    }
 
     /// Multiplies two polynomials, and returns the result in reduced form.
     ///
@@ -304,6 +320,24 @@ impl<const MAX_POLY_DEGREE: usize> Mul<&Poly<MAX_POLY_DEGREE>> for Poly<MAX_POLY
     /// Multiplies then reduces by the polynomial modulus.
     fn mul(self, rhs: &Self) -> Self {
         mul_poly(&self, rhs)
+    }
+}
+
+impl<const MAX_POLY_DEGREE: usize> Mul for &Poly<MAX_POLY_DEGREE> {
+    type Output = Poly<MAX_POLY_DEGREE>;
+
+    /// Multiplies then reduces by the polynomial modulus.
+    fn mul(self, rhs: Self) -> Self::Output {
+        mul_poly(self, rhs)
+    }
+}
+
+impl<const MAX_POLY_DEGREE: usize> Mul<Poly<MAX_POLY_DEGREE>> for &Poly<MAX_POLY_DEGREE> {
+    type Output = Poly<MAX_POLY_DEGREE>;
+
+    /// Multiplies then reduces by the polynomial modulus.
+    fn mul(self, rhs: Poly<MAX_POLY_DEGREE>) -> Self::Output {
+        mul_poly(self, &rhs)
     }
 }
 

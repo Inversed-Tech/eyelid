@@ -1,5 +1,7 @@
 //! Efficient polynomial multiplication.
 
+use std::ops::MulAssign;
+
 use ark_ff::Zero;
 use ark_poly::polynomial::Polynomial;
 use static_assertions::const_assert_eq;
@@ -7,8 +9,26 @@ use static_assertions::const_assert_eq;
 use crate::primitives::poly::{
     mod_poly,
     modular_poly::modulus::{mod_poly_ark_ref_slow, mod_poly_manual_mut},
-    Poly,
+    Coeff, Poly,
 };
+
+// Simple multiplication by a field element.
+
+impl<const MAX_POLY_DEGREE: usize> MulAssign<Coeff> for Poly<MAX_POLY_DEGREE> {
+    fn mul_assign(&mut self, rhs: Coeff) {
+        for coeff in &mut self.0.coeffs {
+            *coeff *= rhs;
+        }
+    }
+}
+
+impl<const MAX_POLY_DEGREE: usize> MulAssign<Coeff> for &mut Poly<MAX_POLY_DEGREE> {
+    fn mul_assign(&mut self, rhs: Coeff) {
+        for coeff in &mut self.0.coeffs {
+            *coeff *= rhs;
+        }
+    }
+}
 
 /// The fastest available cyclotomic polynomial multiplication operation (multiply then reduce).
 pub use rec_karatsuba_mul as mul_poly;

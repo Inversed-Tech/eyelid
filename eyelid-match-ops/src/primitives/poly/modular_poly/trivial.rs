@@ -48,7 +48,7 @@ impl<const MAX_POLY_DEGREE: usize> Zero for Poly<MAX_POLY_DEGREE> {
 impl<const MAX_POLY_DEGREE: usize> One for Poly<MAX_POLY_DEGREE> {
     fn one() -> Self {
         let mut poly = Self::zero();
-        poly.coeffs[0] = Coeff::one();
+        poly[0] = Coeff::one();
         poly
     }
 
