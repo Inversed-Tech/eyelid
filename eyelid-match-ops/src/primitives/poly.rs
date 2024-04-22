@@ -36,13 +36,9 @@ pub mod test;
 pub fn inverse<const MAX_POLY_DEGREE: usize>(
     a: &Poly<MAX_POLY_DEGREE>,
 ) -> Result<Poly<MAX_POLY_DEGREE>, String> {
-    let mut mod_pol = Poly::zero();
+    let unreduced_mod_pol = Poly::new_unreduced_poly_modulus_slow();
 
-    // TODO: don't recompute the modulus here
-    mod_pol[MAX_POLY_DEGREE] = Coeff::one();
-    mod_pol[0] = Coeff::one();
-
-    extended_gcd(&mod_pol, a)
+    extended_gcd(&unreduced_mod_pol, a)
 }
 
 /// Helps to calculate the equation `cur = prev - q.cur`.

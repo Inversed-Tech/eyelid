@@ -19,7 +19,7 @@ use ark_poly::polynomial::univariate::{
 };
 use derive_more::{Add, AsRef, Deref, DerefMut, Div, Into, Neg, Rem};
 
-use crate::primitives::poly::{mod_poly, mul_poly, Coeff};
+use crate::primitives::poly::{mod_poly, mul_poly, new_unreduced_poly_modulus_slow, Coeff};
 
 pub(super) mod modulus;
 pub(super) mod mul;
@@ -147,6 +147,12 @@ impl<const MAX_POLY_DEGREE: usize> Poly<MAX_POLY_DEGREE> {
     }
 
     // Basic Internal Operations
+
+    /// Constructs and returns a new polynomial modulus used for the polynomial field, `X^[MAX_POLY_DEGREE] + 1`.
+    /// This is the canonical but un-reduced form of the modulus, because the reduced form is the zero polynomial.
+    pub fn new_unreduced_poly_modulus_slow() -> Self {
+        new_unreduced_poly_modulus_slow()
+    }
 
     /// Multiplies two polynomials, and returns the result in reduced form.
     ///
