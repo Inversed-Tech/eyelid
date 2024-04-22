@@ -6,5 +6,5 @@ pub mod gen;
 #[cfg(test)]
 pub mod mul;
 
-#[cfg(any(test, feature = "benchmark"))]
+#[cfg(test)]
 pub mod inv;
