@@ -61,7 +61,7 @@ pub fn inverse<const MAX_POLY_DEGREE: usize>(
         let mut inv: Poly<MAX_POLY_DEGREE> = y;
         // Compute the inverse of the content
         let content_inv: Coeff = d[0].inverse().expect("just checked for zero");
-
+        // Divide by `content_inv`
         inv *= content_inv;
 
         Ok(inv)
