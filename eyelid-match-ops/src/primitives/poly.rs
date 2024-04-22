@@ -132,7 +132,8 @@ pub fn extended_gcd<const MAX_POLY_DEGREE: usize>(
 /// The purpose is to obtain a polynomial with small random coefficients.
 pub fn sample<const MAX_POLY_DEGREE: usize>(mut rng: ThreadRng) -> Poly<MAX_POLY_DEGREE> {
     let mut res = Poly::zero();
-    let max_coeff = 8;
+    // TODO: assert that this is less than the modulus of the coefficient
+    let max_coeff = 6;
     let t = 2;
     for i in 0..MAX_POLY_DEGREE {
         let coeff_rand = rng.gen_range(1..max_coeff);
