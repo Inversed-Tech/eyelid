@@ -29,6 +29,9 @@ pub mod modular_poly;
 #[cfg(any(test, feature = "benchmark"))]
 pub mod test;
 
+// Do not add code here.
+// Add functions or trait impls to modular_poly/*.rs and inherent method impls to modular_poly.rs.
+
 /// Returns the monic inverse of `a` in the cyclotomic ring, if it exists.
 /// Otherwise, returns an error.
 pub fn inverse<const MAX_POLY_DEGREE: usize>(
