@@ -1,6 +1,6 @@
 //! The underlying integer field.
 //!
-//! Outside this module, use [`fq::Coeff`](Coeff) and [`fq::MAX_POLY_DEGREE`](MAX_POLY_DEGREE) instead of `fq79` or `fq_tiny`.
+//! Outside this module, use [`fq::Coeff`](Coeff) instead of `fq79` or `fq_tiny`.
 //! This automatically enables CI tests on both fields.
 
 use ark_ff::Zero;
@@ -10,7 +10,7 @@ mod fq79;
 mod fq_tiny;
 
 #[cfg(not(tiny_poly))]
-pub use fq79::{Coeff, MAX_POLY_DEGREE};
+pub use fq79::Coeff;
 
 // Temporarily switch to this tiny field to make test errors easier to debug:
 // ```no_run
@@ -18,7 +18,7 @@ pub use fq79::{Coeff, MAX_POLY_DEGREE};
 // RUSTFLAGS="--cfg tiny_poly" cargo bench --features benchmark
 // ```
 #[cfg(tiny_poly)]
-pub use fq_tiny::{Coeff, MAX_POLY_DEGREE};
+pub use fq_tiny::Coeff;
 
 lazy_static! {
     /// The zero coefficient as a static constant value.

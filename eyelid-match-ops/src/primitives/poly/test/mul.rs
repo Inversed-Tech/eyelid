@@ -1,27 +1,27 @@
-//! Tests for basic polynomial operations.
+//! Tests for polynomial multiplication.
 
 use ark_ff::{One, Zero};
 use ark_poly::{univariate::DenseOrSparsePolynomial, Polynomial};
 
 use crate::primitives::poly::{
-    flat_karatsuba_mul, naive_cyclotomic_mul, rec_karatsuba_mul, test::gen::rand_poly, Coeff, Poly,
-    MAX_POLY_DEGREE, POLY_MODULUS,
+    flat_karatsuba_mul, naive_cyclotomic_mul, new_unreduced_poly_modulus_slow, rec_karatsuba_mul,
+    test::gen::rand_poly, Coeff, Poly, FULL_RES_POLY_DEGREE,
 };
 
 /// Test cyclotomic multiplication of a random polynomial by `X^{[MAX_POLY_DEGREE] - 1}`.
 #[test]
 fn test_cyclotomic_mul_rand_xnm1() {
-    check_cyclotomic_mul_rand_xnm1(naive_cyclotomic_mul);
-    check_cyclotomic_mul_rand_xnm1(rec_karatsuba_mul);
-    check_cyclotomic_mul_rand_xnm1(flat_karatsuba_mul);
+    check_cyclotomic_mul_rand_xnm1::<FULL_RES_POLY_DEGREE, _>(naive_cyclotomic_mul);
+    check_cyclotomic_mul_rand_xnm1::<FULL_RES_POLY_DEGREE, _>(rec_karatsuba_mul);
+    check_cyclotomic_mul_rand_xnm1::<FULL_RES_POLY_DEGREE, _>(flat_karatsuba_mul);
 }
 
 /// Check `mul_fn` correctly implements cyclotomic multiplication of a random polynomial by `X^{[MAX_POLY_DEGREE] - 1}`.
-fn check_cyclotomic_mul_rand_xnm1<F>(mul_fn: F)
+fn check_cyclotomic_mul_rand_xnm1<const MAX_POLY_DEGREE: usize, F>(mul_fn: F)
 where
-    F: Fn(&Poly, &Poly) -> Poly,
+    F: Fn(&Poly<MAX_POLY_DEGREE>, &Poly<MAX_POLY_DEGREE>) -> Poly<MAX_POLY_DEGREE>,
 {
-    let p1 = rand_poly(MAX_POLY_DEGREE - 1);
+    let p1: Poly<MAX_POLY_DEGREE> = rand_poly(MAX_POLY_DEGREE - 1);
 
     #[allow(clippy::int_plus_one)]
     {
@@ -51,30 +51,30 @@ where
 /// Test cyclotomic multiplication that results in `X^[MAX_POLY_DEGREE]`.
 #[test]
 fn test_cyclotomic_mul_max_degree() {
-    check_cyclotomic_mul_max_degree(naive_cyclotomic_mul);
-    check_cyclotomic_mul_max_degree(rec_karatsuba_mul);
-    check_cyclotomic_mul_max_degree(flat_karatsuba_mul);
+    check_cyclotomic_mul_max_degree::<FULL_RES_POLY_DEGREE, _>(naive_cyclotomic_mul);
+    check_cyclotomic_mul_max_degree::<FULL_RES_POLY_DEGREE, _>(rec_karatsuba_mul);
+    check_cyclotomic_mul_max_degree::<FULL_RES_POLY_DEGREE, _>(flat_karatsuba_mul);
 }
 
 /// Check `mul_fn` correctly implements cyclotomic multiplication that results in `X^[MAX_POLY_DEGREE]`.
-fn check_cyclotomic_mul_max_degree<F>(mul_fn: F)
+fn check_cyclotomic_mul_max_degree<const MAX_POLY_DEGREE: usize, F>(mul_fn: F)
 where
-    F: Fn(&Poly, &Poly) -> Poly,
+    F: Fn(&Poly<MAX_POLY_DEGREE>, &Poly<MAX_POLY_DEGREE>) -> Poly<MAX_POLY_DEGREE>,
 {
     // X^MAX_POLY_DEGREE
     //
     // Since the degree is equal to MAX_POLY_DEGREE, this is not reduced.
     // But it is in canonical form, because the leading coefficient is non-zero.
-    let mut x_max = Poly::zero();
+    let mut x_max: Poly<MAX_POLY_DEGREE> = Poly::zero();
     x_max[MAX_POLY_DEGREE] = Coeff::one();
 
     // Manually calculate the reduced representation of X^N as the constant `MODULUS - 1`.
     let x_max = DenseOrSparsePolynomial::from(x_max);
     let (q, x_max) = x_max
-        .divide_with_q_and_r(&*POLY_MODULUS)
+        .divide_with_q_and_r(&new_unreduced_poly_modulus_slow::<MAX_POLY_DEGREE>().into())
         .expect("is divisible by X^MAX_POLY_DEGREE");
-    let q: Poly = q.into();
-    let x_max: Poly = x_max.into();
+    let q: Poly<MAX_POLY_DEGREE> = q.into();
+    let x_max: Poly<MAX_POLY_DEGREE> = x_max.into();
 
     assert_eq!(q, Poly::from_coefficients_vec(vec![Coeff::one()]));
     assert_eq!(
@@ -106,7 +106,7 @@ where
         let p1 = Poly::xn(i);
         let p2 = Poly::xn(MAX_POLY_DEGREE - i);
 
-        if i == 0 || i == MAX_POLY_DEGREE {
+        if i == 0 || i == FULL_RES_POLY_DEGREE {
             assert_eq!(p1.degree(), 0);
             assert_eq!(p2.degree(), 0);
         } else {
@@ -123,23 +123,23 @@ where
 /// Test recursive karatsuba, flat karatsuba, and naive cyclotomic multiplication of two random polynomials all produce the same result.
 #[test]
 fn test_karatsuba_mul_rand_consistent() {
-    let p1 = rand_poly(MAX_POLY_DEGREE - 1);
-    let p2 = rand_poly(MAX_POLY_DEGREE - 1);
+    let p1: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE - 1);
+    let p2: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE - 1);
 
     #[allow(clippy::int_plus_one)]
     {
-        assert!(p1.degree() <= MAX_POLY_DEGREE - 1);
-        assert!(p2.degree() <= MAX_POLY_DEGREE - 1);
+        assert!(p1.degree() <= FULL_RES_POLY_DEGREE - 1);
+        assert!(p2.degree() <= FULL_RES_POLY_DEGREE - 1);
     }
 
     let expected = naive_cyclotomic_mul(&p1, &p2);
-    assert!(expected.degree() <= MAX_POLY_DEGREE);
+    assert!(expected.degree() <= FULL_RES_POLY_DEGREE);
 
     let rec_res = rec_karatsuba_mul(&p1, &p2);
-    assert!(rec_res.degree() <= MAX_POLY_DEGREE);
+    assert!(rec_res.degree() <= FULL_RES_POLY_DEGREE);
 
     let flat_res = flat_karatsuba_mul(&p1, &p2);
-    assert!(flat_res.degree() <= MAX_POLY_DEGREE);
+    assert!(flat_res.degree() <= FULL_RES_POLY_DEGREE);
 
     assert_eq!(expected, rec_res);
     assert_eq!(expected, flat_res);

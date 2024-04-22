@@ -7,14 +7,14 @@ use crate::primitives::poly::Poly;
 
 // Doc links only
 #[allow(unused_imports)]
-use crate::primitives::poly::{Coeff, MAX_POLY_DEGREE};
+use crate::primitives::poly::Coeff;
 
 /// Returns an un-reduced cyclotomic polynomial of `degree`, with random coefficients in [`Coeff`].
-/// `degree` must be less than or equal to [`MAX_POLY_DEGREE`].
+/// `degree` must be less than or equal to `MAX_POLY_DEGREE`.
 ///
 /// In rare cases, the degree can be less than `degree`,
 /// because the random coefficient of `X^[MAX_POLY_DEGREE]` is zero.
-pub fn rand_poly(degree: usize) -> Poly {
+pub fn rand_poly<const MAX_POLY_DEGREE: usize>(degree: usize) -> Poly<MAX_POLY_DEGREE> {
     use rand::thread_rng;
 
     // We can't use test_rng() here, because a deterministic RNG can make benchmarks inaccurate.
@@ -28,7 +28,7 @@ pub fn rand_poly(degree: usize) -> Poly {
     poly
 }
 
-impl Poly {
+impl<const MAX_POLY_DEGREE: usize> Poly<MAX_POLY_DEGREE> {
     // Shadow DenseUVPolynomial methods, but only make the method available in test code.
 
     /// Returns a random polynomial with degree `d`.
