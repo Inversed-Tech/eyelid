@@ -36,31 +36,50 @@ pub fn inverse<const MAX_POLY_DEGREE: usize>(
 ) -> Result<Poly<MAX_POLY_DEGREE>, String> {
     let unreduced_mod_pol = Poly::new_unreduced_poly_modulus_slow();
 
-    extended_gcd(&unreduced_mod_pol, a)
+    let (_x, y, d) = extended_gcd(&unreduced_mod_pol, a);
+
+    // compute the inverse of `d` to calculate the final result
+    if d.degree() == 0 {
+        let mut inv: Poly<MAX_POLY_DEGREE> = y;
+        let divisor_inv: Coeff = d[0].inverse().unwrap();
+
+        inv *= divisor_inv;
+
+        Ok(inv)
+    } else {
+        Err("Can't invert polynomial, invalid divisor".to_string())
+    }
 }
 
 /// Helps to calculate the equation `cur = prev - q.cur`.
 fn update_diophantine<const MAX_POLY_DEGREE: usize>(
-    prev: Poly<MAX_POLY_DEGREE>,
+    mut prev: Poly<MAX_POLY_DEGREE>,
     cur: Poly<MAX_POLY_DEGREE>,
     q: &Poly<MAX_POLY_DEGREE>,
 ) -> (Poly<MAX_POLY_DEGREE>, Poly<MAX_POLY_DEGREE>) {
-    let new_prev = cur.clone();
-    let mul_res = cur * q;
-    let new_cur = prev - mul_res;
+    let mul_res = &cur * q;
+    let new_prev = cur;
+
+    prev -= mul_res;
+    let new_cur = prev;
 
     (new_cur, new_prev)
 }
 
-/// Returns the multiplicative inverse of `b`.
+/// Returns polynomials `(x, y, d)` such that `a.x + b.y = d`.
 ///
 /// Calculates polynomials such that `a.x + b.y = d`.
-/// When `d=0` and `a` is the polynomial modulus, we have that `b` is the multiplicative inverse of `y`.
+/// When `d=1` and `a` is the polynomial modulus (which reduces to `0`),
+/// we have that `b` is the multiplicative inverse of `y`.
 /// Otherwise, returns an error.
 pub fn extended_gcd<const MAX_POLY_DEGREE: usize>(
     a: &Poly<MAX_POLY_DEGREE>,
     b: &Poly<MAX_POLY_DEGREE>,
-) -> Result<Poly<MAX_POLY_DEGREE>, String> {
+) -> (
+    Poly<MAX_POLY_DEGREE>,
+    Poly<MAX_POLY_DEGREE>,
+    Poly<MAX_POLY_DEGREE>,
+) {
     // Invariant a.xi + b.yi = ri
 
     // init with x0=1, y0=0, r0=a
@@ -71,7 +90,8 @@ pub fn extended_gcd<const MAX_POLY_DEGREE: usize>(
     let mut x_cur = Poly::zero();
     let mut y_cur = Poly::one();
     let mut ri_cur = b.clone();
-    let mut q;
+
+    let mut q: Poly<MAX_POLY_DEGREE>;
 
     // loop until ri_cur = 0
     while !(ri_cur.is_zero()) {
@@ -81,21 +101,12 @@ pub fn extended_gcd<const MAX_POLY_DEGREE: usize>(
             .divide_with_q_and_r(&ri_cur)
             .expect("just checked that the loop divisor is not zero");
         ri_prev = ri_aux;
+
         // x_cur = x_prev - q.x_cur
         (x_cur, x_prev) = update_diophantine(x_prev, x_cur, &q);
         // y_cur = y_prev - q.y_cur
         (y_cur, y_prev) = update_diophantine(y_prev, y_cur, &q);
     }
-    // compute ri_prev inverse to calculate the final result
-    if ri_prev.degree() == 0 {
-        let divisor_inv = ri_prev[0].inverse().unwrap();
-        // y_cur / ri_prev
-        let mut final_result = y_prev.clone();
-        for i in 0..=y_prev.degree() {
-            final_result[i] *= divisor_inv;
-        }
-        Ok(final_result)
-    } else {
-        Err("Can't invert b, invalid divisor".to_owned())
-    }
+
+    (x_prev, y_prev, ri_prev)
 }

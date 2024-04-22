@@ -323,6 +323,24 @@ impl<const MAX_POLY_DEGREE: usize> Mul<&Poly<MAX_POLY_DEGREE>> for Poly<MAX_POLY
     }
 }
 
+impl<const MAX_POLY_DEGREE: usize> Mul for &Poly<MAX_POLY_DEGREE> {
+    type Output = Poly<MAX_POLY_DEGREE>;
+
+    /// Multiplies then reduces by the polynomial modulus.
+    fn mul(self, rhs: Self) -> Self::Output {
+        mul_poly(self, rhs)
+    }
+}
+
+impl<const MAX_POLY_DEGREE: usize> Mul<Poly<MAX_POLY_DEGREE>> for &Poly<MAX_POLY_DEGREE> {
+    type Output = Poly<MAX_POLY_DEGREE>;
+
+    /// Multiplies then reduces by the polynomial modulus.
+    fn mul(self, rhs: Poly<MAX_POLY_DEGREE>) -> Self::Output {
+        mul_poly(self, &rhs)
+    }
+}
+
 impl<const MAX_POLY_DEGREE: usize> Mul<DensePolynomial<Coeff>> for Poly<MAX_POLY_DEGREE> {
     type Output = Self;
 
