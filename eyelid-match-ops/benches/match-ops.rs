@@ -223,7 +223,7 @@ pub fn bench_mod_poly_ark(settings: &mut Criterion) {
     );
 }
 
-/// Run [`poly::karatsuba_mul()`] as a Criterion benchmark with random data.
+/// Run [`poly::inverse()`] as a Criterion benchmark with random data.
 pub fn bench_inv(settings: &mut Criterion) {
     // Setup: generate random cyclotomic polynomials
     let p = sample::<FULL_RES_POLY_DEGREE>();
