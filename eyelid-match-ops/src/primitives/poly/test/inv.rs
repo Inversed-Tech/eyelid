@@ -59,3 +59,22 @@ fn test_inverse() {
         }
     }
 }
+
+#[test]
+fn test_edge_cases() {
+    // Inverse of one is one
+    let one_poly: Poly<FULL_RES_POLY_DEGREE> = Poly::one();
+    let mut out = inverse(&one_poly.clone());
+    assert_eq!(out, Ok(one_poly.clone()));
+
+    // Inverse of minus one is minus one
+    let zero_poly: Poly<FULL_RES_POLY_DEGREE> = Poly::zero();
+    let minus_one_poly = zero_poly - one_poly.clone();
+    out = inverse(&minus_one_poly.clone());
+    assert_eq!(out, Ok(minus_one_poly));
+
+    // Inverse of zero is error
+    let zero_poly: Poly<FULL_RES_POLY_DEGREE> = Poly::zero();
+    out = inverse(&zero_poly.clone());
+    assert!(out.is_err());
+}
