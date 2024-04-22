@@ -3,6 +3,7 @@
 use crate::primitives::poly::sample;
 use ark_ff::{One, Zero};
 
+use crate::primitives::poly::test::gen::rand_poly;
 use crate::primitives::poly::Poly;
 
 #[cfg(test)]
@@ -10,14 +11,10 @@ use crate::primitives::poly::{extended_gcd, inverse, FULL_RES_POLY_DEGREE};
 #[cfg(test)]
 use ark_poly::Polynomial;
 
-#[test]
-fn test_inverse() {
-    let rng = rand::thread_rng();
-    let f = sample::<FULL_RES_POLY_DEGREE>(rng);
-
+fn inverse_test_helper<const MAX_POLY_DEGREE: usize>(f: &Poly<MAX_POLY_DEGREE>) {
     // REMARK: For our parameter choices it is very likely to find
     // the inverse in the first attempt.
-    let out = inverse(&f);
+    let out = inverse(f);
 
     #[cfg(not(tiny_poly))]
     let expect_msg = "unexpected non-invertible large polynomial";
@@ -30,7 +27,7 @@ fn test_inverse() {
         // For small degree and coefficient modulus, non-invertible polynomials are more likely.
 
         // Check that `f` isn't invertible
-        let (_x, y, _d) = extended_gcd(&Poly::new_unreduced_poly_modulus_slow(), &f);
+        let (_x, y, _d) = extended_gcd(&Poly::new_unreduced_poly_modulus_slow(), f);
         let fy = f * y;
 
         // Since `f` is not invertible, `f * y` can't be `1`.
@@ -44,6 +41,22 @@ fn test_inverse() {
             assert_ne!(fy.degree(), 0, "incorrect inverse() impl: the inverse of f was y*(c^1), because f * y is a non-zero constant c");
         }
     }
+}
+
+#[test]
+fn test_inverse_with_small_random_coefficients() {
+    let rng = rand::thread_rng();
+    let f = sample::<FULL_RES_POLY_DEGREE>(rng);
+
+    // REMARK: For our parameter choices it is very likely to find
+    // the inverse in the first attempt.
+    inverse_test_helper(&f);
+}
+
+#[test]
+fn test_inverse_with_random_coefficients() {
+    let f: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE);
+    inverse_test_helper(&f);
 }
 
 #[test]
