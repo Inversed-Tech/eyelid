@@ -29,7 +29,7 @@ pub mod modular_poly;
 #[cfg(any(test, feature = "benchmark"))]
 pub mod test;
 
-/// Returns the inverse in the cyclotomic ring, if it exists.
+/// Returns the monic inverse of `a` in the cyclotomic ring, if it exists.
 /// Otherwise, returns an error.
 pub fn inverse<const MAX_POLY_DEGREE: usize>(
     a: &Poly<MAX_POLY_DEGREE>,
@@ -38,16 +38,20 @@ pub fn inverse<const MAX_POLY_DEGREE: usize>(
 
     let (_x, y, d) = extended_gcd(&unreduced_mod_pol, a);
 
-    // compute the inverse of `d` to calculate the final result
-    if d.degree() == 0 {
+    // If `d` is a non-zero constant, we can compute the inverse of `d`,
+    // and calculate the final inverse.
+    if d.is_zero() {
+        Err("Can't invert the zero polynomial".to_string())
+    } else if d.degree() > 0 {
+        Err("Non-invertible polynomial".to_string())
+    } else {
+        // Reduce to a monic polynomial.
         let mut inv: Poly<MAX_POLY_DEGREE> = y;
-        let divisor_inv: Coeff = d[0].inverse().unwrap();
+        let divisor_inv: Coeff = d[0].inverse().expect("just checked for zero");
 
         inv *= divisor_inv;
 
         Ok(inv)
-    } else {
-        Err("Can't invert polynomial, invalid divisor".to_string())
     }
 }
 
