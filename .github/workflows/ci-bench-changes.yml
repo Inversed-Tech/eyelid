@@ -61,6 +61,13 @@ jobs:
        with:
          path: ./cache
          key: ${{ runner.os }}-benchmark
+
+     # Debugging
+     - name: Show cache before update
+       run: |
+         cat output.txt
+         cat ./cache/benchmark-data.json || echo "No cached benchmark-data.json"
+         cp ./cache/benchmark-data.json /tmp/old-benchmark-data.json || echo "No cached benchmark-data.json"
   
      # Run `github-action-benchmark` action
      - name: Store benchmark result
@@ -87,5 +94,11 @@ jobs:
          
          # Upload the updated cache file for the next job by actions/cache,
          # if it's for the main branch. But don't record PR or manual workflow results. 
-         save-data-file: ${{ github.event_name == 'push' }}
+         save-data-file: ${{ github.event_name != 'pull_request' }}
   
+     # Debugging
+     - name: Show cache after update
+       run: |
+         cat output.txt
+         cat ./cache/benchmark-data.json || echo "No cached benchmark-data.json"
+         diff -u /tmp/old-benchmark-data.json ./cache/benchmark-data.json || echo "Differences were found, or no cached benchmark-data.json"
