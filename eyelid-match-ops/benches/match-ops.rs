@@ -8,6 +8,7 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 
 use eyelid_match_ops::{
+    IRIS_BIT_LENGTH,
     plaintext::{
         self,
         test::gen::{random_iris_code, random_iris_mask},
@@ -42,7 +43,7 @@ criterion_group! {
     name = bench_poly_split_karatsuba;
     // This can be any expression that returns a `Criterion` object.
     config = Criterion::default().sample_size(50);
-    // List cyclotomic multiplication implementations here.
+    // List polynomial split implementations here.
     targets = bench_poly_split_half, bench_poly_split_2
 }
 
@@ -58,9 +59,29 @@ criterion_group! {
     name = bench_inverse;
     // This can be any expression that returns a `Criterion` object.
     config = Criterion::default();
-    // List polynomial modulus implementations here.
+    // List polynomial inverse implementations here.
     targets = bench_inv
 }
+
+// Iris-length polynomial benchmarks.
+// These benchmarks provide an upper bound for the performance of iris operations.
+// They also help us decide if we need smaller or larger polynomial sizes.
+criterion_group! {
+    name = bench_cyclotomic_multiplication_iris;
+    // This can be any expression that returns a `Criterion` object.
+    config = Criterion::default();
+    // List iris-length polynomial multiplication implementations here.
+    targets = bench_rec_karatsuba_mul_iris
+}
+
+criterion_group! {
+    name = bench_inverse_iris;
+    // This can be any expression that returns a `Criterion` object.
+    config = Criterion::default();
+    // List iris-length polynomial inverse implementations here.
+    targets = bench_inv_iris
+}
+
 
 // List groups here.
 criterion_main!(
@@ -133,6 +154,27 @@ pub fn bench_rec_karatsuba_mul(settings: &mut Criterion) {
     );
 }
 
+/// Run [`poly::rec_karatsuba_mul()`] as a Criterion benchmark with random data on the full number of iris bits.
+pub fn bench_rec_karatsuba_mul_iris(settings: &mut Criterion) {
+    // Setup: generate random cyclotomic polynomials
+    let p1: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
+    let p2: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
+
+    settings.bench_with_input(
+        BenchmarkId::new(
+            "Recursive Karatsuba multiplication: polynomial",
+            "2 random polys of degree IRIS_BIT_LENGTH",
+        ),
+        &(p1, p2),
+        |benchmark, (p1, p2)| {
+            benchmark.iter_with_large_drop(|| {
+                // To avoid timing dropping the return value, this line must not end in ';'
+                poly::rec_karatsuba_mul(p1, p2)
+            })
+        },
+    );
+}
+
 /// Run [`poly::flat_karatsuba_mul()`] as a Criterion benchmark with random data.
 pub fn bench_flat_karatsuba_mul(settings: &mut Criterion) {
     // Setup: generate random cyclotomic polynomials
@@ -188,7 +230,7 @@ pub fn bench_poly_split_2(settings: &mut Criterion) {
     );
 }
 
-/// Run [`poly::mod_poly_manual()`] as a Criterion benchmark with random data.
+/// Run [`poly::mod_poly_manual_mut()`] as a Criterion benchmark with random data.
 pub fn bench_mod_poly_manual(settings: &mut Criterion) {
     // Setup: generate a random cyclotomic polynomial the size of a typical multiplication.
     let dividend: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE * 2);
@@ -211,7 +253,7 @@ pub fn bench_mod_poly_manual(settings: &mut Criterion) {
     );
 }
 
-/// Run [`poly::mod_poly_ark()`] as a Criterion benchmark with random data.
+/// Run [`poly::mod_poly_ark_ref_slow()`] as a Criterion benchmark with random data.
 pub fn bench_mod_poly_ark(settings: &mut Criterion) {
     // Setup: generate a random cyclotomic polynomial the size of a typical multiplication.
     let dividend: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE * 2);
@@ -252,6 +294,29 @@ pub fn bench_inv(settings: &mut Criterion) {
             benchmark.iter_with_large_drop(|| {
                 // To avoid timing dropping the return value, this line must not end in ';'
                 inverse(p)
+            })
+        },
+    );
+}
+
+/// Run [`poly::inverse()`] as a Criterion benchmark with random data on the full number of iris bits.
+pub fn bench_inv_iris(settings: &mut Criterion) {
+    // Setup: generate random cyclotomic polynomials
+
+    let rng = rand::thread_rng();
+
+    let p = sample::<IRIS_BIT_LENGTH>(rng);
+
+    settings.bench_with_input(
+        BenchmarkId::new(
+            "Cyclotomic inverse: polynomial",
+            "1 relatively small random poly of degree IRIS_BIT_LENGTH",
+        ),
+        &(p),
+        |benchmark, p| {
+            benchmark.iter_with_large_drop(|| {
+                // To avoid timing dropping the return value, this line must not end in ';'
+                poly::inverse(p)
             })
         },
     );
