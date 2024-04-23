@@ -58,6 +58,7 @@ jobs:
      # Download previous benchmark result from the most recent `main` branch cache (if any exists).
      # <https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache>
      - name: Download previous benchmark data
+       id: cache-restore-benchmark
        uses: actions/cache/restore@v4
        with:
          # This must be the same as the save path
@@ -79,7 +80,6 @@ jobs:
   
      # Run `github-action-benchmark` action
      - name: Update benchmark result
-       id: cache-restore-benchmark
        uses: benchmark-action/github-action-benchmark@v1
        with:
          # What benchmark tool the output.txt came from
