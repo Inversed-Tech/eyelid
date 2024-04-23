@@ -79,7 +79,7 @@ jobs:
   
      # Run `github-action-benchmark` action
      - name: Update benchmark result
-       id: restore-benchmark
+       id: cache-restore-benchmark
        uses: benchmark-action/github-action-benchmark@v1
        with:
          # What benchmark tool the output.txt came from
