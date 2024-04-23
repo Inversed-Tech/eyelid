@@ -34,7 +34,7 @@ criterion_group! {
 criterion_group! {
     name = bench_cyclotomic_multiplication;
     // This can be any expression that returns a `Criterion` object.
-    config = Criterion::default().sample_size(50);
+    config = Criterion::default().sample_size(10);
     // List cyclotomic multiplication implementations here.
     targets = bench_naive_cyclotomic_mul, bench_rec_karatsuba_mul, bench_flat_karatsuba_mul
 }
@@ -58,7 +58,7 @@ criterion_group! {
 criterion_group! {
     name = bench_inverse;
     // This can be any expression that returns a `Criterion` object.
-    config = Criterion::default();
+    config = Criterion::default().sample_size(20);
     // List polynomial inverse implementations here.
     targets = bench_inv
 }
@@ -69,15 +69,16 @@ criterion_group! {
 criterion_group! {
     name = bench_cyclotomic_multiplication_iris;
     // This can be any expression that returns a `Criterion` object.
-    config = Criterion::default();
+    config = Criterion::default().sample_size(30);
     // List iris-length polynomial multiplication implementations here.
+    // Currently we only benchmark the most efficient implementation.
     targets = bench_rec_karatsuba_mul_iris
 }
 
 criterion_group! {
     name = bench_inverse_iris;
     // This can be any expression that returns a `Criterion` object.
-    config = Criterion::default();
+    config = Criterion::default().sample_size(10);
     // List iris-length polynomial inverse implementations here.
     targets = bench_inv_iris
 }
@@ -88,7 +89,9 @@ criterion_main!(
     bench_cyclotomic_multiplication,
     bench_poly_split_karatsuba,
     bench_polynomial_modulus,
-    bench_inverse
+    bench_inverse,
+    bench_cyclotomic_multiplication_iris,
+    bench_inverse_iris
 );
 
 /// Run [`plaintext::is_iris_match()`] as a Criterion benchmark with random data.
