@@ -69,10 +69,9 @@ criterion_group! {
 criterion_group! {
     name = bench_cyclotomic_multiplication_iris;
     // This can be any expression that returns a `Criterion` object.
-    config = Criterion::default().sample_size(30);
+    config = Criterion::default().sample_size(10);
     // List iris-length polynomial multiplication implementations here.
-    // Currently we only benchmark the most efficient implementation.
-    targets = bench_rec_karatsuba_mul_iris
+    targets = bench_naive_cyclotomic_mul_iris, bench_rec_karatsuba_mul_iris, bench_flat_karatsuba_mul_iris
 }
 
 criterion_group! {
@@ -124,6 +123,27 @@ pub fn bench_naive_cyclotomic_mul(settings: &mut Criterion) {
         BenchmarkId::new(
             "Cyclotomic multiplication: polynomial",
             "2 random polys of degree N",
+        ),
+        &(p1, p2),
+        |benchmark, (p1, p2)| {
+            benchmark.iter_with_large_drop(|| {
+                // To avoid timing dropping the return value, this line must not end in ';'
+                poly::naive_cyclotomic_mul(p1, p2)
+            })
+        },
+    );
+}
+
+/// Run [`poly::naive_cyclotomic_mul()`] as a Criterion benchmark with random data on the full number of iris bits.
+pub fn bench_naive_cyclotomic_mul_iris(settings: &mut Criterion) {
+    // Setup: generate random cyclotomic polynomials
+    let p1: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
+    let p2: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
+
+    settings.bench_with_input(
+        BenchmarkId::new(
+            "Cyclotomic multiplication: polynomial",
+            "2 random polys of degree IRIS_BIT_LENGTH",
         ),
         &(p1, p2),
         |benchmark, (p1, p2)| {
@@ -187,6 +207,27 @@ pub fn bench_flat_karatsuba_mul(settings: &mut Criterion) {
         BenchmarkId::new(
             "Flat Karatsuba multiplication: polynomial",
             "2 random polys of degree N",
+        ),
+        &(p1, p2),
+        |benchmark, (p1, p2)| {
+            benchmark.iter_with_large_drop(|| {
+                // To avoid timing dropping the return value, this line must not end in ';'
+                poly::flat_karatsuba_mul(p1, p2)
+            })
+        },
+    );
+}
+
+/// Run [`poly::flat_karatsuba_mul()`] as a Criterion benchmark with random data on the full number of iris bits.
+pub fn bench_flat_karatsuba_mul_iris(settings: &mut Criterion) {
+    // Setup: generate random cyclotomic polynomials
+    let p1: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
+    let p2: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
+
+    settings.bench_with_input(
+        BenchmarkId::new(
+            "Flat Karatsuba multiplication: polynomial",
+            "2 random polys of degree IRIS_BIT_LENGTH",
         ),
         &(p1, p2),
         |benchmark, (p1, p2)| {
