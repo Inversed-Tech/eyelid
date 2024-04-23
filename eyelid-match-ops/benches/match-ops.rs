@@ -8,7 +8,6 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 
 use eyelid_match_ops::{
-    IRIS_BIT_LENGTH,
     plaintext::{
         self,
         test::gen::{random_iris_code, random_iris_mask},
@@ -19,6 +18,7 @@ use eyelid_match_ops::{
         },
         yashe::{Yashe, YasheParams},
     },
+    IRIS_BIT_LENGTH,
 };
 
 // Configure Criterion:
@@ -81,7 +81,6 @@ criterion_group! {
     // List iris-length polynomial inverse implementations here.
     targets = bench_inv_iris
 }
-
 
 // List groups here.
 criterion_main!(
@@ -305,7 +304,13 @@ pub fn bench_inv_iris(settings: &mut Criterion) {
 
     let rng = rand::thread_rng();
 
-    let p = sample::<IRIS_BIT_LENGTH>(rng);
+    let params = YasheParams {
+        t: 1024,
+        delta: 3.2,
+    };
+    let ctx: Yashe<IRIS_BIT_LENGTH> = Yashe::new(params);
+
+    let p = ctx.sample_gaussian(rng);
 
     settings.bench_with_input(
         BenchmarkId::new(
@@ -316,7 +321,7 @@ pub fn bench_inv_iris(settings: &mut Criterion) {
         |benchmark, p| {
             benchmark.iter_with_large_drop(|| {
                 // To avoid timing dropping the return value, this line must not end in ';'
-                poly::inverse(p)
+                inverse(p)
             })
         },
     );
