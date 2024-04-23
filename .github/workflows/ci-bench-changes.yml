@@ -55,12 +55,19 @@ jobs:
          cargo bench --features benchmark -- 'match|multiplication|inv' --output-format bencher | tee output.txt
          echo "Warning: benchmark timings are unreliable in CI due to virtualization"
 
-     # Download previous benchmark result from cache (if exists)
+     # Download previous benchmark result from the most recent `main` branch cache (if any exists).
+     # <https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache>
      - name: Download previous benchmark data
        uses: actions/cache@v4
        with:
          path: ./cache
-         key: ${{ runner.os }}-benchmark
+         # Use a unique key to always save a new cache.
+         # The commit hash isn't enough, because we also want to re-run the benchmark if the environment changes.
+         key: ${{ runner.os }}-benchmark-${{ github.sha }}-${{ github.run_id }}
+         # Download the most recent cache for this OS using a prefix.
+         # <https://github.com/actions/cache/blob/main/caching-strategies.md#using-restore-keys-to-download-the-closest-matching-cache>
+         restore-keys: |
+           ${{ runner.os }}-benchmark
 
      # Debugging
      - name: Show cache before update
