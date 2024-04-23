@@ -58,8 +58,9 @@ jobs:
      # Download previous benchmark result from the most recent `main` branch cache (if any exists).
      # <https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache>
      - name: Download previous benchmark data
-       uses: actions/cache@v4
+       uses: actions/cache/restore@v4
        with:
+         # This must be the same as the save path
          path: ./cache
          # Use a unique key to always save a new cache.
          # The commit hash isn't enough, because we also want to re-run the benchmark if the environment changes.
@@ -77,7 +78,8 @@ jobs:
          cp ./cache/benchmark-data.json /tmp/old-benchmark-data.json || echo "No cached benchmark-data.json"
   
      # Run `github-action-benchmark` action
-     - name: Store benchmark result
+     - name: Update benchmark result
+       id: restore-benchmark
        uses: benchmark-action/github-action-benchmark@v1
        with:
          # What benchmark tool the output.txt came from
@@ -109,3 +111,13 @@ jobs:
          cat output.txt
          cat ./cache/benchmark-data.json || echo "No cached benchmark-data.json"
          diff -u /tmp/old-benchmark-data.json ./cache/benchmark-data.json || echo "Differences were found, or no cached benchmark-data.json"
+
+     # The cache update and save is skipped on PRs, because we want the `main` branch to be the baseline
+     - name: Cache benchmark data
+       id: cache-save-benchmark
+       if: ${{ github.event_name != 'pull_request' }}
+       uses: actions/cache/save@v4
+       with:
+         # This must be the same as the restore path
+         path: ./cache
+         key: ${{ steps.cache-restore-benchmark.outputs.cache-primary-key }}
