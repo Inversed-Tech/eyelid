@@ -5,6 +5,8 @@
 // TODO: move the macros to a separate module and allow missing docs only in that module.
 #![allow(missing_docs)]
 
+use std::time::Duration;
+
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 
 use eyelid_match_ops::{
@@ -69,7 +71,7 @@ criterion_group! {
 criterion_group! {
     name = bench_cyclotomic_multiplication_iris;
     // This can be any expression that returns a `Criterion` object.
-    config = Criterion::default().sample_size(10);
+    config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(30));
     // List iris-length polynomial multiplication implementations here.
     targets = bench_naive_cyclotomic_mul_iris, bench_rec_karatsuba_mul_iris, bench_flat_karatsuba_mul_iris
 }
@@ -77,7 +79,7 @@ criterion_group! {
 criterion_group! {
     name = bench_inverse_iris;
     // This can be any expression that returns a `Criterion` object.
-    config = Criterion::default().sample_size(10);
+    config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(80));
     // List iris-length polynomial inverse implementations here.
     targets = bench_inv_iris
 }
