@@ -1,6 +1,6 @@
 //! Tests for polynomial inverse.
 
-use crate::primitives::poly::sample;
+use crate::primitives::poly::sample_gaussian;
 use ark_ff::{One, Zero};
 
 use crate::primitives::poly::test::gen::rand_poly;
@@ -46,7 +46,7 @@ fn inverse_test_helper<const MAX_POLY_DEGREE: usize>(f: &Poly<MAX_POLY_DEGREE>) 
 #[test]
 fn test_inverse_with_small_random_coefficients() {
     let rng = rand::thread_rng();
-    let f = sample::<FULL_RES_POLY_DEGREE>(rng);
+    let f = sample_gaussian::<FULL_RES_POLY_DEGREE>(rng);
 
     // REMARK: For our parameter choices it is very likely to find
     // the inverse in the first attempt.

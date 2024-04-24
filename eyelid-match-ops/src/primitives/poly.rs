@@ -3,9 +3,11 @@
 //! - [`Poly`] is in [`modular_poly`] and its submodules,
 //! - [`Coeff`] is in [`fq`] and submodules.
 
+use crate::primitives::poly::fq::rand_coeff;
 use ark_ff::{Field, One, Zero};
 use ark_poly::polynomial::Polynomial;
-use rand::{rngs::ThreadRng, Rng};
+use rand::rngs::ThreadRng;
+use rand_distr::{Distribution, Normal};
 
 pub use fq::Coeff;
 pub use modular_poly::{
@@ -130,15 +132,29 @@ pub fn extended_gcd<const MAX_POLY_DEGREE: usize>(
 
 /// This sampling is similar to what will be necessary for YASHE KeyGen.
 /// The purpose is to obtain a polynomial with small random coefficients.
-pub fn sample<const MAX_POLY_DEGREE: usize>(mut rng: ThreadRng) -> Poly<MAX_POLY_DEGREE> {
+pub fn sample_gaussian<const MAX_POLY_DEGREE: usize>(mut rng: ThreadRng) -> Poly<MAX_POLY_DEGREE> {
     let mut res = Poly::zero();
     // TODO: assert that this is less than the modulus of the coefficient
-    let max_coeff = 6;
-    let t = 2;
     for i in 0..MAX_POLY_DEGREE {
-        let coeff_rand = rng.gen_range(1..max_coeff);
-        res[i] = Coeff::from(t * coeff_rand);
+        let normal = Normal::new(0.0, 3.0).unwrap();
+        let v: f64 = normal.sample(&mut rng);
+        res[i] = Coeff::from(v as i64);
     }
     res[0] += Coeff::one();
+    res.truncate_to_canonical_form();
+    res
+}
+
+/// This sampling is similar to what will be necessary for YASHE KeyGen.
+/// The purpose is to obtain a polynomial with small random coefficients.
+pub fn sample_rand<const MAX_POLY_DEGREE: usize>(mut rng: ThreadRng) -> Poly<MAX_POLY_DEGREE> {
+    let mut res = Poly::zero();
+    // TODO: assert that this is less than the modulus of the coefficient
+    for i in 0..MAX_POLY_DEGREE {
+        // TODO: implement Coeff:rand
+        let coeff_rand = rand_coeff(&mut rng);
+        res[i] = coeff_rand;
+    }
+    res.truncate_to_canonical_form();
     res
 }
