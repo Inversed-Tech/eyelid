@@ -45,10 +45,7 @@ impl<const MAX_POLY_DEGREE: usize> Yashe<MAX_POLY_DEGREE> {
             let mut priv_key = f.clone();
             let finv = inverse(&f);
 
-            // TODO: use function to multiply by a constant
-            for i in 0..MAX_POLY_DEGREE {
-                priv_key[i] *= Coeff::from(self.params.t);
-            }
+            priv_key *= Coeff::from(self.params.t);
             priv_key[0] += Coeff::one();
             priv_key.truncate_to_canonical_form();
 
@@ -67,10 +64,7 @@ impl<const MAX_POLY_DEGREE: usize> Yashe<MAX_POLY_DEGREE> {
     ) -> PublicKey<MAX_POLY_DEGREE> {
         let q = sample_rand::<MAX_POLY_DEGREE>(rng);
         let mut h = q.clone();
-        // TODO: use function to multiply by a constant
-        for i in 0..MAX_POLY_DEGREE {
-            h[i] *= Coeff::from(self.params.t);
-        }
+        h *= Coeff::from(self.params.t);
         h.truncate_to_canonical_form();
         h = h * &private_key.finv;
         PublicKey { h }

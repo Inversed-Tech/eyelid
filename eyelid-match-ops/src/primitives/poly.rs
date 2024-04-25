@@ -136,7 +136,9 @@ pub fn sample_gaussian<const MAX_POLY_DEGREE: usize>(mut rng: ThreadRng) -> Poly
     let mut res = Poly::zero();
     // TODO: assert that this is less than the modulus of the coefficient
     for i in 0..MAX_POLY_DEGREE {
-        let normal = Normal::new(0.0, 3.0).unwrap();
+        // TODO: use delta (YASHE param) instead of 3.2
+        // Then those sampling functions should be moved
+        let normal = Normal::new(0.0, 3.2).unwrap();
         let v: f64 = normal.sample(&mut rng);
         res[i] = Coeff::from(v as i64);
     }
