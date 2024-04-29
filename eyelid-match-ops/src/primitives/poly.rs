@@ -3,10 +3,8 @@
 //! - [`Poly`] is in [`modular_poly`] and its submodules,
 //! - [`Coeff`] is in [`fq`] and submodules.
 
-use ark_ff::{Field, One, UniformRand, Zero};
+use ark_ff::{Field, One, Zero};
 use ark_poly::polynomial::Polynomial;
-use rand::rngs::ThreadRng;
-use rand_distr::{Distribution, Normal};
 
 pub use fq::Coeff;
 pub use modular_poly::{
@@ -129,34 +127,3 @@ pub fn extended_gcd<const MAX_POLY_DEGREE: usize>(
     (x_prev, y_prev, ri_prev)
 }
 
-/// This sampling is similar to what will be necessary for YASHE KeyGen.
-/// The purpose is to obtain a polynomial with small random coefficients.
-#[allow(clippy::cast_possible_truncation)]
-pub fn sample_gaussian<const MAX_POLY_DEGREE: usize>(mut rng: ThreadRng) -> Poly<MAX_POLY_DEGREE> {
-    let mut res = Poly::zero();
-    // TODO: assert that this is less than the modulus of the coefficient
-    for i in 0..MAX_POLY_DEGREE {
-        // TODO: use delta (YASHE param) instead of 3.2
-        // Then those sampling functions should be moved
-        let normal = Normal::new(0.0, 3.2).unwrap();
-        let v: f64 = normal.sample(&mut rng);
-        res[i] = Coeff::from(v as i64);
-    }
-    res[0] += Coeff::one();
-    res.truncate_to_canonical_form();
-    res
-}
-
-/// This sampling is similar to what will be necessary for YASHE KeyGen.
-/// The purpose is to obtain a polynomial with small random coefficients.
-pub fn sample_rand<const MAX_POLY_DEGREE: usize>(mut rng: ThreadRng) -> Poly<MAX_POLY_DEGREE> {
-    let mut res = Poly::zero();
-    // TODO: assert that this is less than the modulus of the coefficient
-    for i in 0..MAX_POLY_DEGREE {
-        // TODO: implement Coeff:rand
-        let coeff_rand = Coeff::rand(&mut rng);
-        res[i] = coeff_rand;
-    }
-    res.truncate_to_canonical_form();
-    res
-}

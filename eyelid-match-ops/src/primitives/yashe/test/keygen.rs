@@ -12,7 +12,7 @@ fn keygen_helper<const MAX_POLY_DEGREE: usize>() {
     let rng = rand::thread_rng();
     let params = YasheParams {
         t: 1024,
-        _delta: 3.2,
+        delta: 3.2,
     };
     let ctx: Yashe<MAX_POLY_DEGREE> = Yashe::new(params);
     let (private_key, public_key) = ctx.keygen(rng);
