@@ -126,4 +126,3 @@ pub fn extended_gcd<const MAX_POLY_DEGREE: usize>(
 
     (x_prev, y_prev, ri_prev)
 }
-

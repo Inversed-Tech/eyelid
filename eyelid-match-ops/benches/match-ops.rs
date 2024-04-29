@@ -5,8 +5,8 @@
 // TODO: move the macros to a separate module and allow missing docs only in that module.
 #![allow(missing_docs)]
 
-use eyelid_match_ops::primitives::yashe::{Yashe, YasheParams};
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use eyelid_match_ops::primitives::yashe::{Yashe, YasheParams};
 
 use eyelid_match_ops::{
     plaintext::{

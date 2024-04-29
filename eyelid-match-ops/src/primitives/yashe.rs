@@ -1,6 +1,5 @@
 /// Implementation of YASHE cryptosystem
 /// https://eprint.iacr.org/2013/075.pdf
-
 use crate::primitives::poly::{inverse, modular_poly::Poly, Coeff};
 use ark_ff::{One, UniformRand, Zero};
 use rand::rngs::ThreadRng;
@@ -90,7 +89,6 @@ impl<const MAX_POLY_DEGREE: usize> Yashe<MAX_POLY_DEGREE> {
         (priv_key, pub_key)
     }
 
-
     /// This sampling is similar to what will be necessary for YASHE KeyGen.
     /// The purpose is to obtain a polynomial with small random coefficients.
     #[allow(clippy::cast_possible_truncation)]
@@ -122,5 +120,4 @@ impl<const MAX_POLY_DEGREE: usize> Yashe<MAX_POLY_DEGREE> {
         res.truncate_to_canonical_form();
         res
     }
-
 }
