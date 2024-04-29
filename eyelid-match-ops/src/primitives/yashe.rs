@@ -1,5 +1,5 @@
 //! Implementation of YASHE cryptosystem
-//! https://eprint.iacr.org/2013/075.pdf
+//! `<https://eprint.iacr.org/2013/075.pdf>`
 
 use crate::primitives::poly::{inverse, modular_poly::Poly, Coeff};
 use ark_ff::{One, UniformRand, Zero};
