@@ -9,6 +9,7 @@ use rand_distr::{Distribution, Normal};
 pub mod test;
 
 /// Yashe parameters
+#[derive(Clone)]
 pub struct YasheParams {
     /// Plaintext coefficient modulus
     pub t: u64,
@@ -95,15 +96,11 @@ impl<const MAX_POLY_DEGREE: usize> Yashe<MAX_POLY_DEGREE> {
     #[allow(clippy::cast_possible_truncation)]
     pub fn sample_gaussian(&self, mut rng: ThreadRng) -> Poly<MAX_POLY_DEGREE> {
         let mut res = Poly::zero();
-        // TODO: assert that this is less than the modulus of the coefficient
         for i in 0..MAX_POLY_DEGREE {
-            // TODO: use delta (YASHE param) instead of 3.2
-            // Then those sampling functions should be moved
             let normal = Normal::new(0.0, self.params.delta).unwrap();
             let v: f64 = normal.sample(&mut rng);
             res[i] = Coeff::from(v as i64);
         }
-        res[0] += Coeff::one();
         res.truncate_to_canonical_form();
         res
     }
@@ -112,9 +109,7 @@ impl<const MAX_POLY_DEGREE: usize> Yashe<MAX_POLY_DEGREE> {
     /// The purpose is to obtain a polynomial with small random coefficients.
     pub fn sample_rand(&self, mut rng: ThreadRng) -> Poly<MAX_POLY_DEGREE> {
         let mut res = Poly::zero();
-        // TODO: assert that this is less than the modulus of the coefficient
         for i in 0..MAX_POLY_DEGREE {
-            // TODO: implement Coeff:rand
             let coeff_rand = Coeff::rand(&mut rng);
             res[i] = coeff_rand;
         }

@@ -1,5 +1,6 @@
 //! Unit tests for Key Generation
 
+use crate::primitives::yashe::Coeff;
 use crate::primitives::yashe::{inverse, Poly};
 use crate::primitives::yashe::{Yashe, YasheParams};
 use ark_ff::One;
@@ -15,11 +16,18 @@ fn keygen_helper<const MAX_POLY_DEGREE: usize>() {
         t: 1024,
         delta: 3.2,
     };
-    let ctx: Yashe<MAX_POLY_DEGREE> = Yashe::new(params);
+    let ctx: Yashe<MAX_POLY_DEGREE> = Yashe::new(params.clone());
     let (private_key, public_key) = ctx.keygen(rng);
 
     let f_inv = inverse(&private_key.f);
     let priv_key_inv = inverse(&private_key.priv_key);
+
+    //dbg!(private_key.priv_key[0].clone());
+    assert_eq!(
+        private_key.f[0] * Coeff::from(params.t) + Coeff::one(),
+        private_key.priv_key[0]
+    );
+
     assert_eq!(
         private_key.f * f_inv.expect("Polynomial f must be invertible"),
         Poly::one()
@@ -29,7 +37,6 @@ fn keygen_helper<const MAX_POLY_DEGREE: usize>() {
         Poly::one()
     );
 
-    // TODO: test small coeff size
     assert_eq!(public_key.h.degree(), MAX_POLY_DEGREE - 1);
 }
 
