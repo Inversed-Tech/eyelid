@@ -1,3 +1,6 @@
+/// Implementation of YASHE cryptosystem
+/// https://eprint.iacr.org/2013/075.pdf
+
 use crate::primitives::poly::{inverse, modular_poly::Poly, sample_gaussian, sample_rand, Coeff};
 use ark_ff::One;
 use rand::rngs::ThreadRng;
