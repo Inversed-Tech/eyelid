@@ -131,6 +131,7 @@ pub fn extended_gcd<const MAX_POLY_DEGREE: usize>(
 
 /// This sampling is similar to what will be necessary for YASHE KeyGen.
 /// The purpose is to obtain a polynomial with small random coefficients.
+#[allow(clippy::cast_possible_truncation)]
 pub fn sample_gaussian<const MAX_POLY_DEGREE: usize>(mut rng: ThreadRng) -> Poly<MAX_POLY_DEGREE> {
     let mut res = Poly::zero();
     // TODO: assert that this is less than the modulus of the coefficient
