@@ -154,7 +154,7 @@ pub fn sample_rand<const MAX_POLY_DEGREE: usize>(mut rng: ThreadRng) -> Poly<MAX
     // TODO: assert that this is less than the modulus of the coefficient
     for i in 0..MAX_POLY_DEGREE {
         // TODO: implement Coeff:rand
-        let coeff_rand = rand_coeff(&mut rng);
+        let coeff_rand = Coeff::rand(&mut rng);
         res[i] = coeff_rand;
     }
     res.truncate_to_canonical_form();
