@@ -1,10 +1,12 @@
-/// Unit tests for Key Generation
+//! Unit tests for Key Generation
+
 use crate::primitives::yashe::{inverse, Poly};
 use crate::primitives::yashe::{Yashe, YasheParams};
 use ark_ff::One;
 use ark_poly::Polynomial;
 
 #[allow(dead_code)]
+/// Auxiliary function for testing key generation
 fn keygen_helper<const MAX_POLY_DEGREE: usize>() {
     // TODO: how to deal with different sets of parameters?
     // We must be able to test all the different parameterizations
