@@ -3,8 +3,7 @@
 //! - [`Poly`] is in [`modular_poly`] and its submodules,
 //! - [`Coeff`] is in [`fq`] and submodules.
 
-use crate::primitives::poly::fq::rand_coeff;
-use ark_ff::{Field, One, Zero};
+use ark_ff::{Field, One, UniformRand, Zero};
 use ark_poly::polynomial::Polynomial;
 use rand::rngs::ThreadRng;
 use rand_distr::{Distribution, Normal};
