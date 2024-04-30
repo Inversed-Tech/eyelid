@@ -6,7 +6,7 @@
 #![allow(missing_docs)]
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use eyelid_match_ops::primitives::yashe::{Yashe, YasheParams};
+use eyelid_match_ops::primitives::{yashe::{Yashe, YasheParams}, poly::FULL_RES_POLY_DEGREE};
 
 use eyelid_match_ops::{
     plaintext::{
@@ -234,7 +234,7 @@ pub fn bench_inv(settings: &mut Criterion) {
         t: 1024,
         delta: 3.2,
     };
-    let ctx: Yashe<2048> = Yashe::new(params);
+    let ctx: Yashe<FULL_RES_POLY_DEGREE> = Yashe::new(params);
 
     let p = ctx.sample_gaussian(rng);
 

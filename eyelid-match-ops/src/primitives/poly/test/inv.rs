@@ -51,7 +51,7 @@ fn test_inverse_with_small_random_coefficients() {
         t: 1024,
         delta: 3.2,
     };
-    let ctx: Yashe<2048> = Yashe::new(params);
+    let ctx: Yashe<FULL_RES_POLY_DEGREE> = Yashe::new(params);
     let f = ctx.sample_gaussian(rng);
 
     // REMARK: For our parameter choices it is very likely to find

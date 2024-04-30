@@ -194,7 +194,7 @@ impl<const MAX_POLY_DEGREE: usize> Poly<MAX_POLY_DEGREE> {
 
     /// Returns a new `Poly` filled with `n` zeroes.
     /// This is *not* the canonical form.
-    fn non_canonical_zeroes(n: usize) -> Self {
+    pub(crate) fn non_canonical_zeroes(n: usize) -> Self {
         Self(DensePolynomial {
             coeffs: vec![Coeff::zero(); n],
         })

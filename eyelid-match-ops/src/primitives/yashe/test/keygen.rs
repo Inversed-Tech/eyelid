@@ -1,8 +1,9 @@
 //! Unit tests for Key Generation
 
-use crate::primitives::yashe::Coeff;
-use crate::primitives::yashe::{inverse, Poly};
-use crate::primitives::yashe::{Yashe, YasheParams};
+use crate::primitives::{
+    yashe::{Coeff, inverse, Poly, Yashe, YasheParams},
+    poly::FULL_RES_POLY_DEGREE
+};
 use ark_ff::One;
 use ark_poly::Polynomial;
 
@@ -41,5 +42,5 @@ fn keygen_helper<const MAX_POLY_DEGREE: usize>() {
 
 #[test]
 fn test_keygen() {
-    keygen_helper::<2048>();
+    keygen_helper::<FULL_RES_POLY_DEGREE>();
 }

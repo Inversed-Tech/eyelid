@@ -2,7 +2,7 @@
 //! `<https://eprint.iacr.org/2013/075.pdf>`
 
 use crate::primitives::poly::{inverse, modular_poly::Poly, Coeff};
-use ark_ff::{One, UniformRand, Zero};
+use ark_ff::{One, UniformRand};
 use rand::rngs::ThreadRng;
 use rand_distr::{Distribution, Normal};
 
@@ -93,7 +93,7 @@ impl<const MAX_POLY_DEGREE: usize> Yashe<MAX_POLY_DEGREE> {
     /// The purpose is to obtain a polynomial with small random coefficients.
     #[allow(clippy::cast_possible_truncation)]
     pub fn sample_gaussian(&self, mut rng: ThreadRng) -> Poly<MAX_POLY_DEGREE> {
-        let mut res = Poly::zero();
+        let mut res = Poly::non_canonical_zeroes(MAX_POLY_DEGREE);
         for i in 0..MAX_POLY_DEGREE {
             let normal = Normal::new(0.0, self.params.delta).unwrap();
             let v: f64 = normal.sample(&mut rng);
@@ -106,7 +106,7 @@ impl<const MAX_POLY_DEGREE: usize> Yashe<MAX_POLY_DEGREE> {
     /// This sampling is similar to what will be necessary for YASHE KeyGen.
     /// The purpose is to obtain a polynomial with small random coefficients.
     pub fn sample_rand(&self, mut rng: ThreadRng) -> Poly<MAX_POLY_DEGREE> {
-        let mut res = Poly::zero();
+        let mut res = Poly::non_canonical_zeroes(MAX_POLY_DEGREE);
         for i in 0..MAX_POLY_DEGREE {
             let coeff_rand = Coeff::rand(&mut rng);
             res[i] = coeff_rand;
