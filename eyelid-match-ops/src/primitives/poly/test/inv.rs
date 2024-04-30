@@ -5,8 +5,8 @@ use ark_ff::{One, Zero};
 use crate::primitives::{
     poly::{
         modular_poly::inv::{extended_gcd, inverse},
-        Poly,
         test::gen::rand_poly,
+        Poly,
     },
     yashe::{Yashe, YasheParams},
 };

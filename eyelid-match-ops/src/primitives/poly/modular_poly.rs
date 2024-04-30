@@ -21,9 +21,9 @@ use derive_more::{Add, AsRef, Deref, DerefMut, Div, Into, Neg, Rem};
 
 use crate::primitives::poly::{mod_poly, mul_poly, new_unreduced_poly_modulus_slow, Coeff};
 
+pub(crate) mod inv;
 pub(super) mod modulus;
 pub(super) mod mul;
-pub(crate) mod inv;
 
 mod trivial;
 

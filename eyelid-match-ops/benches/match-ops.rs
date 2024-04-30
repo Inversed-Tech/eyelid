@@ -14,8 +14,7 @@ use eyelid_match_ops::{
     },
     primitives::{
         poly::{
-            modular_poly::inv::inverse,
-            self, test::gen::rand_poly, Poly, FULL_RES_POLY_DEGREE
+            self, modular_poly::inv::inverse, test::gen::rand_poly, Poly, FULL_RES_POLY_DEGREE,
         },
         yashe::{Yashe, YasheParams},
     },
