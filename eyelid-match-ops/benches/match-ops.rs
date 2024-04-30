@@ -251,7 +251,7 @@ pub fn bench_inv(settings: &mut Criterion) {
         |benchmark, p| {
             benchmark.iter_with_large_drop(|| {
                 // To avoid timing dropping the return value, this line must not end in ';'
-                poly::inverse(p)
+                inverse(p)
             })
         },
     );
