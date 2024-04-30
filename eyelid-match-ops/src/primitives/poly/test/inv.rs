@@ -2,12 +2,17 @@
 
 use ark_ff::{One, Zero};
 
-use crate::primitives::poly::Poly;
-use crate::primitives::yashe::YasheParams;
-use crate::primitives::{poly::test::gen::rand_poly, yashe::Yashe};
+use crate::primitives::{
+    poly::{
+        modular_poly::inv::{extended_gcd, inverse},
+        Poly,
+        test::gen::rand_poly,
+    },
+    yashe::{Yashe, YasheParams},
+};
 
 #[cfg(test)]
-use crate::primitives::poly::{extended_gcd, inverse, FULL_RES_POLY_DEGREE};
+use crate::primitives::poly::FULL_RES_POLY_DEGREE;
 #[cfg(test)]
 use ark_poly::Polynomial;
 

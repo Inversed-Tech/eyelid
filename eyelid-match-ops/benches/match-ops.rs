@@ -13,7 +13,10 @@ use eyelid_match_ops::{
         test::gen::{random_iris_code, random_iris_mask},
     },
     primitives::{
-        poly::{self, test::gen::rand_poly, Poly, FULL_RES_POLY_DEGREE},
+        poly::{
+            modular_poly::inv::inverse,
+            self, test::gen::rand_poly, Poly, FULL_RES_POLY_DEGREE
+        },
         yashe::{Yashe, YasheParams},
     },
 };
