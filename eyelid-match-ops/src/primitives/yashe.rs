@@ -59,8 +59,7 @@ impl<const MAX_POLY_DEGREE: usize> Yashe<MAX_POLY_DEGREE> {
             priv_key[0] += Coeff::one();
             priv_key.truncate_to_canonical_form();
 
-            if finv.is_ok() {
-                let finv = finv.unwrap();
+            if let Ok(finv) = finv {
                 return PrivateKey { f, finv, priv_key };
             }
         }
