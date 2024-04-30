@@ -28,18 +28,18 @@ pub struct Yashe<const MAX_POLY_DEGREE: usize> {
 #[derive(Debug, Clone)]
 pub struct PrivateKey<const MAX_POLY_DEGREE: usize> {
     /// Sampled with small coefficients (and invertible)
-    f: Poly<MAX_POLY_DEGREE>,
+    pub f: Poly<MAX_POLY_DEGREE>,
     /// The inverse of f
-    finv: Poly<MAX_POLY_DEGREE>,
+    pub finv: Poly<MAX_POLY_DEGREE>,
     /// Private key
-    priv_key: Poly<MAX_POLY_DEGREE>,
+    pub priv_key: Poly<MAX_POLY_DEGREE>,
 }
 
 /// Public key struct
 #[derive(Debug)]
 pub struct PublicKey<const MAX_POLY_DEGREE: usize> {
     /// Public key
-    h: Poly<MAX_POLY_DEGREE>,
+    pub h: Poly<MAX_POLY_DEGREE>,
 }
 
 impl<const MAX_POLY_DEGREE: usize> Yashe<MAX_POLY_DEGREE> {
