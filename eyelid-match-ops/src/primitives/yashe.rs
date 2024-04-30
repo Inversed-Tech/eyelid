@@ -6,6 +6,7 @@ use ark_ff::{One, UniformRand, Zero};
 use rand::rngs::ThreadRng;
 use rand_distr::{Distribution, Normal};
 
+#[cfg(test)]
 pub mod test;
 
 /// Yashe parameters
