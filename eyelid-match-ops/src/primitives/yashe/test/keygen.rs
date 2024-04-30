@@ -1,8 +1,8 @@
 //! Unit tests for Key Generation
 
 use crate::primitives::{
-    yashe::{Coeff, inverse, Poly, Yashe, YasheParams},
-    poly::FULL_RES_POLY_DEGREE
+    poly::FULL_RES_POLY_DEGREE,
+    yashe::{inverse, Coeff, Poly, Yashe, YasheParams},
 };
 use ark_ff::One;
 use ark_poly::Polynomial;

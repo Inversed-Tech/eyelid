@@ -6,7 +6,10 @@
 #![allow(missing_docs)]
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use eyelid_match_ops::primitives::{yashe::{Yashe, YasheParams}, poly::FULL_RES_POLY_DEGREE};
+use eyelid_match_ops::primitives::{
+    poly::FULL_RES_POLY_DEGREE,
+    yashe::{Yashe, YasheParams},
+};
 
 use eyelid_match_ops::{
     plaintext::{
