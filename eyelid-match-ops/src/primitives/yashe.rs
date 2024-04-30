@@ -26,7 +26,6 @@ pub struct Yashe<const MAX_POLY_DEGREE: usize> {
 
 /// Private key struct
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub struct PrivateKey<const MAX_POLY_DEGREE: usize> {
     /// Sampled with small coefficients (and invertible)
     f: Poly<MAX_POLY_DEGREE>,
@@ -38,7 +37,6 @@ pub struct PrivateKey<const MAX_POLY_DEGREE: usize> {
 
 /// Public key struct
 #[derive(Debug)]
-#[allow(dead_code)]
 pub struct PublicKey<const MAX_POLY_DEGREE: usize> {
     /// Public key
     h: Poly<MAX_POLY_DEGREE>,
