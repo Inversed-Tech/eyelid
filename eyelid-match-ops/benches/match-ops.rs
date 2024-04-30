@@ -6,17 +6,16 @@
 #![allow(missing_docs)]
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use eyelid_match_ops::primitives::{
-    poly::FULL_RES_POLY_DEGREE,
-    yashe::{Yashe, YasheParams},
-};
 
 use eyelid_match_ops::{
     plaintext::{
         self,
         test::gen::{random_iris_code, random_iris_mask},
     },
-    primitives::poly::{self, test::gen::rand_poly, Poly, FULL_RES_POLY_DEGREE},
+    primitives::{
+        poly::{self, test::gen::rand_poly, Poly, FULL_RES_POLY_DEGREE},
+        yashe::{Yashe, YasheParams},
+    },
 };
 
 // Configure Criterion:
