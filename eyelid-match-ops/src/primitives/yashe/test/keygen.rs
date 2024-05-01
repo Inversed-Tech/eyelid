@@ -37,7 +37,7 @@ fn keygen_helper<const MAX_POLY_DEGREE: usize>() {
         Poly::one()
     );
 
-    assert!(public_key.h.degree() <= MAX_POLY_DEGREE - 1);
+    assert!(public_key.h.degree() < MAX_POLY_DEGREE);
 }
 
 #[test]
