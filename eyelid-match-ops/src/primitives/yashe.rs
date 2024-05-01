@@ -98,6 +98,8 @@ impl<const MAX_POLY_DEGREE: usize> Yashe<MAX_POLY_DEGREE> {
     pub fn sample_gaussian(&self, mut rng: ThreadRng) -> Poly<MAX_POLY_DEGREE> {
         let mut res = Poly::non_canonical_zeroes(MAX_POLY_DEGREE);
         for i in 0..MAX_POLY_DEGREE {
+            // TODO SECURITY: check that the generated integers are secure:
+            // <https://github.com/Inversed-Tech/eyelid/issues/70>
             let normal = Normal::new(0.0, self.params.delta).unwrap();
             let v: f64 = normal.sample(&mut rng);
             res[i] = Coeff::from(v as i64);
