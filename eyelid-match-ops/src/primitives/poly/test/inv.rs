@@ -1,13 +1,18 @@
 //! Tests for polynomial inverse.
 
-use crate::primitives::poly::sample;
 use ark_ff::{One, Zero};
 
-use crate::primitives::poly::test::gen::rand_poly;
-use crate::primitives::poly::Poly;
+use crate::primitives::{
+    poly::{
+        modular_poly::inv::{extended_gcd, inverse},
+        test::gen::rand_poly,
+        Poly,
+    },
+    yashe::{Yashe, YasheParams},
+};
 
 #[cfg(test)]
-use crate::primitives::poly::{extended_gcd, inverse, FULL_RES_POLY_DEGREE};
+use crate::primitives::poly::FULL_RES_POLY_DEGREE;
 #[cfg(test)]
 use ark_poly::Polynomial;
 
@@ -44,9 +49,15 @@ fn inverse_test_helper<const MAX_POLY_DEGREE: usize>(f: &Poly<MAX_POLY_DEGREE>) 
 }
 
 #[test]
-fn test_inverse_with_small_random_coefficients() {
+fn test_key_generation_and_inverse() {
     let rng = rand::thread_rng();
-    let f = sample::<FULL_RES_POLY_DEGREE>(rng);
+
+    let params = YasheParams {
+        t: 1024,
+        delta: 3.2,
+    };
+    let ctx: Yashe<FULL_RES_POLY_DEGREE> = Yashe::new(params);
+    let f = ctx.sample_gaussian(rng);
 
     // REMARK: For our parameter choices it is very likely to find
     // the inverse in the first attempt.

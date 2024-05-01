@@ -12,7 +12,12 @@ use eyelid_match_ops::{
         self,
         test::gen::{random_iris_code, random_iris_mask},
     },
-    primitives::poly::{self, sample, test::gen::rand_poly, Poly, FULL_RES_POLY_DEGREE},
+    primitives::{
+        poly::{
+            self, modular_poly::inv::inverse, test::gen::rand_poly, Poly, FULL_RES_POLY_DEGREE,
+        },
+        yashe::{Yashe, YasheParams},
+    },
 };
 
 // Configure Criterion:
@@ -229,7 +234,13 @@ pub fn bench_inv(settings: &mut Criterion) {
 
     let rng = rand::thread_rng();
 
-    let p = sample::<FULL_RES_POLY_DEGREE>(rng);
+    let params = YasheParams {
+        t: 1024,
+        delta: 3.2,
+    };
+    let ctx: Yashe<FULL_RES_POLY_DEGREE> = Yashe::new(params);
+
+    let p = ctx.sample_gaussian(rng);
 
     settings.bench_with_input(
         BenchmarkId::new(
@@ -240,7 +251,7 @@ pub fn bench_inv(settings: &mut Criterion) {
         |benchmark, p| {
             benchmark.iter_with_large_drop(|| {
                 // To avoid timing dropping the return value, this line must not end in ';'
-                poly::inverse(p)
+                inverse(p)
             })
         },
     );

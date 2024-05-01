@@ -21,6 +21,7 @@ use derive_more::{Add, AsRef, Deref, DerefMut, Div, Into, Neg, Rem};
 
 use crate::primitives::poly::{mod_poly, mul_poly, new_unreduced_poly_modulus_slow, Coeff};
 
+pub mod inv;
 pub(super) mod modulus;
 pub(super) mod mul;
 
@@ -194,7 +195,7 @@ impl<const MAX_POLY_DEGREE: usize> Poly<MAX_POLY_DEGREE> {
 
     /// Returns a new `Poly` filled with `n` zeroes.
     /// This is *not* the canonical form.
-    fn non_canonical_zeroes(n: usize) -> Self {
+    pub(crate) fn non_canonical_zeroes(n: usize) -> Self {
         Self(DensePolynomial {
             coeffs: vec![Coeff::zero(); n],
         })
