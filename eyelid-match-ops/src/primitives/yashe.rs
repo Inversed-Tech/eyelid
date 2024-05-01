@@ -58,11 +58,17 @@ impl<const MAX_POLY_DEGREE: usize> Yashe<MAX_POLY_DEGREE> {
             let mut priv_key = f.clone();
             let finv = inverse(&f);
 
+            let Ok(finv) = finv else {
+                continue;
+            }
+
             priv_key *= Coeff::from(self.params.t);
             priv_key[0] += Coeff::one();
             priv_key.truncate_to_canonical_form();
 
-            if let Ok(finv) = finv {
+            let priv_key_inv = inverse(&priv_key);
+
+            if let Ok(_priv_key_inv) = priv_key_inv {
                 return PrivateKey { f, finv, priv_key };
             }
         }
