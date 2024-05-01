@@ -49,7 +49,7 @@ fn inverse_test_helper<const MAX_POLY_DEGREE: usize>(f: &Poly<MAX_POLY_DEGREE>) 
 }
 
 #[test]
-fn test_inverse_with_small_random_coefficients() {
+fn test_key_generation_and_inverse() {
     let rng = rand::thread_rng();
 
     let params = YasheParams {
