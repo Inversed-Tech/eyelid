@@ -60,7 +60,7 @@ impl<const MAX_POLY_DEGREE: usize> Yashe<MAX_POLY_DEGREE> {
 
             let Ok(finv) = finv else {
                 continue;
-            }
+            };
 
             priv_key *= Coeff::from(self.params.t);
             priv_key[0] += Coeff::one();
