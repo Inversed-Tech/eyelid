@@ -5,7 +5,9 @@
 // TODO: move the macros to a separate module and allow missing docs only in that module.
 #![allow(missing_docs)]
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use std::time::Duration;
+
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode::*};
 
 use eyelid_match_ops::{
     plaintext::{
@@ -16,8 +18,9 @@ use eyelid_match_ops::{
         poly::{
             self, modular_poly::inv::inverse, test::gen::rand_poly, Poly, FULL_RES_POLY_DEGREE,
         },
-        yashe::{Yashe, YasheParams},
+        yashe::{self, Yashe, YasheParams},
     },
+    IRIS_BIT_LENGTH,
 };
 
 // Configure Criterion:
@@ -33,7 +36,7 @@ criterion_group! {
 criterion_group! {
     name = bench_cyclotomic_multiplication;
     // This can be any expression that returns a `Criterion` object.
-    config = Criterion::default().sample_size(50);
+    config = Criterion::default().sample_size(10);
     // List cyclotomic multiplication implementations here.
     targets = bench_naive_cyclotomic_mul, bench_rec_karatsuba_mul, bench_flat_karatsuba_mul
 }
@@ -42,7 +45,7 @@ criterion_group! {
     name = bench_poly_split_karatsuba;
     // This can be any expression that returns a `Criterion` object.
     config = Criterion::default().sample_size(50);
-    // List cyclotomic multiplication implementations here.
+    // List polynomial split implementations here.
     targets = bench_poly_split_half, bench_poly_split_2
 }
 
@@ -57,9 +60,44 @@ criterion_group! {
 criterion_group! {
     name = bench_inverse;
     // This can be any expression that returns a `Criterion` object.
-    config = Criterion::default();
-    // List polynomial modulus implementations here.
+    config = Criterion::default().sample_size(20);
+    // List polynomial inverse implementations here.
     targets = bench_inv
+}
+
+criterion_group! {
+    name = bench_key_generation;
+    // This can be any expression that returns a `Criterion` object.
+    config = Criterion::default().sample_size(10);
+    // List key generation implementations here.
+    targets = bench_keygen
+}
+
+// Iris-length polynomial benchmarks.
+// These benchmarks provide an upper bound for the performance of iris operations.
+// They also help us decide if we need smaller or larger polynomial sizes.
+criterion_group! {
+    name = bench_cyclotomic_multiplication_iris;
+    // This can be any expression that returns a `Criterion` object.
+    config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(40));
+    // List iris-length polynomial multiplication implementations here.
+    targets = bench_naive_cyclotomic_mul_iris, bench_rec_karatsuba_mul_iris, bench_flat_karatsuba_mul_iris
+}
+
+criterion_group! {
+    name = bench_inverse_iris;
+    // This can be any expression that returns a `Criterion` object.
+    config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(120));
+    // List iris-length polynomial inverse implementations here.
+    targets = bench_inv_iris
+}
+
+criterion_group! {
+    name = bench_key_generation_iris;
+    // This can be any expression that returns a `Criterion` object.
+    config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(230));
+    // List key generation implementations here.
+    targets = bench_keygen_iris
 }
 
 // List groups here.
@@ -68,7 +106,11 @@ criterion_main!(
     bench_cyclotomic_multiplication,
     bench_poly_split_karatsuba,
     bench_polynomial_modulus,
-    bench_inverse
+    bench_inverse,
+    bench_key_generation,
+    bench_cyclotomic_multiplication_iris,
+    bench_inverse_iris,
+    bench_key_generation_iris
 );
 
 /// Run [`plaintext::is_iris_match()`] as a Criterion benchmark with random data.
@@ -104,8 +146,34 @@ pub fn bench_naive_cyclotomic_mul(settings: &mut Criterion) {
         ),
         &(p1, p2),
         |benchmark, (p1, p2)| {
-            benchmark.iter_with_large_drop(|| {
-                // To avoid timing dropping the return value, this line must not end in ';'
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Poly<FULL_RES_POLY_DEGREE> {
+                poly::naive_cyclotomic_mul(p1, p2)
+            })
+        },
+    );
+}
+
+/// Run [`poly::naive_cyclotomic_mul()`] as a Criterion benchmark with random data on the full number of iris bits.
+pub fn bench_naive_cyclotomic_mul_iris(settings: &mut Criterion) {
+    // Tweak configuration for a long-running test
+    let mut settings = settings.benchmark_group("Slow Benchmarks");
+    // We can override the configuration on a per-group level
+    settings.sampling_mode(Flat);
+
+    // Setup: generate random cyclotomic polynomials
+    let p1: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
+    let p2: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
+
+    settings.bench_with_input(
+        BenchmarkId::new(
+            "Cyclotomic multiplication: polynomial",
+            "2 random polys of degree IRIS_BIT_LENGTH",
+        ),
+        &(p1, p2),
+        |benchmark, (p1, p2)| {
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Poly<IRIS_BIT_LENGTH> {
                 poly::naive_cyclotomic_mul(p1, p2)
             })
         },
@@ -125,8 +193,34 @@ pub fn bench_rec_karatsuba_mul(settings: &mut Criterion) {
         ),
         &(p1, p2),
         |benchmark, (p1, p2)| {
-            benchmark.iter_with_large_drop(|| {
-                // To avoid timing dropping the return value, this line must not end in ';'
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Poly<FULL_RES_POLY_DEGREE> {
+                poly::rec_karatsuba_mul(p1, p2)
+            })
+        },
+    );
+}
+
+/// Run [`poly::rec_karatsuba_mul()`] as a Criterion benchmark with random data on the full number of iris bits.
+pub fn bench_rec_karatsuba_mul_iris(settings: &mut Criterion) {
+    // Tweak configuration for a long-running test
+    let mut settings = settings.benchmark_group("Slow Benchmarks");
+    // We can override the configuration on a per-group level
+    settings.sampling_mode(Flat);
+
+    // Setup: generate random cyclotomic polynomials
+    let p1: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
+    let p2: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
+
+    settings.bench_with_input(
+        BenchmarkId::new(
+            "Recursive Karatsuba multiplication: polynomial",
+            "2 random polys of degree IRIS_BIT_LENGTH",
+        ),
+        &(p1, p2),
+        |benchmark, (p1, p2)| {
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Poly<IRIS_BIT_LENGTH> {
                 poly::rec_karatsuba_mul(p1, p2)
             })
         },
@@ -146,8 +240,34 @@ pub fn bench_flat_karatsuba_mul(settings: &mut Criterion) {
         ),
         &(p1, p2),
         |benchmark, (p1, p2)| {
-            benchmark.iter_with_large_drop(|| {
-                // To avoid timing dropping the return value, this line must not end in ';'
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Poly<FULL_RES_POLY_DEGREE> {
+                poly::flat_karatsuba_mul(p1, p2)
+            })
+        },
+    );
+}
+
+/// Run [`poly::flat_karatsuba_mul()`] as a Criterion benchmark with random data on the full number of iris bits.
+pub fn bench_flat_karatsuba_mul_iris(settings: &mut Criterion) {
+    // Tweak configuration for a long-running test
+    let mut settings = settings.benchmark_group("Slow Benchmarks");
+    // We can override the configuration on a per-group level
+    settings.sampling_mode(Flat);
+
+    // Setup: generate random cyclotomic polynomials
+    let p1: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
+    let p2: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
+
+    settings.bench_with_input(
+        BenchmarkId::new(
+            "Flat Karatsuba multiplication: polynomial",
+            "2 random polys of degree IRIS_BIT_LENGTH",
+        ),
+        &(p1, p2),
+        |benchmark, (p1, p2)| {
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Poly<IRIS_BIT_LENGTH> {
                 poly::flat_karatsuba_mul(p1, p2)
             })
         },
@@ -163,10 +283,12 @@ pub fn bench_poly_split_half(settings: &mut Criterion) {
         BenchmarkId::new("Karatsuba: poly split half", "random poly of degree N"),
         &(p),
         |benchmark, p| {
-            benchmark.iter_with_large_drop(|| {
-                // To avoid timing dropping the return value, this line must not end in ';'
-                poly::poly_split_half(p, FULL_RES_POLY_DEGREE)
-            })
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(
+                || -> (Poly<FULL_RES_POLY_DEGREE>, Poly<FULL_RES_POLY_DEGREE>) {
+                    poly::poly_split_half(p, FULL_RES_POLY_DEGREE)
+                },
+            )
         },
     );
 }
@@ -180,15 +302,15 @@ pub fn bench_poly_split_2(settings: &mut Criterion) {
         BenchmarkId::new("Karatsuba: poly split 2", "random poly of degree N"),
         &(p),
         |benchmark, p| {
-            benchmark.iter_with_large_drop(|| {
-                // To avoid timing dropping the return value, this line must not end in ';'
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Vec<Poly<FULL_RES_POLY_DEGREE>> {
                 poly::poly_split(p, 2)
             })
         },
     );
 }
 
-/// Run [`poly::mod_poly_manual()`] as a Criterion benchmark with random data.
+/// Run [`poly::mod_poly_manual_mut()`] as a Criterion benchmark with random data.
 pub fn bench_mod_poly_manual(settings: &mut Criterion) {
     // Setup: generate a random cyclotomic polynomial the size of a typical multiplication.
     let dividend: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE * 2);
@@ -197,21 +319,21 @@ pub fn bench_mod_poly_manual(settings: &mut Criterion) {
         BenchmarkId::new("Manual polynomial modulus", "A random poly of degree 2N"),
         &dividend,
         |benchmark, dividend| {
-            benchmark.iter_with_large_drop(|| {
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Poly<FULL_RES_POLY_DEGREE> {
                 // TODO: work out how to avoid timing this clone
                 // (The production code already avoids cloning where possible.)
                 let mut dividend = dividend.clone();
 
                 poly::mod_poly_manual_mut(&mut dividend);
 
-                // To avoid timing dropping dividend, we return it instead
                 dividend
             })
         },
     );
 }
 
-/// Run [`poly::mod_poly_ark()`] as a Criterion benchmark with random data.
+/// Run [`poly::mod_poly_ark_ref_slow()`] as a Criterion benchmark with random data.
 pub fn bench_mod_poly_ark(settings: &mut Criterion) {
     // Setup: generate a random cyclotomic polynomial the size of a typical multiplication.
     let dividend: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE * 2);
@@ -220,8 +342,8 @@ pub fn bench_mod_poly_ark(settings: &mut Criterion) {
         BenchmarkId::new("ark-poly polynomial modulus", "A random poly of degree 2N"),
         &dividend,
         |benchmark, dividend| {
-            benchmark.iter_with_large_drop(|| {
-                // To avoid timing dropping the return value, this line must not end in ';'
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Poly<FULL_RES_POLY_DEGREE> {
                 poly::mod_poly_ark_ref_slow(dividend)
             })
         },
@@ -232,7 +354,7 @@ pub fn bench_mod_poly_ark(settings: &mut Criterion) {
 pub fn bench_inv(settings: &mut Criterion) {
     // Setup: generate random cyclotomic polynomials
 
-    let rng = rand::thread_rng();
+    let mut rng = rand::thread_rng();
 
     let params = YasheParams {
         t: 1024,
@@ -240,7 +362,7 @@ pub fn bench_inv(settings: &mut Criterion) {
     };
     let ctx: Yashe<FULL_RES_POLY_DEGREE> = Yashe::new(params);
 
-    let p = ctx.sample_gaussian(rng);
+    let p = ctx.sample_gaussian(&mut rng);
 
     settings.bench_with_input(
         BenchmarkId::new(
@@ -249,10 +371,101 @@ pub fn bench_inv(settings: &mut Criterion) {
         ),
         &(p),
         |benchmark, p| {
-            benchmark.iter_with_large_drop(|| {
-                // To avoid timing dropping the return value, this line must not end in ';'
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Result<Poly<FULL_RES_POLY_DEGREE>, String> {
                 inverse(p)
             })
+        },
+    );
+}
+
+/// Run [`poly::inverse()`] as a Criterion benchmark with random data on the full number of iris bits.
+pub fn bench_inv_iris(settings: &mut Criterion) {
+    // Tweak configuration for a long-running test
+    let mut settings = settings.benchmark_group("Slow Benchmarks");
+    // We can override the configuration on a per-group level
+    settings.sampling_mode(Flat);
+
+    // Setup: generate random cyclotomic polynomials
+
+    let mut rng = rand::thread_rng();
+
+    let params = YasheParams {
+        t: 1024,
+        delta: 3.2,
+    };
+    let ctx: Yashe<IRIS_BIT_LENGTH> = Yashe::new(params);
+
+    let p = ctx.sample_gaussian(&mut rng);
+
+    settings.bench_with_input(
+        BenchmarkId::new(
+            "Cyclotomic inverse: polynomial",
+            "1 relatively small random poly of degree IRIS_BIT_LENGTH",
+        ),
+        &(p),
+        |benchmark, p| {
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Result<Poly<IRIS_BIT_LENGTH>, String> {
+                // TODO: consider benchmarking the inverse of a uniform random polynomial as well
+                inverse(p)
+            })
+        },
+    );
+}
+
+/// Run [`Yashe::keygen()`] as a Criterion benchmark with random data.
+pub fn bench_keygen(settings: &mut Criterion) {
+    // Setup parameters
+    let params = YasheParams {
+        t: 1024,
+        delta: 3.2,
+    };
+    let ctx: Yashe<FULL_RES_POLY_DEGREE> = Yashe::new(params);
+
+    settings.bench_with_input(
+        BenchmarkId::new("YASHE keygen", "standard parameters with degree N"),
+        &ctx,
+        |benchmark, ctx| {
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(
+                || -> (yashe::PrivateKey<FULL_RES_POLY_DEGREE>, yashe::PublicKey<FULL_RES_POLY_DEGREE>) {
+                    // The thread_rng() call is efficient, because it only clones a small amount of memory,
+                    // which is dedicated to the current thread.
+                    ctx.keygen(&mut rand::thread_rng())
+                },
+            )
+        },
+    );
+}
+
+/// Run [`Yashe::keygen()`] as a Criterion benchmark with random data on the full number of iris bits.
+pub fn bench_keygen_iris(settings: &mut Criterion) {
+    // Tweak configuration for a long-running test
+    let mut settings = settings.benchmark_group("Slow Benchmarks");
+    // We can override the configuration on a per-group level
+    settings.sampling_mode(Flat);
+
+    // Setup parameters
+    let params = YasheParams {
+        t: 1024,
+        delta: 3.2,
+    };
+    let ctx: Yashe<IRIS_BIT_LENGTH> = Yashe::new(params);
+
+    settings.bench_with_input(
+        BenchmarkId::new(
+            "YASHE keygen",
+            "standard parameters with degree IRIS_BIT_LENGTH",
+        ),
+        &ctx,
+        |benchmark, ctx| {
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(
+                || -> (yashe::PrivateKey<IRIS_BIT_LENGTH>, yashe::PublicKey<IRIS_BIT_LENGTH>) {
+                    ctx.keygen(&mut rand::thread_rng())
+                },
+            )
         },
     );
 }
