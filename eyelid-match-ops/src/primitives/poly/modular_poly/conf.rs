@@ -22,6 +22,16 @@ pub trait PolyConf: Copy + Clone + Debug + Eq + PartialEq {
     // TODO: add Coeff type
 }
 
+/// Iris bit length polynomial parameters.
+///
+/// This uses the full number of iris bits, which gives an upper bound on benchmarks.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct IrisBits;
+
+impl PolyConf for IrisBits {
+    const MAX_POLY_DEGREE: usize = crate::IRIS_BIT_LENGTH;
+}
+
 /// Full resolution polynomial parameters.
 ///
 /// These are the parameters for full resolution, according to the Inversed Tech report.

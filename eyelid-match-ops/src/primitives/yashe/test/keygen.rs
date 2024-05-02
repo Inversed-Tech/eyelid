@@ -1,7 +1,7 @@
 //! Unit tests for Key Generation
 
 use crate::primitives::{
-    poly::FULL_RES_POLY_DEGREE,
+    poly::TestRes,
     yashe::{Coeff, Poly, PolyConf, Yashe, YasheParams},
 };
 use ark_ff::One;

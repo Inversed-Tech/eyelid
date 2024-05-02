@@ -15,7 +15,7 @@ use eyelid_match_ops::{
         test::gen::{random_iris_code, random_iris_mask},
     },
     primitives::{
-        poly::{self, test::gen::rand_poly, Poly, FULL_RES_POLY_DEGREE},
+        poly::{self, test::gen::rand_poly, IrisBits, Poly, TestRes, FULL_RES_POLY_DEGREE},
         yashe::{self, Yashe, YasheParams},
     },
     IRIS_BIT_LENGTH,
@@ -145,9 +145,8 @@ pub fn bench_naive_cyclotomic_mul(settings: &mut Criterion) {
         &(p1, p2),
         |benchmark, (p1, p2)| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> Poly<TestRes> {
-                poly::naive_cyclotomic_mul(p1, p2)
-            })
+            benchmark
+                .iter_with_large_drop(|| -> Poly<TestRes> { poly::naive_cyclotomic_mul(p1, p2) })
         },
     );
 }
@@ -192,9 +191,7 @@ pub fn bench_rec_karatsuba_mul(settings: &mut Criterion) {
         &(p1, p2),
         |benchmark, (p1, p2)| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> Poly<TestRes> {
-                poly::rec_karatsuba_mul(p1, p2)
-            })
+            benchmark.iter_with_large_drop(|| -> Poly<TestRes> { poly::rec_karatsuba_mul(p1, p2) })
         },
     );
 }
@@ -239,9 +236,7 @@ pub fn bench_flat_karatsuba_mul(settings: &mut Criterion) {
         &(p1, p2),
         |benchmark, (p1, p2)| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> Poly<TestRes> {
-                poly::flat_karatsuba_mul(p1, p2)
-            })
+            benchmark.iter_with_large_drop(|| -> Poly<TestRes> { poly::flat_karatsuba_mul(p1, p2) })
         },
     );
 }
@@ -282,11 +277,9 @@ pub fn bench_poly_split_half(settings: &mut Criterion) {
         &(p),
         |benchmark, p| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(
-                || -> (Poly<TestRes>, Poly<FULL_RES_POLY_DEGREE>) {
-                    poly::poly_split_half(p, FULL_RES_POLY_DEGREE)
-                },
-            )
+            benchmark.iter_with_large_drop(|| -> (Poly<TestRes>, Poly<FULL_RES_POLY_DEGREE>) {
+                poly::poly_split_half(p, FULL_RES_POLY_DEGREE)
+            })
         },
     );
 }
@@ -301,9 +294,7 @@ pub fn bench_poly_split_2(settings: &mut Criterion) {
         &(p),
         |benchmark, p| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> Vec<Poly<TestRes>> {
-                poly::poly_split(p, 2)
-            })
+            benchmark.iter_with_large_drop(|| -> Vec<Poly<TestRes>> { poly::poly_split(p, 2) })
         },
     );
 }
@@ -341,9 +332,8 @@ pub fn bench_mod_poly_ark(settings: &mut Criterion) {
         &dividend,
         |benchmark, dividend| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> Poly<TestRes> {
-                poly::mod_poly_ark_ref_slow(dividend)
-            })
+            benchmark
+                .iter_with_large_drop(|| -> Poly<TestRes> { poly::mod_poly_ark_ref_slow(dividend) })
         },
     );
 }
@@ -372,9 +362,8 @@ pub fn bench_inv(settings: &mut Criterion) {
         &(p),
         |benchmark, p| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(
-                || -> Result<Poly<TestRes>, &'static str> { p.inverse() },
-            )
+            benchmark
+                .iter_with_large_drop(|| -> Result<Poly<TestRes>, &'static str> { p.inverse() })
         },
     );
 }
