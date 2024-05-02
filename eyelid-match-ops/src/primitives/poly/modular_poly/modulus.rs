@@ -1,23 +1,14 @@
 //! Reduction by the polynomial modulus `X^[MAX_POLY_DEGREE] + 1`.
 
 use ark_ff::{One, Zero};
-
-use crate::primitives::poly::{Coeff, Poly};
 use ark_poly::polynomial::Polynomial;
 
-/// The maximum exponent in the polynomial.
-///
-/// These are the parameters for full resolution, according to the Inversed Tech report.
-/// N = 2048
-#[cfg(not(tiny_poly))]
-pub const FULL_RES_POLY_DEGREE: usize = 2048;
+use crate::primitives::poly::{Coeff, Poly};
 
-/// The maximum exponent in the test-only polynomial.
-///
-/// The test parameters are specifically chosen to make failing tests easy to read and diagnose.
-/// N = 8
-#[cfg(tiny_poly)]
-pub const FULL_RES_POLY_DEGREE: usize = 8;
+// TODO: delete this after the search and replace.
+use super::conf::PolyConf;
+/// Temporary alias to make things compile.
+pub const FULL_RES_POLY_DEGREE: usize = super::conf::TestRes::MAX_POLY_DEGREE;
 
 /// The fastest available modular polynomial operation.
 pub use mod_poly_manual_mut as mod_poly;
