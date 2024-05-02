@@ -66,7 +66,7 @@ fn test_key_generation_and_inverse() {
 
 #[test]
 fn test_inverse_with_random_coefficients() {
-    let f: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE);
+    let f: Poly<TestRes> = rand_poly(TestRes::MAX_POLY_DEGREE);
     inverse_test_helper(&f);
 }
 

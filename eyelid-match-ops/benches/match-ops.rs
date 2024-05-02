@@ -133,8 +133,8 @@ fn bench_plaintext_full_match(settings: &mut Criterion) {
 /// Run [`poly::naive_cyclotomic_mul()`] as a Criterion benchmark with random data.
 pub fn bench_naive_cyclotomic_mul(settings: &mut Criterion) {
     // Setup: generate random cyclotomic polynomials
-    let p1: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE);
-    let p2: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE);
+    let p1: Poly<TestRes> = rand_poly(TestRes::MAX_POLY_DEGREE);
+    let p2: Poly<TestRes> = rand_poly(TestRes::MAX_POLY_DEGREE);
 
     settings.bench_with_input(
         BenchmarkId::new(
@@ -178,8 +178,8 @@ pub fn bench_naive_cyclotomic_mul_iris(settings: &mut Criterion) {
 /// Run [`poly::rec_karatsuba_mul()`] as a Criterion benchmark with random data.
 pub fn bench_rec_karatsuba_mul(settings: &mut Criterion) {
     // Setup: generate random cyclotomic polynomials
-    let p1: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE);
-    let p2: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE);
+    let p1: Poly<TestRes> = rand_poly(TestRes::MAX_POLY_DEGREE);
+    let p2: Poly<TestRes> = rand_poly(TestRes::MAX_POLY_DEGREE);
 
     settings.bench_with_input(
         BenchmarkId::new(
@@ -221,8 +221,8 @@ pub fn bench_rec_karatsuba_mul_iris(settings: &mut Criterion) {
 /// Run [`poly::flat_karatsuba_mul()`] as a Criterion benchmark with random data.
 pub fn bench_flat_karatsuba_mul(settings: &mut Criterion) {
     // Setup: generate random cyclotomic polynomials
-    let p1: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE);
-    let p2: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE);
+    let p1: Poly<TestRes> = rand_poly(TestRes::MAX_POLY_DEGREE);
+    let p2: Poly<TestRes> = rand_poly(TestRes::MAX_POLY_DEGREE);
 
     settings.bench_with_input(
         BenchmarkId::new(
@@ -265,7 +265,7 @@ pub fn bench_flat_karatsuba_mul_iris(settings: &mut Criterion) {
 /// Run [`poly::poly_split_half()`] as a Criterion benchmark with random data.
 pub fn bench_poly_split_half(settings: &mut Criterion) {
     // Setup: generate random cyclotomic polynomials
-    let p: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE);
+    let p: Poly<TestRes> = rand_poly(TestRes::MAX_POLY_DEGREE);
 
     settings.bench_with_input(
         BenchmarkId::new("Karatsuba: poly split half", "random poly of degree N"),
@@ -282,7 +282,7 @@ pub fn bench_poly_split_half(settings: &mut Criterion) {
 /// Run [`poly::poly_split(_, 2)`] as a Criterion benchmark with random data.
 pub fn bench_poly_split_2(settings: &mut Criterion) {
     // Setup: generate random cyclotomic polynomials
-    let p: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE);
+    let p: Poly<TestRes> = rand_poly(TestRes::MAX_POLY_DEGREE);
 
     settings.bench_with_input(
         BenchmarkId::new("Karatsuba: poly split 2", "random poly of degree N"),
@@ -297,7 +297,7 @@ pub fn bench_poly_split_2(settings: &mut Criterion) {
 /// Run [`poly::mod_poly_manual_mut()`] as a Criterion benchmark with random data.
 pub fn bench_mod_poly_manual(settings: &mut Criterion) {
     // Setup: generate a random cyclotomic polynomial the size of a typical multiplication.
-    let dividend: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE * 2);
+    let dividend: Poly<TestRes> = rand_poly(TestRes::MAX_POLY_DEGREE * 2);
 
     settings.bench_with_input(
         BenchmarkId::new("Manual polynomial modulus", "A random poly of degree 2N"),
@@ -320,7 +320,7 @@ pub fn bench_mod_poly_manual(settings: &mut Criterion) {
 /// Run [`poly::mod_poly_ark_ref_slow()`] as a Criterion benchmark with random data.
 pub fn bench_mod_poly_ark(settings: &mut Criterion) {
     // Setup: generate a random cyclotomic polynomial the size of a typical multiplication.
-    let dividend: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE * 2);
+    let dividend: Poly<TestRes> = rand_poly(TestRes::MAX_POLY_DEGREE * 2);
 
     settings.bench_with_input(
         BenchmarkId::new("ark-poly polynomial modulus", "A random poly of degree 2N"),

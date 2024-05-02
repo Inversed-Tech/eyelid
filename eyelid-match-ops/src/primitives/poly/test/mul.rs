@@ -121,8 +121,8 @@ where
 /// Test recursive karatsuba, flat karatsuba, and naive cyclotomic multiplication of two random polynomials all produce the same result.
 #[test]
 fn test_karatsuba_mul_rand_consistent() {
-    let p1: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE - 1);
-    let p2: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE - 1);
+    let p1: Poly<TestRes> = rand_poly(TestRes::MAX_POLY_DEGREE - 1);
+    let p2: Poly<TestRes> = rand_poly(TestRes::MAX_POLY_DEGREE - 1);
 
     #[allow(clippy::int_plus_one)]
     {
