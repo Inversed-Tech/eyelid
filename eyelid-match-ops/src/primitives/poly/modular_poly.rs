@@ -268,7 +268,7 @@ impl<'a, C: PolyConf> From<&DenseOrSparsePolynomial<'a, Coeff>> for Poly<C> {
 }
 
 impl<C: PolyConf> Index<usize> for Poly<C> {
-    type Output = Coeff;
+    type Output = C::Coeff;
 
     /// Read the coefficient at `index`, panicking only when reading a leading zero index above
     /// the maximum degree.
@@ -296,7 +296,7 @@ impl<C: PolyConf> Index<usize> for Poly<C> {
             Some(coeff) => coeff,
             None => {
                 if index <= C::MAX_POLY_DEGREE {
-                    &super::fq::COEFF_ZERO
+                    C::coeff_zero()
                 } else {
                     panic!("accessed virtual leading zero coefficient: improve performance by stopping at the highest non-zero coefficient")
                 }
