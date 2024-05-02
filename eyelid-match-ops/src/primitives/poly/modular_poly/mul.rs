@@ -9,7 +9,7 @@ use static_assertions::const_assert_eq;
 use crate::primitives::poly::{
     mod_poly,
     modular_poly::modulus::{mod_poly_ark_ref_slow, mod_poly_manual_mut},
-    C::Coeff, Poly, PolyConf,
+    Poly, PolyConf,
 };
 
 // Simple multiplication by a field element.
@@ -56,7 +56,7 @@ pub const FLAT_KARATSUBA_INITIAL_LAYER: u32 = 3;
 pub const FLAT_KARATSUBA_INITIAL_LAYER: u32 = 2;
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1`.
-/// All polynomials have maximum degree `C::MAX_POLY_DEGREE`.
+/// All polynomials have maximum degree [`PolyConf::MAX_POLY_DEGREE`].
 pub fn naive_cyclotomic_mul<C: PolyConf>(a: &Poly<C>, b: &Poly<C>) -> Poly<C> {
     debug_assert!(a.degree() <= C::MAX_POLY_DEGREE);
     debug_assert!(b.degree() <= C::MAX_POLY_DEGREE);
@@ -94,7 +94,7 @@ pub fn naive_cyclotomic_mul<C: PolyConf>(a: &Poly<C>, b: &Poly<C>) -> Poly<C> {
 }
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1` using recursive Karatsuba method.
-/// All polynomials have maximum degree `C::MAX_POLY_DEGREE`.
+/// All polynomials have maximum degree [`PolyConf::MAX_POLY_DEGREE`].
 ///
 /// # Performance
 ///
@@ -183,7 +183,7 @@ fn rec_karatsuba_mul_inner<C: PolyConf>(a: &Poly<C>, b: &Poly<C>, chunk: usize) 
 }
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1` using flat Karatsuba method.
-/// The returned polynomial has a degree less than `C::MAX_POLY_DEGREE`.
+/// The returned polynomial has a degree less than [`PolyConf::MAX_POLY_DEGREE`].
 ///
 /// This implementation can be parallelized since for each layer
 /// we have that chunks are independent of each other.
@@ -340,7 +340,7 @@ pub fn poly_split<C: PolyConf>(a: &Poly<C>, k: usize) -> Vec<Poly<C>> {
 ///
 /// Returns `(low, high)`, where `low` contains the constant term.
 ///
-/// All polynomials have maximum degree `C::MAX_POLY_DEGREE`. The modulus remains the same even after
+/// All polynomials have maximum degree [`PolyConf::MAX_POLY_DEGREE`]. The modulus remains the same even after
 /// the split.
 pub fn poly_split_half<C: PolyConf>(a: &Poly<C>, chunk: usize) -> (Poly<C>, Poly<C>) {
     debug_assert!(chunk <= C::MAX_POLY_DEGREE);

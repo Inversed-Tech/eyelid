@@ -5,10 +5,6 @@
 
 use ark_ff::{Fp128, MontBackend, MontConfig};
 
-/// The modular field used for polynomial coefficients, with precomputed primes and generators.
-/// TODO: delete this alias as part of cleanup.
-pub type C::Coeff = Fq79;
-
 /// The configuration of the modular field used for polynomial coefficients.
 //
 // Sage commands:

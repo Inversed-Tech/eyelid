@@ -2,7 +2,7 @@
 
 use crate::primitives::{
     poly::TestRes,
-    yashe::{C::Coeff, Poly, PolyConf, Yashe, YasheParams},
+    yashe::{Poly, PolyConf, Yashe, YasheParams},
 };
 use ark_ff::One;
 use ark_poly::Polynomial;

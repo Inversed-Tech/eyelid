@@ -12,7 +12,7 @@ use std::{
 use ark_ff::{One, Zero};
 use ark_poly::polynomial::univariate::{DenseOrSparsePolynomial, DensePolynomial};
 
-use crate::primitives::poly::{modular_poly::Poly, C::Coeff, PolyConf};
+use crate::primitives::poly::{modular_poly::Poly, PolyConf};
 
 impl<C: PolyConf> Borrow<DensePolynomial<C::Coeff>> for Poly<C> {
     fn borrow(&self) -> &DensePolynomial<C::Coeff> {

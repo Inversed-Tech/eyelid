@@ -22,9 +22,7 @@ use ark_poly::polynomial::univariate::{
 };
 use derive_more::{AsRef, Deref, DerefMut, Div, Into, Rem};
 
-use crate::primitives::poly::{
-    mod_poly, mul_poly, new_unreduced_poly_modulus_slow, C::Coeff, PolyConf,
-};
+use crate::primitives::poly::{mod_poly, mul_poly, new_unreduced_poly_modulus_slow, PolyConf};
 
 pub mod conf;
 
@@ -34,8 +32,8 @@ pub(super) mod mul;
 
 mod trivial;
 
-/// A modular polynomial with coefficients in [`C::Coeff`], and a generic maximum degree
-/// `C::MAX_POLY_DEGREE`. The un-reduced polynomial modulus is the polynomial modulus. TODO
+/// A modular polynomial with coefficients in [`PolyConf::Coeff`], and a generic maximum degree
+/// [`PolyConf::MAX_POLY_DEGREE`]. The un-reduced polynomial modulus is the polynomial modulus. TODO
 ///
 /// In its canonical form, a polynomial is a list of coefficients from the constant term `X^0`
 /// to the degree `X^n`, where the highest coefficient is non-zero. Leading zero coefficients are
@@ -194,7 +192,7 @@ impl<C: PolyConf> Poly<C> {
     }
 
     /// Reduce this polynomial so it is less than the polynomial modulus.
-    /// This also ensures its degree is less than [`C::MAX_POLY_DEGREE`](Self::N).
+    /// This also ensures its degree is less than [[`PolyConf::MAX_POLY_DEGREE`]](Self::N).
     ///
     /// This operation should be performed after every [`Poly`] method that increases the degree of the polynomial.
     /// [`DensePolynomial`] methods *do not* do this reduction.
@@ -282,7 +280,7 @@ impl<C: PolyConf> Index<usize> for Poly<C> {
     ///
     /// Only panics if index is:
     /// - a leading zero coefficient (which is not represented in the underlying data), and
-    /// - above [`C::MAX_POLY_DEGREE`](Self::N).
+    /// - above [[`PolyConf::MAX_POLY_DEGREE`]](Self::N).
     ///
     /// Panics indicate redundant code which should have stopped at the highest non-zero
     /// coefficient. Using `self.coeffs.iter()` is one way to ensure the code only accesses real

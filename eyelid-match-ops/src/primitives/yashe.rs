@@ -7,7 +7,7 @@ use ark_ff::{One, UniformRand};
 use rand::rngs::ThreadRng;
 use rand_distr::{Distribution, Normal};
 
-use crate::primitives::poly::{C::Coeff, Poly, PolyConf};
+use crate::primitives::poly::{Poly, PolyConf};
 
 #[cfg(test)]
 pub mod test;

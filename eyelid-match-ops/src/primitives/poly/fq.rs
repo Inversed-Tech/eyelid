@@ -16,11 +16,3 @@ mod fq79;
 
 #[cfg(tiny_poly)]
 mod fq_tiny;
-
-// TODO: delete this after C::Coeff is generic
-#[cfg(not(tiny_poly))]
-pub use fq79::C::Coeff;
-
-// TODO: delete this after C::Coeff is generic
-#[cfg(tiny_poly)]
-pub use fq_tiny::C::Coeff;

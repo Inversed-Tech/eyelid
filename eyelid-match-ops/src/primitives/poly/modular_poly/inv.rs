@@ -2,7 +2,7 @@
 use ark_ff::{Field, One, Zero};
 use ark_poly::Polynomial;
 
-use crate::primitives::poly::{C::Coeff, Poly, PolyConf};
+use crate::primitives::poly::{Poly, PolyConf};
 
 /// Returns the primitive polynomial which is the inverse of `a` in the
 /// cyclotomic ring, if it exists. Otherwise, returns an error.

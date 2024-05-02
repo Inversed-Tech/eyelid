@@ -3,7 +3,7 @@
 use ark_ff::{One, Zero};
 use ark_poly::polynomial::Polynomial;
 
-use crate::primitives::poly::{C::Coeff, Poly, PolyConf};
+use crate::primitives::poly::{Poly, PolyConf};
 
 /// The fastest available modular polynomial operation.
 pub use mod_poly_manual_mut as mod_poly;
