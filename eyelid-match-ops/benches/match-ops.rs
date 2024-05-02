@@ -319,7 +319,7 @@ pub fn bench_mod_poly_ark(settings: &mut Criterion) {
 pub fn bench_inv(settings: &mut Criterion) {
     // Setup: generate random cyclotomic polynomials
 
-    let rng = rand::thread_rng();
+    let mut rng = rand::thread_rng();
 
     let params = YasheParams {
         t: 1024,
@@ -327,7 +327,7 @@ pub fn bench_inv(settings: &mut Criterion) {
     };
     let ctx: Yashe<FULL_RES_POLY_DEGREE> = Yashe::new(params);
 
-    let p = ctx.sample_gaussian(rng);
+    let p = ctx.sample_gaussian(&mut rng);
 
     settings.bench_with_input(
         BenchmarkId::new(
@@ -348,7 +348,7 @@ pub fn bench_inv(settings: &mut Criterion) {
 pub fn bench_inv_iris(settings: &mut Criterion) {
     // Setup: generate random cyclotomic polynomials
 
-    let rng = rand::thread_rng();
+    let mut rng = rand::thread_rng();
 
     let params = YasheParams {
         t: 1024,
@@ -356,7 +356,7 @@ pub fn bench_inv_iris(settings: &mut Criterion) {
     };
     let ctx: Yashe<IRIS_BIT_LENGTH> = Yashe::new(params);
 
-    let p = ctx.sample_gaussian(rng);
+    let p = ctx.sample_gaussian(&mut rng);
 
     settings.bench_with_input(
         BenchmarkId::new(

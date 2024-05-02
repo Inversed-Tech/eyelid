@@ -50,14 +50,14 @@ fn inverse_test_helper<const MAX_POLY_DEGREE: usize>(f: &Poly<MAX_POLY_DEGREE>) 
 
 #[test]
 fn test_key_generation_and_inverse() {
-    let rng = rand::thread_rng();
+    let mut rng = rand::thread_rng();
 
     let params = YasheParams {
         t: 1024,
         delta: 3.2,
     };
     let ctx: Yashe<FULL_RES_POLY_DEGREE> = Yashe::new(params);
-    let f = ctx.sample_gaussian(rng);
+    let f = ctx.sample_gaussian(&mut rng);
 
     // REMARK: For our parameter choices it is very likely to find
     // the inverse in the first attempt.

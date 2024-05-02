@@ -13,7 +13,7 @@ use rand_distr::{Distribution, Normal};
 pub mod test;
 
 /// Yashe parameters
-#[derive(Clone)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct YasheParams {
     /// Plaintext coefficient modulus
     pub t: u64,
@@ -22,6 +22,7 @@ pub struct YasheParams {
 }
 
 /// Yashe scheme
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Yashe<const MAX_POLY_DEGREE: usize> {
     /// Cryptosystem parameters
     params: YasheParams,
@@ -52,16 +53,16 @@ impl<const MAX_POLY_DEGREE: usize> Yashe<MAX_POLY_DEGREE> {
     }
 
     /// Generate the private key
-    pub fn generate_private_key(&self, rng: ThreadRng) -> PrivateKey<MAX_POLY_DEGREE> {
+    pub fn generate_private_key(&self, rng: &mut ThreadRng) -> PrivateKey<MAX_POLY_DEGREE> {
         loop {
-            let f = self.sample_gaussian(rng.clone());
-            let mut priv_key = f.clone();
+            let f = self.sample_gaussian(rng);
             let finv = inverse(&f);
 
             let Ok(finv) = finv else {
                 continue;
             };
 
+            let mut priv_key = f.clone();
             priv_key *= Coeff::from(self.params.t);
             priv_key[0] += Coeff::one();
             priv_key.truncate_to_canonical_form();
@@ -77,46 +78,51 @@ impl<const MAX_POLY_DEGREE: usize> Yashe<MAX_POLY_DEGREE> {
     /// Generate the public key
     pub fn generate_public_key(
         &self,
-        rng: ThreadRng,
-        private_key: PrivateKey<MAX_POLY_DEGREE>,
+        rng: &mut ThreadRng,
+        private_key: &PrivateKey<MAX_POLY_DEGREE>,
     ) -> PublicKey<MAX_POLY_DEGREE> {
-        let q = self.sample_rand(rng);
-        let mut h = q.clone();
+        let mut h = self.sample_uniform(rng);
+
         h *= Coeff::from(self.params.t);
         h.truncate_to_canonical_form();
         h = h * &private_key.finv;
+
         PublicKey { h }
     }
 
     /// Generate the key pair
     pub fn keygen(
         &self,
-        rng: ThreadRng,
+        rng: &mut ThreadRng,
     ) -> (PrivateKey<MAX_POLY_DEGREE>, PublicKey<MAX_POLY_DEGREE>) {
-        let priv_key = self.generate_private_key(rng.clone());
-        let pub_key = self.generate_public_key(rng, priv_key.clone());
+        let priv_key = self.generate_private_key(rng);
+        let pub_key = self.generate_public_key(rng, &priv_key);
         (priv_key, pub_key)
     }
 
-    /// This sampling is similar to what will be necessary for YASHE KeyGen.
-    /// The purpose is to obtain a polynomial with small random coefficients.
+    /// Sample a polynomial with small random coefficients using a gaussian distribution.
     #[allow(clippy::cast_possible_truncation)]
-    pub fn sample_gaussian(&self, mut rng: ThreadRng) -> Poly<MAX_POLY_DEGREE> {
+    pub fn sample_gaussian(&self, rng: &mut ThreadRng) -> Poly<MAX_POLY_DEGREE> {
         let mut res = Poly::non_canonical_zeroes(MAX_POLY_DEGREE);
         for i in 0..MAX_POLY_DEGREE {
             // TODO SECURITY: check that the generated integers are secure:
             // <https://github.com/Inversed-Tech/eyelid/issues/70>
             let normal = Normal::new(0.0, self.params.delta).unwrap();
-            let v: f64 = normal.sample(&mut rng);
+            let v: f64 = normal.sample(rng);
+
+            // TODO: try i128, i32, i16, or i8 here
+            //
+            // Until we've checked the security of using fewer bits, use a large and performant type.
+            // Larger values are extremely rare, and will saturate to MIN or MAX.
+            // This is ok because the Coeff modulus is smaller than MIN/MAX.
             res[i] = Coeff::from(v as i64);
         }
         res.truncate_to_canonical_form();
         res
     }
 
-    /// This sampling is similar to what will be necessary for YASHE KeyGen.
-    /// The purpose is to obtain a polynomial with small random coefficients.
-    pub fn sample_rand(&self, mut rng: ThreadRng) -> Poly<MAX_POLY_DEGREE> {
+    /// Sample a polynomial with unlimited size random coefficients using a uniform distribution.
+    pub fn sample_uniform(&self, mut rng: &mut ThreadRng) -> Poly<MAX_POLY_DEGREE> {
         let mut res = Poly::non_canonical_zeroes(MAX_POLY_DEGREE);
         for i in 0..MAX_POLY_DEGREE {
             let coeff_rand = Coeff::rand(&mut rng);
