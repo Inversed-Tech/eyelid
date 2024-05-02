@@ -79,7 +79,7 @@ impl<C: PolyConf> Poly<C> {
 
     /// Converts the `coeffs` vector into a dense polynomial.
     pub fn from_coefficients_vec(coeffs: Vec<Coeff>) -> Self {
-        let mut poly = Self(DensePolynomial { coeffs }, PhantomData, PhantomData);
+        let mut poly = Self(DensePolynomial { coeffs }, PhantomData);
         poly.truncate_to_canonical_form();
         poly
     }
@@ -216,9 +216,12 @@ impl<C: PolyConf> Poly<C> {
     /// Returns a new `Poly` filled with `n` zeroes.
     /// This is *not* the canonical form.
     pub(crate) fn non_canonical_zeroes(n: usize) -> Self {
-        Self(DensePolynomial {
-            coeffs: vec![Coeff::zero(); n],
-        })
+        Self(
+            DensePolynomial {
+                coeffs: vec![Coeff::zero(); n],
+            },
+            PhantomData,
+        )
     }
 }
 
@@ -363,7 +366,7 @@ impl<C: PolyConf> Mul<DensePolynomial<Coeff>> for Poly<C> {
 
     /// Multiplies then reduces by the polynomial modulus.
     fn mul(self, rhs: DensePolynomial<Coeff>) -> Self {
-        mul_poly(&self, &Self(rhs), PhantomData)
+        mul_poly(&self, &Self(rhs, PhantomData))
     }
 }
 

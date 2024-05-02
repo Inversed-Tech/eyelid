@@ -5,6 +5,7 @@
 
 use std::{
     borrow::Borrow,
+    marker::PhantomData,
     ops::{Add, AddAssign, Mul, Sub, SubAssign},
 };
 
@@ -67,7 +68,7 @@ impl<C: PolyConf> Add<&Poly<C>> for Poly<C> {
     type Output = Self;
 
     fn add(self, rhs: &Self) -> Self {
-        Poly(&self.0 + &rhs.0)
+        Poly(&self.0 + &rhs.0, PhantomData)
     }
 }
 
@@ -75,7 +76,7 @@ impl<C: PolyConf> Add<Poly<C>> for &Poly<C> {
     type Output = Poly<C>;
 
     fn add(self, rhs: Poly<C>) -> Self::Output {
-        Poly(&self.0 + &rhs.0)
+        Poly(&self.0 + &rhs.0, PhantomData)
     }
 }
 
@@ -83,7 +84,7 @@ impl<'a, 'b, C: PolyConf> Add<&'a Poly<C>> for &'b Poly<C> {
     type Output = Poly<C>;
 
     fn add(self, rhs: &'a Poly<C>) -> Self::Output {
-        Poly(&self.0 + &rhs.0)
+        Poly(&self.0 + &rhs.0, PhantomData)
     }
 }
 
@@ -99,7 +100,7 @@ impl<C: PolyConf> Sub<&Poly<C>> for Poly<C> {
     type Output = Self;
 
     fn sub(self, rhs: &Self) -> Self {
-        Poly(&self.0 - &rhs.0)
+        Poly(&self.0 - &rhs.0, PhantomData)
     }
 }
 
@@ -107,7 +108,7 @@ impl<C: PolyConf> Sub<Poly<C>> for &Poly<C> {
     type Output = Poly<C>;
 
     fn sub(self, rhs: Poly<C>) -> Self::Output {
-        Poly(&self.0 - &rhs.0)
+        Poly(&self.0 - &rhs.0, PhantomData)
     }
 }
 
@@ -115,7 +116,7 @@ impl<'a, 'b, C: PolyConf> Sub<&'a Poly<C>> for &'b Poly<C> {
     type Output = Poly<C>;
 
     fn sub(self, rhs: &'a Poly<C>) -> Self::Output {
-        Poly(&self.0 - &rhs.0)
+        Poly(&self.0 - &rhs.0, PhantomData)
     }
 }
 
@@ -148,7 +149,7 @@ impl<C: PolyConf> Mul<Coeff> for Poly<C> {
     type Output = Self;
 
     fn mul(self, rhs: Coeff) -> Self {
-        Poly(&self.0 * rhs)
+        Poly(&self.0 * rhs, PhantomData)
     }
 }
 
@@ -156,6 +157,6 @@ impl<C: PolyConf> Mul<Coeff> for &Poly<C> {
     type Output = Poly<C>;
 
     fn mul(self, rhs: Coeff) -> Self::Output {
-        Poly(&self.0 * rhs)
+        Poly(&self.0 * rhs, PhantomData)
     }
 }
