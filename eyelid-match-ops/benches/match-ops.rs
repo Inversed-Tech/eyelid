@@ -15,10 +15,9 @@ use eyelid_match_ops::{
         test::gen::{random_iris_code, random_iris_mask},
     },
     primitives::{
-        poly::{self, test::gen::rand_poly, IrisBits, Poly, TestRes, FULL_RES_POLY_DEGREE},
+        poly::{self, test::gen::rand_poly, IrisBits, Poly, PolyConf, TestRes},
         yashe::{self, Yashe, YasheParams},
     },
-    IRIS_BIT_LENGTH,
 };
 
 // Configure Criterion:
@@ -170,9 +169,8 @@ pub fn bench_naive_cyclotomic_mul_iris(settings: &mut Criterion) {
         &(p1, p2),
         |benchmark, (p1, p2)| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> Poly<IrisBits> {
-                poly::naive_cyclotomic_mul(p1, p2)
-            })
+            benchmark
+                .iter_with_large_drop(|| -> Poly<IrisBits> { poly::naive_cyclotomic_mul(p1, p2) })
         },
     );
 }
@@ -215,9 +213,7 @@ pub fn bench_rec_karatsuba_mul_iris(settings: &mut Criterion) {
         &(p1, p2),
         |benchmark, (p1, p2)| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> Poly<IrisBits> {
-                poly::rec_karatsuba_mul(p1, p2)
-            })
+            benchmark.iter_with_large_drop(|| -> Poly<IrisBits> { poly::rec_karatsuba_mul(p1, p2) })
         },
     );
 }
@@ -260,9 +256,8 @@ pub fn bench_flat_karatsuba_mul_iris(settings: &mut Criterion) {
         &(p1, p2),
         |benchmark, (p1, p2)| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> Poly<IrisBits> {
-                poly::flat_karatsuba_mul(p1, p2)
-            })
+            benchmark
+                .iter_with_large_drop(|| -> Poly<IrisBits> { poly::flat_karatsuba_mul(p1, p2) })
         },
     );
 }
@@ -277,7 +272,7 @@ pub fn bench_poly_split_half(settings: &mut Criterion) {
         &(p),
         |benchmark, p| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> (Poly<TestRes>, Poly<FULL_RES_POLY_DEGREE>) {
+            benchmark.iter_with_large_drop(|| -> (Poly<TestRes>, Poly<TestRes>) {
                 poly::poly_split_half(p, FULL_RES_POLY_DEGREE)
             })
         },
@@ -395,9 +390,8 @@ pub fn bench_inv_iris(settings: &mut Criterion) {
         &(p),
         |benchmark, p| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> Result<Poly<IrisBits>, &'static str> {
-                p.inverse()
-            })
+            benchmark
+                .iter_with_large_drop(|| -> Result<Poly<IrisBits>, &'static str> { p.inverse() })
         },
     );
 }
@@ -417,7 +411,7 @@ pub fn bench_keygen(settings: &mut Criterion) {
         |benchmark, ctx| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
             benchmark.iter_with_large_drop(
-                || -> (yashe::PrivateKey<TestRes>, yashe::PublicKey<FULL_RES_POLY_DEGREE>) {
+                || -> (yashe::PrivateKey<TestRes>, yashe::PublicKey<TestRes>) {
                     // The thread_rng() call is efficient, because it only clones a small amount of memory,
                     // which is dedicated to the current thread.
                     ctx.keygen(&mut rand::thread_rng())
@@ -450,7 +444,7 @@ pub fn bench_keygen_iris(settings: &mut Criterion) {
         |benchmark, ctx| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
             benchmark.iter_with_large_drop(
-                || -> (yashe::PrivateKey<IrisBits>, yashe::PublicKey<IRIS_BIT_LENGTH>) {
+                || -> (yashe::PrivateKey<IrisBits>, yashe::PublicKey<IrisBits>) {
                     ctx.keygen(&mut rand::thread_rng())
                 },
             )

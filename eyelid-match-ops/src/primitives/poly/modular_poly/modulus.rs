@@ -3,12 +3,7 @@
 use ark_ff::{One, Zero};
 use ark_poly::polynomial::Polynomial;
 
-use crate::primitives::poly::{Coeff, Poly};
-
-// TODO: delete this after the search and replace.
-use super::conf::PolyConf;
-/// Temporary alias to make things compile.
-pub const FULL_RES_POLY_DEGREE: usize = super::conf::TestRes::MAX_POLY_DEGREE;
+use crate::primitives::poly::{Coeff, Poly, PolyConf};
 
 /// The fastest available modular polynomial operation.
 pub use mod_poly_manual_mut as mod_poly;

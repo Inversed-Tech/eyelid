@@ -6,7 +6,7 @@
 pub use fq::Coeff;
 pub use modular_poly::{
     conf::PolyConf,
-    modulus::{mod_poly, new_unreduced_poly_modulus_slow, FULL_RES_POLY_DEGREE},
+    modulus::{mod_poly, new_unreduced_poly_modulus_slow},
     mul::mul_poly,
     Poly,
 };
