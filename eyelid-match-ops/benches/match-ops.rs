@@ -273,7 +273,7 @@ pub fn bench_poly_split_half(settings: &mut Criterion) {
         |benchmark, p| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
             benchmark.iter_with_large_drop(|| -> (Poly<TestRes>, Poly<TestRes>) {
-                poly::poly_split_half(p, FULL_RES_POLY_DEGREE)
+                poly::poly_split_half(p, TestRes::MAX_POLY_DEGREE)
             })
         },
     );

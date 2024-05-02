@@ -5,7 +5,7 @@ use ark_poly::Polynomial;
 
 use crate::primitives::poly::{
     flat_karatsuba_mul, naive_cyclotomic_mul, new_unreduced_poly_modulus_slow, rec_karatsuba_mul,
-    test::gen::rand_poly, Coeff, Poly, PolyConf, TestRes, FULL_RES_POLY_DEGREE,
+    test::gen::rand_poly, Coeff, Poly, PolyConf, TestRes,
 };
 
 /// Test cyclotomic multiplication of a random polynomial by `X^{[C::MAX_POLY_DEGREE] - 1}`.
@@ -104,7 +104,7 @@ where
         let p1 = Poly::xn(i);
         let p2 = Poly::xn(C::MAX_POLY_DEGREE - i);
 
-        if i == 0 || i == FULL_RES_POLY_DEGREE {
+        if i == 0 || i == TestRes::MAX_POLY_DEGREE {
             assert_eq!(p1.degree(), 0);
             assert_eq!(p2.degree(), 0);
         } else {
@@ -126,18 +126,18 @@ fn test_karatsuba_mul_rand_consistent() {
 
     #[allow(clippy::int_plus_one)]
     {
-        assert!(p1.degree() <= FULL_RES_POLY_DEGREE - 1);
-        assert!(p2.degree() <= FULL_RES_POLY_DEGREE - 1);
+        assert!(p1.degree() <= TestRes::MAX_POLY_DEGREE - 1);
+        assert!(p2.degree() <= TestRes::MAX_POLY_DEGREE - 1);
     }
 
     let expected = naive_cyclotomic_mul(&p1, &p2);
-    assert!(expected.degree() <= FULL_RES_POLY_DEGREE);
+    assert!(expected.degree() <= TestRes::MAX_POLY_DEGREE);
 
     let rec_res = rec_karatsuba_mul(&p1, &p2);
-    assert!(rec_res.degree() <= FULL_RES_POLY_DEGREE);
+    assert!(rec_res.degree() <= TestRes::MAX_POLY_DEGREE);
 
     let flat_res = flat_karatsuba_mul(&p1, &p2);
-    assert!(flat_res.degree() <= FULL_RES_POLY_DEGREE);
+    assert!(flat_res.degree() <= TestRes::MAX_POLY_DEGREE);
 
     assert_eq!(expected, rec_res);
     assert_eq!(expected, flat_res);

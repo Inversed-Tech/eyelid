@@ -12,8 +12,6 @@ use crate::primitives::{
 };
 
 #[cfg(test)]
-use crate::primitives::poly::FULL_RES_POLY_DEGREE;
-#[cfg(test)]
 use ark_poly::Polynomial;
 
 fn inverse_test_helper<C: PolyConf>(f: &Poly<C>) {
