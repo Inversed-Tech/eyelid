@@ -79,7 +79,7 @@ impl<C: PolyConf> Poly<C> {
 
     /// Converts the `coeffs` vector into a dense polynomial.
     pub fn from_coefficients_vec(coeffs: Vec<Coeff>) -> Self {
-        let mut poly = Self(DensePolynomial { coeffs }, PhantomData);
+        let mut poly = Self(DensePolynomial { coeffs }, PhantomData, PhantomData);
         poly.truncate_to_canonical_form();
         poly
     }
@@ -96,7 +96,7 @@ impl<C: PolyConf> Poly<C> {
     pub fn naive_mul(&self, other: &Self) -> Self {
         // Deliberately avoid the modular reduction performed by `From`
         // Removing and replacing type wrappers is zero-cost at runtime.
-        Self(DensePolynomial::naive_mul(self, other))
+        Self(DensePolynomial::naive_mul(self, other), PhantomData)
     }
 
     // Re-Implement DenseOrSparsePolynomial methods, so the types are all `Poly`
@@ -224,7 +224,7 @@ impl<C: PolyConf> Poly<C> {
 
 impl<C: PolyConf> From<DensePolynomial<Coeff>> for Poly<C> {
     fn from(poly: DensePolynomial<Coeff>) -> Self {
-        let mut poly = Self(poly);
+        let mut poly = Self(poly, PhantomData);
         poly.reduce_mod_poly();
         poly
     }
@@ -232,7 +232,7 @@ impl<C: PolyConf> From<DensePolynomial<Coeff>> for Poly<C> {
 
 impl<C: PolyConf> From<&DensePolynomial<Coeff>> for Poly<C> {
     fn from(poly: &DensePolynomial<Coeff>) -> Self {
-        let mut poly = Self(poly.clone());
+        let mut poly = Self(poly.clone(), PhantomData);
         poly.reduce_mod_poly();
         poly
     }
@@ -363,7 +363,7 @@ impl<C: PolyConf> Mul<DensePolynomial<Coeff>> for Poly<C> {
 
     /// Multiplies then reduces by the polynomial modulus.
     fn mul(self, rhs: DensePolynomial<Coeff>) -> Self {
-        mul_poly(&self, &Self(rhs))
+        mul_poly(&self, &Self(rhs), PhantomData)
     }
 }
 
@@ -374,6 +374,6 @@ impl<C: PolyConf> Mul<&DensePolynomial<Coeff>> for Poly<C> {
 
     /// Multiplies then reduces by the polynomial modulus.
     fn mul(self, rhs: &DensePolynomial<Coeff>) -> Self {
-        mul_poly(&self, &Self(rhs.clone()))
+        mul_poly(&self, &Self(rhs.clone()), PhantomData)
     }
 }

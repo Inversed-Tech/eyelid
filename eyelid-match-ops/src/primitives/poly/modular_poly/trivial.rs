@@ -33,7 +33,7 @@ impl<'a, C: PolyConf> From<&'a Poly<C>> for DenseOrSparsePolynomial<'a, Coeff> {
 
 impl<C: PolyConf> Zero for Poly<C> {
     fn zero() -> Self {
-        Self(DensePolynomial { coeffs: vec![] })
+        Self(DensePolynomial { coeffs: vec![] }, PhantomData)
     }
 
     fn is_zero(&self) -> bool {
@@ -91,7 +91,7 @@ impl<C: PolyConf> Sub for Poly<C> {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self {
-        Self(&self.0 - &rhs.0)
+        Self(&self.0 - &rhs.0, PhantomData)
     }
 }
 
