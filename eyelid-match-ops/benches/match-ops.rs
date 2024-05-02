@@ -7,7 +7,7 @@
 
 use std::time::Duration;
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode::*};
 
 use eyelid_match_ops::{
     plaintext::{
@@ -87,7 +87,7 @@ criterion_group! {
 criterion_group! {
     name = bench_inverse_iris;
     // This can be any expression that returns a `Criterion` object.
-    config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(80));
+    config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(60));
     // List iris-length polynomial inverse implementations here.
     targets = bench_inv_iris
 }
@@ -95,7 +95,7 @@ criterion_group! {
 criterion_group! {
     name = bench_key_generation_iris;
     // This can be any expression that returns a `Criterion` object.
-    config = Criterion::default().sample_size(10);
+    config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(130));
     // List key generation implementations here.
     targets = bench_keygen_iris
 }
@@ -135,6 +135,11 @@ fn bench_plaintext_full_match(settings: &mut Criterion) {
 
 /// Run [`poly::naive_cyclotomic_mul()`] as a Criterion benchmark with random data.
 pub fn bench_naive_cyclotomic_mul(settings: &mut Criterion) {
+    // Tweak configuration for a long-running test
+    let mut settings = settings.benchmark_group("Slow Benchmarks");
+    // We can override the configuration on a per-group level
+    settings.sampling_mode(Flat);
+
     // Setup: generate random cyclotomic polynomials
     let p1: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE);
     let p2: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE);
@@ -240,6 +245,11 @@ pub fn bench_flat_karatsuba_mul(settings: &mut Criterion) {
 
 /// Run [`poly::flat_karatsuba_mul()`] as a Criterion benchmark with random data on the full number of iris bits.
 pub fn bench_flat_karatsuba_mul_iris(settings: &mut Criterion) {
+    // Tweak configuration for a long-running test
+    let mut settings = settings.benchmark_group("Slow Benchmarks");
+    // We can override the configuration on a per-group level
+    settings.sampling_mode(Flat);
+
     // Setup: generate random cyclotomic polynomials
     let p1: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
     let p2: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
@@ -366,6 +376,11 @@ pub fn bench_inv(settings: &mut Criterion) {
 
 /// Run [`poly::inverse()`] as a Criterion benchmark with random data on the full number of iris bits.
 pub fn bench_inv_iris(settings: &mut Criterion) {
+    // Tweak configuration for a long-running test
+    let mut settings = settings.benchmark_group("Slow Benchmarks");
+    // We can override the configuration on a per-group level
+    settings.sampling_mode(Flat);
+
     // Setup: generate random cyclotomic polynomials
 
     let mut rng = rand::thread_rng();
@@ -421,6 +436,11 @@ pub fn bench_keygen(settings: &mut Criterion) {
 
 /// Run [`Yashe::keygen()`] as a Criterion benchmark with random data on the full number of iris bits.
 pub fn bench_keygen_iris(settings: &mut Criterion) {
+    // Tweak configuration for a long-running test
+    let mut settings = settings.benchmark_group("Slow Benchmarks");
+    // We can override the configuration on a per-group level
+    settings.sampling_mode(Flat);
+
     // Setup parameters
     let params = YasheParams {
         t: 1024,
