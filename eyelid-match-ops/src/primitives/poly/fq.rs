@@ -1,6 +1,6 @@
 //! The underlying integer field.
 //!
-//! Outside this module, use [`PolyConf::Coeff`] instead of [`Fq79`] or `FqTiny`.
+//! Outside this module, use [`PolyConf::C::Coeff`] instead of [`Fq79`] or `FqTiny`.
 //! This automatically enables CI tests on both fields.
 
 pub use fq79::Fq79;
@@ -17,10 +17,10 @@ mod fq79;
 #[cfg(tiny_poly)]
 mod fq_tiny;
 
-// TODO: delete this after Coeff is generic
+// TODO: delete this after C::Coeff is generic
 #[cfg(not(tiny_poly))]
-pub use fq79::Coeff;
+pub use fq79::C::Coeff;
 
-// TODO: delete this after Coeff is generic
+// TODO: delete this after C::Coeff is generic
 #[cfg(tiny_poly)]
-pub use fq_tiny::Coeff;
+pub use fq_tiny::C::Coeff;

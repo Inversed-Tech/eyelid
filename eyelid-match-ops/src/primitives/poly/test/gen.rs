@@ -7,9 +7,9 @@ use crate::primitives::poly::{Poly, PolyConf};
 
 // Doc links only
 #[allow(unused_imports)]
-use crate::primitives::poly::Coeff;
+use crate::primitives::poly::C::Coeff;
 
-/// Returns an un-reduced cyclotomic polynomial of `degree`, with random coefficients in [`Coeff`].
+/// Returns an un-reduced cyclotomic polynomial of `degree`, with random coefficients in [`C::Coeff`].
 /// `degree` must be less than or equal to `C::MAX_POLY_DEGREE`.
 ///
 /// In rare cases, the degree can be less than `degree`,

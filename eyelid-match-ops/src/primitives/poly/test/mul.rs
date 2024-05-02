@@ -5,7 +5,7 @@ use ark_poly::Polynomial;
 
 use crate::primitives::poly::{
     flat_karatsuba_mul, naive_cyclotomic_mul, new_unreduced_poly_modulus_slow, rec_karatsuba_mul,
-    test::gen::rand_poly, Coeff, Poly, PolyConf, TestRes,
+    test::gen::rand_poly, C::Coeff, Poly, PolyConf, TestRes,
 };
 
 /// Test cyclotomic multiplication of a random polynomial by `X^{[C::MAX_POLY_DEGREE] - 1}`.
@@ -67,18 +67,18 @@ where
     // We can't use the standard methods, because we want an un-reduced polynomial.
     // But it is in canonical form, because the leading coefficient is non-zero.
     let mut x_max: Poly<C> = Poly::zero();
-    x_max[C::MAX_POLY_DEGREE] = Coeff::one();
+    x_max[C::MAX_POLY_DEGREE] = C::Coeff::one();
 
     // Manually calculate the reduced representation of X^N as the constant `MODULUS - 1`.
     let (q, x_max) = x_max
         .divide_with_q_and_r(&new_unreduced_poly_modulus_slow::<C>())
         .expect("is divisible by X^C::MAX_POLY_DEGREE");
 
-    assert_eq!(q, Poly::from_coefficients_vec(vec![Coeff::one()]));
+    assert_eq!(q, Poly::from_coefficients_vec(vec![C::Coeff::one()]));
     assert_eq!(
         x_max,
         // TODO: should `MODULUS - 1` be a constant?
-        Poly::from_coefficients_vec(vec![Coeff::zero() - Coeff::one()]),
+        Poly::from_coefficients_vec(vec![C::Coeff::zero() - C::Coeff::one()]),
     );
 
     for i in 0..=C::MAX_POLY_DEGREE {

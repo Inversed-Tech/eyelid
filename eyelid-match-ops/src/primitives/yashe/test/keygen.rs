@@ -2,7 +2,7 @@
 
 use crate::primitives::{
     poly::TestRes,
-    yashe::{Coeff, Poly, PolyConf, Yashe, YasheParams},
+    yashe::{C::Coeff, Poly, PolyConf, Yashe, YasheParams},
 };
 use ark_ff::One;
 use ark_poly::Polynomial;
@@ -24,7 +24,7 @@ fn keygen_helper<C: PolyConf>() {
 
     //dbg!(private_key.priv_key[0].clone());
     assert_eq!(
-        private_key.f[0] * Coeff::from(params.t) + Coeff::one(),
+        private_key.f[0] * C::Coeff::from(params.t) + C::Coeff::one(),
         private_key.priv_key[0]
     );
 

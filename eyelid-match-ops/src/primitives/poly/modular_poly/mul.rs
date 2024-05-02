@@ -9,21 +9,21 @@ use static_assertions::const_assert_eq;
 use crate::primitives::poly::{
     mod_poly,
     modular_poly::modulus::{mod_poly_ark_ref_slow, mod_poly_manual_mut},
-    Coeff, Poly, PolyConf,
+    C::Coeff, Poly, PolyConf,
 };
 
 // Simple multiplication by a field element.
 
-impl<C: PolyConf> MulAssign<Coeff> for Poly<C> {
-    fn mul_assign(&mut self, rhs: Coeff) {
+impl<C: PolyConf> MulAssign<C::Coeff> for Poly<C> {
+    fn mul_assign(&mut self, rhs: C::Coeff) {
         for coeff in &mut self.0.coeffs {
             *coeff *= rhs;
         }
     }
 }
 
-impl<C: PolyConf> MulAssign<Coeff> for &mut Poly<C> {
-    fn mul_assign(&mut self, rhs: Coeff) {
+impl<C: PolyConf> MulAssign<C::Coeff> for &mut Poly<C> {
+    fn mul_assign(&mut self, rhs: C::Coeff) {
         for coeff in &mut self.0.coeffs {
             *coeff *= rhs;
         }
