@@ -42,5 +42,5 @@ fn keygen_helper<C: PolyConf>() {
 
 #[test]
 fn test_keygen() {
-    keygen_helper::<FULL_RES_POLY_DEGREE>();
+    keygen_helper::<TestRes>();
 }

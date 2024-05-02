@@ -134,8 +134,8 @@ fn bench_plaintext_full_match(settings: &mut Criterion) {
 /// Run [`poly::naive_cyclotomic_mul()`] as a Criterion benchmark with random data.
 pub fn bench_naive_cyclotomic_mul(settings: &mut Criterion) {
     // Setup: generate random cyclotomic polynomials
-    let p1: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE);
-    let p2: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE);
+    let p1: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE);
+    let p2: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE);
 
     settings.bench_with_input(
         BenchmarkId::new(
@@ -145,7 +145,7 @@ pub fn bench_naive_cyclotomic_mul(settings: &mut Criterion) {
         &(p1, p2),
         |benchmark, (p1, p2)| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> Poly<FULL_RES_POLY_DEGREE> {
+            benchmark.iter_with_large_drop(|| -> Poly<TestRes> {
                 poly::naive_cyclotomic_mul(p1, p2)
             })
         },
@@ -181,8 +181,8 @@ pub fn bench_naive_cyclotomic_mul_iris(settings: &mut Criterion) {
 /// Run [`poly::rec_karatsuba_mul()`] as a Criterion benchmark with random data.
 pub fn bench_rec_karatsuba_mul(settings: &mut Criterion) {
     // Setup: generate random cyclotomic polynomials
-    let p1: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE);
-    let p2: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE);
+    let p1: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE);
+    let p2: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE);
 
     settings.bench_with_input(
         BenchmarkId::new(
@@ -192,7 +192,7 @@ pub fn bench_rec_karatsuba_mul(settings: &mut Criterion) {
         &(p1, p2),
         |benchmark, (p1, p2)| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> Poly<FULL_RES_POLY_DEGREE> {
+            benchmark.iter_with_large_drop(|| -> Poly<TestRes> {
                 poly::rec_karatsuba_mul(p1, p2)
             })
         },
@@ -228,8 +228,8 @@ pub fn bench_rec_karatsuba_mul_iris(settings: &mut Criterion) {
 /// Run [`poly::flat_karatsuba_mul()`] as a Criterion benchmark with random data.
 pub fn bench_flat_karatsuba_mul(settings: &mut Criterion) {
     // Setup: generate random cyclotomic polynomials
-    let p1: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE);
-    let p2: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE);
+    let p1: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE);
+    let p2: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE);
 
     settings.bench_with_input(
         BenchmarkId::new(
@@ -239,7 +239,7 @@ pub fn bench_flat_karatsuba_mul(settings: &mut Criterion) {
         &(p1, p2),
         |benchmark, (p1, p2)| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> Poly<FULL_RES_POLY_DEGREE> {
+            benchmark.iter_with_large_drop(|| -> Poly<TestRes> {
                 poly::flat_karatsuba_mul(p1, p2)
             })
         },
@@ -275,7 +275,7 @@ pub fn bench_flat_karatsuba_mul_iris(settings: &mut Criterion) {
 /// Run [`poly::poly_split_half()`] as a Criterion benchmark with random data.
 pub fn bench_poly_split_half(settings: &mut Criterion) {
     // Setup: generate random cyclotomic polynomials
-    let p: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE);
+    let p: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE);
 
     settings.bench_with_input(
         BenchmarkId::new("Karatsuba: poly split half", "random poly of degree N"),
@@ -283,7 +283,7 @@ pub fn bench_poly_split_half(settings: &mut Criterion) {
         |benchmark, p| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
             benchmark.iter_with_large_drop(
-                || -> (Poly<FULL_RES_POLY_DEGREE>, Poly<FULL_RES_POLY_DEGREE>) {
+                || -> (Poly<TestRes>, Poly<FULL_RES_POLY_DEGREE>) {
                     poly::poly_split_half(p, FULL_RES_POLY_DEGREE)
                 },
             )
@@ -294,14 +294,14 @@ pub fn bench_poly_split_half(settings: &mut Criterion) {
 /// Run [`poly::poly_split(_, 2)`] as a Criterion benchmark with random data.
 pub fn bench_poly_split_2(settings: &mut Criterion) {
     // Setup: generate random cyclotomic polynomials
-    let p: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE);
+    let p: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE);
 
     settings.bench_with_input(
         BenchmarkId::new("Karatsuba: poly split 2", "random poly of degree N"),
         &(p),
         |benchmark, p| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> Vec<Poly<FULL_RES_POLY_DEGREE>> {
+            benchmark.iter_with_large_drop(|| -> Vec<Poly<TestRes>> {
                 poly::poly_split(p, 2)
             })
         },
@@ -311,14 +311,14 @@ pub fn bench_poly_split_2(settings: &mut Criterion) {
 /// Run [`poly::mod_poly_manual_mut()`] as a Criterion benchmark with random data.
 pub fn bench_mod_poly_manual(settings: &mut Criterion) {
     // Setup: generate a random cyclotomic polynomial the size of a typical multiplication.
-    let dividend: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE * 2);
+    let dividend: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE * 2);
 
     settings.bench_with_input(
         BenchmarkId::new("Manual polynomial modulus", "A random poly of degree 2N"),
         &dividend,
         |benchmark, dividend| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> Poly<FULL_RES_POLY_DEGREE> {
+            benchmark.iter_with_large_drop(|| -> Poly<TestRes> {
                 // TODO: work out how to avoid timing this clone
                 // (The production code already avoids cloning where possible.)
                 let mut dividend = dividend.clone();
@@ -334,14 +334,14 @@ pub fn bench_mod_poly_manual(settings: &mut Criterion) {
 /// Run [`poly::mod_poly_ark_ref_slow()`] as a Criterion benchmark with random data.
 pub fn bench_mod_poly_ark(settings: &mut Criterion) {
     // Setup: generate a random cyclotomic polynomial the size of a typical multiplication.
-    let dividend: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE * 2);
+    let dividend: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE * 2);
 
     settings.bench_with_input(
         BenchmarkId::new("ark-poly polynomial modulus", "A random poly of degree 2N"),
         &dividend,
         |benchmark, dividend| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> Poly<FULL_RES_POLY_DEGREE> {
+            benchmark.iter_with_large_drop(|| -> Poly<TestRes> {
                 poly::mod_poly_ark_ref_slow(dividend)
             })
         },
@@ -360,7 +360,7 @@ pub fn bench_inv(settings: &mut Criterion) {
         t: 1024,
         delta: 3.2,
     };
-    let ctx: Yashe<FULL_RES_POLY_DEGREE> = Yashe::new(params);
+    let ctx: Yashe<TestRes> = Yashe::new(params);
 
     let p = ctx.sample_gaussian(&mut rng);
 
@@ -373,7 +373,7 @@ pub fn bench_inv(settings: &mut Criterion) {
         |benchmark, p| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
             benchmark.iter_with_large_drop(
-                || -> Result<Poly<FULL_RES_POLY_DEGREE>, &'static str> { p.inverse() },
+                || -> Result<Poly<TestRes>, &'static str> { p.inverse() },
             )
         },
     );
@@ -420,7 +420,7 @@ pub fn bench_keygen(settings: &mut Criterion) {
         t: 1024,
         delta: 3.2,
     };
-    let ctx: Yashe<FULL_RES_POLY_DEGREE> = Yashe::new(params);
+    let ctx: Yashe<TestRes> = Yashe::new(params);
 
     settings.bench_with_input(
         BenchmarkId::new("YASHE keygen", "standard parameters with degree N"),
@@ -428,7 +428,7 @@ pub fn bench_keygen(settings: &mut Criterion) {
         |benchmark, ctx| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
             benchmark.iter_with_large_drop(
-                || -> (yashe::PrivateKey<FULL_RES_POLY_DEGREE>, yashe::PublicKey<FULL_RES_POLY_DEGREE>) {
+                || -> (yashe::PrivateKey<TestRes>, yashe::PublicKey<FULL_RES_POLY_DEGREE>) {
                     // The thread_rng() call is efficient, because it only clones a small amount of memory,
                     // which is dedicated to the current thread.
                     ctx.keygen(&mut rand::thread_rng())

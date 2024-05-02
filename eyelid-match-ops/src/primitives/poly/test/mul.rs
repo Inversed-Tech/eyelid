@@ -11,9 +11,9 @@ use crate::primitives::poly::{
 /// Test cyclotomic multiplication of a random polynomial by `X^{[C::MAX_POLY_DEGREE] - 1}`.
 #[test]
 fn test_cyclotomic_mul_rand_xnm1() {
-    check_cyclotomic_mul_rand_xnm1::<FULL_RES_POLY_DEGREE, _>(naive_cyclotomic_mul);
-    check_cyclotomic_mul_rand_xnm1::<FULL_RES_POLY_DEGREE, _>(rec_karatsuba_mul);
-    check_cyclotomic_mul_rand_xnm1::<FULL_RES_POLY_DEGREE, _>(flat_karatsuba_mul);
+    check_cyclotomic_mul_rand_xnm1::<TestRes, _>(naive_cyclotomic_mul);
+    check_cyclotomic_mul_rand_xnm1::<TestRes, _>(rec_karatsuba_mul);
+    check_cyclotomic_mul_rand_xnm1::<TestRes, _>(flat_karatsuba_mul);
 }
 
 /// Check `mul_fn` correctly implements cyclotomic multiplication of a random polynomial by `X^{[C::MAX_POLY_DEGREE] - 1}`.
@@ -51,9 +51,9 @@ where
 /// Test cyclotomic multiplication that results in `X^[C::MAX_POLY_DEGREE]`.
 #[test]
 fn test_cyclotomic_mul_max_degree() {
-    check_cyclotomic_mul_max_degree::<FULL_RES_POLY_DEGREE, _>(naive_cyclotomic_mul);
-    check_cyclotomic_mul_max_degree::<FULL_RES_POLY_DEGREE, _>(rec_karatsuba_mul);
-    check_cyclotomic_mul_max_degree::<FULL_RES_POLY_DEGREE, _>(flat_karatsuba_mul);
+    check_cyclotomic_mul_max_degree::<TestRes, _>(naive_cyclotomic_mul);
+    check_cyclotomic_mul_max_degree::<TestRes, _>(rec_karatsuba_mul);
+    check_cyclotomic_mul_max_degree::<TestRes, _>(flat_karatsuba_mul);
 }
 
 /// Check `mul_fn` correctly implements cyclotomic multiplication that results in `X^[C::MAX_POLY_DEGREE]`.
@@ -121,8 +121,8 @@ where
 /// Test recursive karatsuba, flat karatsuba, and naive cyclotomic multiplication of two random polynomials all produce the same result.
 #[test]
 fn test_karatsuba_mul_rand_consistent() {
-    let p1: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE - 1);
-    let p2: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE - 1);
+    let p1: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE - 1);
+    let p2: Poly<TestRes> = rand_poly(FULL_RES_POLY_DEGREE - 1);
 
     #[allow(clippy::int_plus_one)]
     {
