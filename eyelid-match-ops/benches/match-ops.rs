@@ -79,7 +79,7 @@ criterion_group! {
 criterion_group! {
     name = bench_cyclotomic_multiplication_iris;
     // This can be any expression that returns a `Criterion` object.
-    config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(30));
+    config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(40));
     // List iris-length polynomial multiplication implementations here.
     targets = bench_naive_cyclotomic_mul_iris, bench_rec_karatsuba_mul_iris, bench_flat_karatsuba_mul_iris
 }
@@ -87,7 +87,7 @@ criterion_group! {
 criterion_group! {
     name = bench_inverse_iris;
     // This can be any expression that returns a `Criterion` object.
-    config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(60));
+    config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(120));
     // List iris-length polynomial inverse implementations here.
     targets = bench_inv_iris
 }
@@ -95,7 +95,7 @@ criterion_group! {
 criterion_group! {
     name = bench_key_generation_iris;
     // This can be any expression that returns a `Criterion` object.
-    config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(130));
+    config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(230));
     // List key generation implementations here.
     targets = bench_keygen_iris
 }
@@ -135,11 +135,6 @@ fn bench_plaintext_full_match(settings: &mut Criterion) {
 
 /// Run [`poly::naive_cyclotomic_mul()`] as a Criterion benchmark with random data.
 pub fn bench_naive_cyclotomic_mul(settings: &mut Criterion) {
-    // Tweak configuration for a long-running test
-    let mut settings = settings.benchmark_group("Slow Benchmarks");
-    // We can override the configuration on a per-group level
-    settings.sampling_mode(Flat);
-
     // Setup: generate random cyclotomic polynomials
     let p1: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE);
     let p2: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE);
@@ -161,6 +156,11 @@ pub fn bench_naive_cyclotomic_mul(settings: &mut Criterion) {
 
 /// Run [`poly::naive_cyclotomic_mul()`] as a Criterion benchmark with random data on the full number of iris bits.
 pub fn bench_naive_cyclotomic_mul_iris(settings: &mut Criterion) {
+    // Tweak configuration for a long-running test
+    let mut settings = settings.benchmark_group("Slow Benchmarks");
+    // We can override the configuration on a per-group level
+    settings.sampling_mode(Flat);
+
     // Setup: generate random cyclotomic polynomials
     let p1: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
     let p2: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
@@ -203,6 +203,11 @@ pub fn bench_rec_karatsuba_mul(settings: &mut Criterion) {
 
 /// Run [`poly::rec_karatsuba_mul()`] as a Criterion benchmark with random data on the full number of iris bits.
 pub fn bench_rec_karatsuba_mul_iris(settings: &mut Criterion) {
+    // Tweak configuration for a long-running test
+    let mut settings = settings.benchmark_group("Slow Benchmarks");
+    // We can override the configuration on a per-group level
+    settings.sampling_mode(Flat);
+
     // Setup: generate random cyclotomic polynomials
     let p1: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
     let p2: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
