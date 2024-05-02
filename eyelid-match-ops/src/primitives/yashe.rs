@@ -21,37 +21,37 @@ pub struct YasheParams {
 
 /// Yashe scheme
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct Yashe<const MAX_POLY_DEGREE: usize> {
+pub struct Yashe<C: PolyConf> {
     /// Cryptosystem parameters
     params: YasheParams,
 }
 
 /// Private key struct
 #[derive(Debug, Clone)]
-pub struct PrivateKey<const MAX_POLY_DEGREE: usize> {
+pub struct PrivateKey<C: PolyConf> {
     /// Sampled with small coefficients (and invertible)
-    pub f: Poly<MAX_POLY_DEGREE>,
+    pub f: Poly<C>,
     /// The inverse of f
-    pub finv: Poly<MAX_POLY_DEGREE>,
+    pub finv: Poly<C>,
     /// Private key
-    pub priv_key: Poly<MAX_POLY_DEGREE>,
+    pub priv_key: Poly<C>,
 }
 
 /// Public key struct
 #[derive(Debug)]
-pub struct PublicKey<const MAX_POLY_DEGREE: usize> {
+pub struct PublicKey<C: PolyConf> {
     /// Public key
-    pub h: Poly<MAX_POLY_DEGREE>,
+    pub h: Poly<C>,
 }
 
-impl<const MAX_POLY_DEGREE: usize> Yashe<MAX_POLY_DEGREE> {
+impl<C: PolyConf> Yashe<C> {
     /// Yashe constructor
     pub fn new(params: YasheParams) -> Self {
         Self { params }
     }
 
     /// Generate the private key
-    pub fn generate_private_key(&self, rng: &mut ThreadRng) -> PrivateKey<MAX_POLY_DEGREE> {
+    pub fn generate_private_key(&self, rng: &mut ThreadRng) -> PrivateKey<C> {
         loop {
             let f = self.sample_gaussian(rng);
             let finv = f.inverse();
@@ -77,8 +77,8 @@ impl<const MAX_POLY_DEGREE: usize> Yashe<MAX_POLY_DEGREE> {
     pub fn generate_public_key(
         &self,
         rng: &mut ThreadRng,
-        private_key: &PrivateKey<MAX_POLY_DEGREE>,
-    ) -> PublicKey<MAX_POLY_DEGREE> {
+        private_key: &PrivateKey<C>,
+    ) -> PublicKey<C> {
         let mut h = self.sample_uniform(rng);
 
         h *= Coeff::from(self.params.t);
@@ -92,7 +92,7 @@ impl<const MAX_POLY_DEGREE: usize> Yashe<MAX_POLY_DEGREE> {
     pub fn keygen(
         &self,
         rng: &mut ThreadRng,
-    ) -> (PrivateKey<MAX_POLY_DEGREE>, PublicKey<MAX_POLY_DEGREE>) {
+    ) -> (PrivateKey<C>, PublicKey<C>) {
         let priv_key = self.generate_private_key(rng);
         let pub_key = self.generate_public_key(rng, &priv_key);
         (priv_key, pub_key)
@@ -100,9 +100,9 @@ impl<const MAX_POLY_DEGREE: usize> Yashe<MAX_POLY_DEGREE> {
 
     /// Sample a polynomial with small random coefficients using a gaussian distribution.
     #[allow(clippy::cast_possible_truncation)]
-    pub fn sample_gaussian(&self, rng: &mut ThreadRng) -> Poly<MAX_POLY_DEGREE> {
-        let mut res = Poly::non_canonical_zeroes(MAX_POLY_DEGREE);
-        for i in 0..MAX_POLY_DEGREE {
+    pub fn sample_gaussian(&self, rng: &mut ThreadRng) -> Poly<C> {
+        let mut res = Poly::non_canonical_zeroes(C::MAX_POLY_DEGREE);
+        for i in 0..C::MAX_POLY_DEGREE {
             // TODO SECURITY: check that the generated integers are secure:
             // <https://github.com/Inversed-Tech/eyelid/issues/70>
             let normal = Normal::new(0.0, self.params.delta).unwrap();
@@ -120,9 +120,9 @@ impl<const MAX_POLY_DEGREE: usize> Yashe<MAX_POLY_DEGREE> {
     }
 
     /// Sample a polynomial with unlimited size random coefficients using a uniform distribution.
-    pub fn sample_uniform(&self, mut rng: &mut ThreadRng) -> Poly<MAX_POLY_DEGREE> {
-        let mut res = Poly::non_canonical_zeroes(MAX_POLY_DEGREE);
-        for i in 0..MAX_POLY_DEGREE {
+    pub fn sample_uniform(&self, mut rng: &mut ThreadRng) -> Poly<C> {
+        let mut res = Poly::non_canonical_zeroes(C::MAX_POLY_DEGREE);
+        for i in 0..C::MAX_POLY_DEGREE {
             let coeff_rand = Coeff::rand(&mut rng);
             res[i] = coeff_rand;
         }

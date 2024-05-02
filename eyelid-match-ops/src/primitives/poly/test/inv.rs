@@ -16,7 +16,7 @@ use crate::primitives::poly::FULL_RES_POLY_DEGREE;
 #[cfg(test)]
 use ark_poly::Polynomial;
 
-fn inverse_test_helper<const MAX_POLY_DEGREE: usize>(f: &Poly<MAX_POLY_DEGREE>) {
+fn inverse_test_helper<C: PolyConf>(f: &Poly<C>) {
     // REMARK: For our parameter choices it is very likely to find
     // the inverse in the first attempt.
     let out = inverse(f);
