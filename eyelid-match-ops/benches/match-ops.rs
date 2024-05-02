@@ -15,9 +15,7 @@ use eyelid_match_ops::{
         test::gen::{random_iris_code, random_iris_mask},
     },
     primitives::{
-        poly::{
-            self, modular_poly::inv::inverse, test::gen::rand_poly, Poly, FULL_RES_POLY_DEGREE,
-        },
+        poly::{self, test::gen::rand_poly, Poly, FULL_RES_POLY_DEGREE},
         yashe::{self, Yashe, YasheParams},
     },
     IRIS_BIT_LENGTH,
@@ -373,7 +371,7 @@ pub fn bench_inv(settings: &mut Criterion) {
         |benchmark, p| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
             benchmark.iter_with_large_drop(|| -> Result<Poly<FULL_RES_POLY_DEGREE>, String> {
-                inverse(p)
+                p.inverse()
             })
         },
     );
@@ -408,7 +406,7 @@ pub fn bench_inv_iris(settings: &mut Criterion) {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
             benchmark.iter_with_large_drop(|| -> Result<Poly<IRIS_BIT_LENGTH>, String> {
                 // TODO: consider benchmarking the inverse of a uniform random polynomial as well
-                inverse(p)
+                p.inverse()
             })
         },
     );

@@ -3,12 +3,13 @@ use crate::primitives::poly::{Coeff, Poly};
 use ark_ff::{Field, One, Zero};
 use ark_poly::Polynomial;
 
+/// Returns the primitive polynomial which is the inverse of `a` in the
+/// cyclotomic ring, if it exists. Otherwise, returns an error.
+///
 /// Implementation based on Algorithm 3.3.1 (Page 118) from
 /// "A Course in Computational Algebraic Number Theory", Henri Cohen.
 /// We don't divide by content of `a` and `b` every time,
 /// just in the end of the algorithm.
-/// Returns the primitive polynomial which is the inverse of `a` in the
-/// cyclotomic ring, if it exists. Otherwise, returns an error.
 ///
 /// When `d` is a constant polynomial and `a` is the polynomial modulus
 /// (which reduces to `0`), we have that `b/cont(d)` is the primitive

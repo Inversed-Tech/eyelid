@@ -1,13 +1,11 @@
 //! Implementation of YASHE cryptosystem
 //! `<https://eprint.iacr.org/2013/075.pdf>`
 
-use crate::primitives::poly::{
-    modular_poly::{inv::inverse, Poly},
-    Coeff,
-};
 use ark_ff::{One, UniformRand};
 use rand::rngs::ThreadRng;
 use rand_distr::{Distribution, Normal};
+
+use crate::primitives::poly::{Coeff, Poly};
 
 #[cfg(test)]
 pub mod test;
@@ -56,7 +54,7 @@ impl<const MAX_POLY_DEGREE: usize> Yashe<MAX_POLY_DEGREE> {
     pub fn generate_private_key(&self, rng: &mut ThreadRng) -> PrivateKey<MAX_POLY_DEGREE> {
         loop {
             let f = self.sample_gaussian(rng);
-            let finv = inverse(&f);
+            let finv = f.inverse();
 
             let Ok(finv) = finv else {
                 continue;
@@ -67,7 +65,7 @@ impl<const MAX_POLY_DEGREE: usize> Yashe<MAX_POLY_DEGREE> {
             priv_key[0] += Coeff::one();
             priv_key.truncate_to_canonical_form();
 
-            let priv_key_inv = inverse(&priv_key);
+            let priv_key_inv = priv_key.inverse();
 
             if let Ok(_priv_key_inv) = priv_key_inv {
                 return PrivateKey { f, finv, priv_key };

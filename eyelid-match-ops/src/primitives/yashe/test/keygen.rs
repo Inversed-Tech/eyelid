@@ -1,7 +1,7 @@
 //! Unit tests for Key Generation
 
 use crate::primitives::{
-    poly::{modular_poly::inv::inverse, FULL_RES_POLY_DEGREE},
+    poly::FULL_RES_POLY_DEGREE,
     yashe::{Coeff, Poly, Yashe, YasheParams},
 };
 use ark_ff::One;
@@ -19,8 +19,8 @@ fn keygen_helper<const MAX_POLY_DEGREE: usize>() {
     let ctx: Yashe<MAX_POLY_DEGREE> = Yashe::new(params);
     let (private_key, public_key) = ctx.keygen(&mut rng);
 
-    let f_inv = inverse(&private_key.f);
-    let priv_key_inv = inverse(&private_key.priv_key);
+    let f_inv = private_key.f.inverse();
+    let priv_key_inv = private_key.priv_key.inverse();
 
     //dbg!(private_key.priv_key[0].clone());
     assert_eq!(
