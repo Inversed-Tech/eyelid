@@ -11,7 +11,10 @@
 // Trivial:
 // - implement Sum manually
 
-use std::ops::{Index, IndexMut, Mul};
+use std::{
+    marker::PhantomData,
+    ops::{Index, IndexMut, Mul},
+};
 
 use ark_ff::{One, Zero};
 use ark_poly::polynomial::univariate::{
@@ -19,7 +22,9 @@ use ark_poly::polynomial::univariate::{
 };
 use derive_more::{Add, AsRef, Deref, DerefMut, Div, Into, Neg, Rem};
 
-use crate::primitives::poly::{mod_poly, mul_poly, new_unreduced_poly_modulus_slow, Coeff};
+use crate::primitives::poly::{
+    mod_poly, mul_poly, new_unreduced_poly_modulus_slow, Coeff, PolyConf,
+};
 
 pub mod conf;
 
@@ -57,7 +62,14 @@ mod trivial;
     Div,
     Rem,
 )]
-pub struct Poly<C: PolyConf>(DensePolynomial<Coeff>);
+pub struct Poly<C: PolyConf>(
+    /// The inner polynomial.
+    #[deref]
+    #[deref_mut]
+    DensePolynomial<Coeff>,
+    /// A zero-sized marker, which binds the config type to the outer polynomial type.
+    PhantomData<C>,
+);
 
 impl<C: PolyConf> Poly<C> {
     /// The constant maximum degree of this monomorphized polynomial type.
@@ -67,7 +79,7 @@ impl<C: PolyConf> Poly<C> {
 
     /// Converts the `coeffs` vector into a dense polynomial.
     pub fn from_coefficients_vec(coeffs: Vec<Coeff>) -> Self {
-        let mut poly = Self(DensePolynomial { coeffs });
+        let mut poly = Self(DensePolynomial { coeffs }, PhantomData);
         poly.truncate_to_canonical_form();
         poly
     }
@@ -239,17 +251,13 @@ impl<C: PolyConf> From<&SparsePolynomial<Coeff>> for Poly<C> {
     }
 }
 
-impl<'a, C: PolyConf> From<DenseOrSparsePolynomial<'a, Coeff>>
-    for Poly<C>
-{
+impl<'a, C: PolyConf> From<DenseOrSparsePolynomial<'a, Coeff>> for Poly<C> {
     fn from(poly: DenseOrSparsePolynomial<'a, Coeff>) -> Self {
         DensePolynomial::from(poly).into()
     }
 }
 
-impl<'a, C: PolyConf> From<&DenseOrSparsePolynomial<'a, Coeff>>
-    for Poly<C>
-{
+impl<'a, C: PolyConf> From<&DenseOrSparsePolynomial<'a, Coeff>> for Poly<C> {
     fn from(poly: &DenseOrSparsePolynomial<'a, Coeff>) -> Self {
         DensePolynomial::from(poly.clone()).into()
     }

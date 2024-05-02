@@ -9,7 +9,7 @@ use static_assertions::const_assert_eq;
 use crate::primitives::poly::{
     mod_poly,
     modular_poly::modulus::{mod_poly_ark_ref_slow, mod_poly_manual_mut},
-    Coeff, Poly,
+    Coeff, Poly, PolyConf,
 };
 
 // Simple multiplication by a field element.
@@ -57,10 +57,7 @@ pub const FLAT_KARATSUBA_INITIAL_LAYER: u32 = 2;
 
 /// Returns `a * b` followed by reduction mod `XˆN + 1`.
 /// All polynomials have maximum degree `C::MAX_POLY_DEGREE`.
-pub fn naive_cyclotomic_mul<C: PolyConf>(
-    a: &Poly<C>,
-    b: &Poly<C>,
-) -> Poly<C> {
+pub fn naive_cyclotomic_mul<C: PolyConf>(a: &Poly<C>, b: &Poly<C>) -> Poly<C> {
     debug_assert!(a.degree() <= C::MAX_POLY_DEGREE);
     debug_assert!(b.degree() <= C::MAX_POLY_DEGREE);
 
@@ -108,10 +105,7 @@ pub fn naive_cyclotomic_mul<C: PolyConf>(
 /// debug-assertions = true
 /// overflow-checks = true
 /// ```
-pub fn rec_karatsuba_mul<C: PolyConf>(
-    a: &Poly<C>,
-    b: &Poly<C>,
-) -> Poly<C> {
+pub fn rec_karatsuba_mul<C: PolyConf>(a: &Poly<C>, b: &Poly<C>) -> Poly<C> {
     rec_karatsuba_mul_inner(a, b, C::MAX_POLY_DEGREE)
 }
 
@@ -119,11 +113,7 @@ pub fn rec_karatsuba_mul<C: PolyConf>(
 /// The returned polynomial has a degree less than or equal to `chunk`.
 ///
 /// At each recusrsion level, polynomials start with maximum degree `chunk`, and are split to maximum degree `chunk/2`.
-fn rec_karatsuba_mul_inner<C: PolyConf>(
-    a: &Poly<C>,
-    b: &Poly<C>,
-    chunk: usize,
-) -> Poly<C> {
+fn rec_karatsuba_mul_inner<C: PolyConf>(a: &Poly<C>, b: &Poly<C>, chunk: usize) -> Poly<C> {
     debug_assert!(a.degree() <= chunk);
     debug_assert!(b.degree() <= chunk);
 
@@ -203,10 +193,7 @@ fn rec_karatsuba_mul_inner<C: PolyConf>(
 // - split large code blocks into smaller functions, and benchmark the overall performance.
 #[cfg(any(test, feature = "benchmark"))]
 #[allow(clippy::cognitive_complexity)]
-pub fn flat_karatsuba_mul<C: PolyConf>(
-    a: &Poly<C>,
-    b: &Poly<C>,
-) -> Poly<C> {
+pub fn flat_karatsuba_mul<C: PolyConf>(a: &Poly<C>, b: &Poly<C>) -> Poly<C> {
     use std::ops::{Add, Sub};
 
     debug_assert!(a.degree() <= C::MAX_POLY_DEGREE);
@@ -234,7 +221,8 @@ pub fn flat_karatsuba_mul<C: PolyConf>(
     debug_assert_eq!(
         a_chunks.len(),
         C::MAX_POLY_DEGREE / chunk_size,
-        "{C::MAX_POLY_DEGREE} / {chunk_size}"
+        "{} / {chunk_size}",
+        C::MAX_POLY_DEGREE
     );
 
     // Take 2 at each step
@@ -280,7 +268,8 @@ pub fn flat_karatsuba_mul<C: PolyConf>(
         debug_assert_eq!(
             a_chunks.len(),
             C::MAX_POLY_DEGREE / chunk_size,
-            "{C::MAX_POLY_DEGREE} / {chunk_size}"
+            "{} / {chunk_size}",
+            C::MAX_POLY_DEGREE
         );
 
         // Take two polynomials each round
@@ -330,10 +319,7 @@ pub fn flat_karatsuba_mul<C: PolyConf>(
 /// Split the polynomial into `C::MAX_POLY_DEGREE / k` parts, in order from the constant term to the degree.
 /// Any of the polynomials can be zero.
 #[cfg(any(test, feature = "benchmark"))]
-pub fn poly_split<C: PolyConf>(
-    a: &Poly<C>,
-    k: usize,
-) -> Vec<Poly<C>> {
+pub fn poly_split<C: PolyConf>(a: &Poly<C>, k: usize) -> Vec<Poly<C>> {
     // invariant: k must be a power of 2
     debug_assert_eq!(k.count_ones(), 1);
 
@@ -356,10 +342,7 @@ pub fn poly_split<C: PolyConf>(
 ///
 /// All polynomials have maximum degree `C::MAX_POLY_DEGREE`. The modulus remains the same even after
 /// the split.
-pub fn poly_split_half<C: PolyConf>(
-    a: &Poly<C>,
-    chunk: usize,
-) -> (Poly<C>, Poly<C>) {
+pub fn poly_split_half<C: PolyConf>(a: &Poly<C>, chunk: usize) -> (Poly<C>, Poly<C>) {
     debug_assert!(chunk <= C::MAX_POLY_DEGREE);
 
     let (quotient, remainder) = a.new_div_xn(chunk / 2);

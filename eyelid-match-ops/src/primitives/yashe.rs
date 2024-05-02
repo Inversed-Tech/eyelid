@@ -5,7 +5,7 @@ use ark_ff::{One, UniformRand};
 use rand::rngs::ThreadRng;
 use rand_distr::{Distribution, Normal};
 
-use crate::primitives::poly::{Coeff, Poly};
+use crate::primitives::poly::{Coeff, Poly, PolyConf};
 
 #[cfg(test)]
 pub mod test;
@@ -89,10 +89,7 @@ impl<C: PolyConf> Yashe<C> {
     }
 
     /// Generate the key pair
-    pub fn keygen(
-        &self,
-        rng: &mut ThreadRng,
-    ) -> (PrivateKey<C>, PublicKey<C>) {
+    pub fn keygen(&self, rng: &mut ThreadRng) -> (PrivateKey<C>, PublicKey<C>) {
         let priv_key = self.generate_private_key(rng);
         let pub_key = self.generate_public_key(rng, &priv_key);
         (priv_key, pub_key)

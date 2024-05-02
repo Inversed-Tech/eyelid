@@ -1,7 +1,8 @@
 //! Polynomial inverse.
-use crate::primitives::poly::{Coeff, Poly};
 use ark_ff::{Field, One, Zero};
 use ark_poly::Polynomial;
+
+use crate::primitives::poly::{Coeff, Poly, PolyConf};
 
 /// Returns the primitive polynomial which is the inverse of `a` in the
 /// cyclotomic ring, if it exists. Otherwise, returns an error.
@@ -14,9 +15,7 @@ use ark_poly::Polynomial;
 /// When `d` is a constant polynomial and `a` is the polynomial modulus
 /// (which reduces to `0`), we have that `b/cont(d)` is the primitive
 /// multiplicative inverse of `y`.
-pub fn inverse<C: PolyConf>(
-    a: &Poly<C>,
-) -> Result<Poly<C>, &'static str> {
+pub fn inverse<C: PolyConf>(a: &Poly<C>) -> Result<Poly<C>, &'static str> {
     let unreduced_mod_pol = Poly::new_unreduced_poly_modulus_slow();
 
     let (_x, y, d) = extended_gcd(&unreduced_mod_pol, a);
@@ -55,14 +54,7 @@ fn update_diophantine<C: PolyConf>(
 }
 
 /// Returns polynomials `(x, y, d)` such that `a.x + b.y = d`.
-pub fn extended_gcd<C: PolyConf>(
-    a: &Poly<C>,
-    b: &Poly<C>,
-) -> (
-    Poly<C>,
-    Poly<C>,
-    Poly<C>,
-) {
+pub fn extended_gcd<C: PolyConf>(a: &Poly<C>, b: &Poly<C>) -> (Poly<C>, Poly<C>, Poly<C>) {
     // Invariant a.xi + b.yi = ri
 
     // init with x0=1, y0=0, r0=a

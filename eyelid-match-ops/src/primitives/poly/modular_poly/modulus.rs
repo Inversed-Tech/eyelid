@@ -8,7 +8,7 @@ use crate::primitives::poly::{Coeff, Poly};
 // TODO: delete this after the search and replace.
 use super::conf::PolyConf;
 /// Temporary alias to make things compile.
-pub const FULL_RES_POLY_DEGREE: usize = super::conf::TestRes::C::MAX_POLY_DEGREE;
+pub const FULL_RES_POLY_DEGREE: usize = super::conf::TestRes::MAX_POLY_DEGREE;
 
 /// The fastest available modular polynomial operation.
 pub use mod_poly_manual_mut as mod_poly;
@@ -46,9 +46,7 @@ pub fn mod_poly_manual_mut<C: PolyConf>(dividend: &mut Poly<C>) {
 ///
 /// This clones then uses the manual implementation.
 #[cfg(inefficient)]
-pub fn mod_poly_manual_ref<C: PolyConf>(
-    dividend: &Poly<C>,
-) -> Poly<C> {
+pub fn mod_poly_manual_ref<C: PolyConf>(dividend: &Poly<C>) -> Poly<C> {
     let mut dividend = dividend.clone();
     mod_poly_manual_mut(&mut dividend);
     dividend
@@ -57,9 +55,7 @@ pub fn mod_poly_manual_ref<C: PolyConf>(
 /// Returns the remainder of `dividend % [POLY_MODULUS]`, as a polynomial.
 ///
 /// This uses an [`ark-poly`] library implementation, which always creates a new polynomial.
-pub fn mod_poly_ark_ref_slow<C: PolyConf>(
-    dividend: &Poly<C>,
-) -> Poly<C> {
+pub fn mod_poly_ark_ref_slow<C: PolyConf>(dividend: &Poly<C>) -> Poly<C> {
     // The DenseOrSparsePolynomial implementation ensures canonical form.
     let (_quotient, remainder) = dividend
         .divide_with_q_and_r(&new_unreduced_poly_modulus_slow::<C>())

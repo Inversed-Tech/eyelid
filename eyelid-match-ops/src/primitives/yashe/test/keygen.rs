@@ -2,7 +2,7 @@
 
 use crate::primitives::{
     poly::FULL_RES_POLY_DEGREE,
-    yashe::{Coeff, Poly, Yashe, YasheParams},
+    yashe::{Coeff, Poly, PolyConf, Yashe, YasheParams},
 };
 use ark_ff::One;
 use ark_poly::Polynomial;

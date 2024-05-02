@@ -11,7 +11,7 @@ use std::{
 use ark_ff::{One, Zero};
 use ark_poly::polynomial::univariate::{DenseOrSparsePolynomial, DensePolynomial};
 
-use crate::primitives::poly::modular_poly::{Coeff, Poly};
+use crate::primitives::poly::{modular_poly::Poly, Coeff, PolyConf};
 
 impl<C: PolyConf> Borrow<DensePolynomial<Coeff>> for Poly<C> {
     fn borrow(&self) -> &DensePolynomial<Coeff> {
@@ -19,17 +19,13 @@ impl<C: PolyConf> Borrow<DensePolynomial<Coeff>> for Poly<C> {
     }
 }
 
-impl<C: PolyConf> From<Poly<C>>
-    for DenseOrSparsePolynomial<'static, Coeff>
-{
+impl<C: PolyConf> From<Poly<C>> for DenseOrSparsePolynomial<'static, Coeff> {
     fn from(poly: Poly<C>) -> DenseOrSparsePolynomial<'static, Coeff> {
         poly.0.into()
     }
 }
 
-impl<'a, C: PolyConf> From<&'a Poly<C>>
-    for DenseOrSparsePolynomial<'a, Coeff>
-{
+impl<'a, C: PolyConf> From<&'a Poly<C>> for DenseOrSparsePolynomial<'a, Coeff> {
     fn from(poly: &'a Poly<C>) -> DenseOrSparsePolynomial<'a, Coeff> {
         (&poly.0).into()
     }
@@ -83,9 +79,7 @@ impl<C: PolyConf> Add<Poly<C>> for &Poly<C> {
     }
 }
 
-impl<'a, 'b, C: PolyConf> Add<&'a Poly<C>>
-    for &'b Poly<C>
-{
+impl<'a, 'b, C: PolyConf> Add<&'a Poly<C>> for &'b Poly<C> {
     type Output = Poly<C>;
 
     fn add(self, rhs: &'a Poly<C>) -> Self::Output {
@@ -117,9 +111,7 @@ impl<C: PolyConf> Sub<Poly<C>> for &Poly<C> {
     }
 }
 
-impl<'a, 'b, C: PolyConf> Sub<&'a Poly<C>>
-    for &'b Poly<C>
-{
+impl<'a, 'b, C: PolyConf> Sub<&'a Poly<C>> for &'b Poly<C> {
     type Output = Poly<C>;
 
     fn sub(self, rhs: &'a Poly<C>) -> Self::Output {

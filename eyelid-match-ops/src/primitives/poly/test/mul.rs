@@ -5,7 +5,7 @@ use ark_poly::Polynomial;
 
 use crate::primitives::poly::{
     flat_karatsuba_mul, naive_cyclotomic_mul, new_unreduced_poly_modulus_slow, rec_karatsuba_mul,
-    test::gen::rand_poly, Coeff, Poly, FULL_RES_POLY_DEGREE,
+    test::gen::rand_poly, Coeff, Poly, PolyConf, FULL_RES_POLY_DEGREE,
 };
 
 /// Test cyclotomic multiplication of a random polynomial by `X^{[C::MAX_POLY_DEGREE] - 1}`.

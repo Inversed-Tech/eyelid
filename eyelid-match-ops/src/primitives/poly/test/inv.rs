@@ -6,7 +6,7 @@ use crate::primitives::{
     poly::{
         modular_poly::inv::{extended_gcd, inverse},
         test::gen::rand_poly,
-        Poly,
+        Poly, PolyConf,
     },
     yashe::{Yashe, YasheParams},
 };

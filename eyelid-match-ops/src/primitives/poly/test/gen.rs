@@ -3,7 +3,7 @@
 use ark_poly::{univariate::DensePolynomial, DenseUVPolynomial, Polynomial};
 use rand::Rng;
 
-use crate::primitives::poly::Poly;
+use crate::primitives::poly::{Poly, PolyConf};
 
 // Doc links only
 #[allow(unused_imports)]
