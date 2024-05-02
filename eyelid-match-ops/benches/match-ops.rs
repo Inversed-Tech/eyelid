@@ -372,3 +372,48 @@ pub fn bench_inv_iris(settings: &mut Criterion) {
         },
     );
 }
+
+/// Run [`Yashe::keygen()`] as a Criterion benchmark with random data.
+pub fn bench_keygen(settings: &mut Criterion) {
+    // Setup parameters
+    let params = YasheParams {
+        t: 1024,
+        delta: 3.2,
+    };
+    let ctx: Yashe<FULL_RES_POLY_DEGREE> = Yashe::new(params);
+
+    settings.bench_with_input(
+        BenchmarkId::new("YASHE keygen", "standard parameters with degree N"),
+        &ctx,
+        |benchmark, ctx| {
+            benchmark.iter_with_large_drop(|| {
+                // To avoid timing dropping the return value, this line must not end in ';'
+                ctx.keygen(&mut rand::thread_rng())
+            })
+        },
+    );
+}
+
+/// Run [`Yashe::keygen()`] as a Criterion benchmark with random data on the full number of iris bits.
+pub fn bench_keygen_iris(settings: &mut Criterion) {
+    // Setup parameters
+    let params = YasheParams {
+        t: 1024,
+        delta: 3.2,
+    };
+    let ctx: Yashe<IRIS_BIT_LENGTH> = Yashe::new(params);
+
+    settings.bench_with_input(
+        BenchmarkId::new(
+            "YASHE keygen",
+            "standard parameters with degree IRIS_BIT_LENGTH",
+        ),
+        &ctx,
+        |benchmark, ctx| {
+            benchmark.iter_with_large_drop(|| {
+                // To avoid timing dropping the return value, this line must not end in ';'
+                ctx.keygen(&mut rand::thread_rng())
+            })
+        },
+    );
+}
