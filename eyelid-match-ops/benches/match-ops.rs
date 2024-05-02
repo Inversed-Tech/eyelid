@@ -159,8 +159,8 @@ pub fn bench_naive_cyclotomic_mul_iris(settings: &mut Criterion) {
     settings.sampling_mode(Flat);
 
     // Setup: generate random cyclotomic polynomials
-    let p1: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
-    let p2: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
+    let p1: Poly<IrisBits> = rand_poly(IrisBits::MAX_POLY_DEGREE);
+    let p2: Poly<IrisBits> = rand_poly(IrisBits::MAX_POLY_DEGREE);
 
     settings.bench_with_input(
         BenchmarkId::new(
@@ -170,7 +170,7 @@ pub fn bench_naive_cyclotomic_mul_iris(settings: &mut Criterion) {
         &(p1, p2),
         |benchmark, (p1, p2)| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> Poly<IRIS_BIT_LENGTH> {
+            benchmark.iter_with_large_drop(|| -> Poly<IrisBits> {
                 poly::naive_cyclotomic_mul(p1, p2)
             })
         },
@@ -204,8 +204,8 @@ pub fn bench_rec_karatsuba_mul_iris(settings: &mut Criterion) {
     settings.sampling_mode(Flat);
 
     // Setup: generate random cyclotomic polynomials
-    let p1: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
-    let p2: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
+    let p1: Poly<IrisBits> = rand_poly(IrisBits::MAX_POLY_DEGREE);
+    let p2: Poly<IrisBits> = rand_poly(IrisBits::MAX_POLY_DEGREE);
 
     settings.bench_with_input(
         BenchmarkId::new(
@@ -215,7 +215,7 @@ pub fn bench_rec_karatsuba_mul_iris(settings: &mut Criterion) {
         &(p1, p2),
         |benchmark, (p1, p2)| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> Poly<IRIS_BIT_LENGTH> {
+            benchmark.iter_with_large_drop(|| -> Poly<IrisBits> {
                 poly::rec_karatsuba_mul(p1, p2)
             })
         },
@@ -249,8 +249,8 @@ pub fn bench_flat_karatsuba_mul_iris(settings: &mut Criterion) {
     settings.sampling_mode(Flat);
 
     // Setup: generate random cyclotomic polynomials
-    let p1: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
-    let p2: Poly<IRIS_BIT_LENGTH> = rand_poly(IRIS_BIT_LENGTH);
+    let p1: Poly<IrisBits> = rand_poly(IrisBits::MAX_POLY_DEGREE);
+    let p2: Poly<IrisBits> = rand_poly(IrisBits::MAX_POLY_DEGREE);
 
     settings.bench_with_input(
         BenchmarkId::new(
@@ -260,7 +260,7 @@ pub fn bench_flat_karatsuba_mul_iris(settings: &mut Criterion) {
         &(p1, p2),
         |benchmark, (p1, p2)| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> Poly<IRIS_BIT_LENGTH> {
+            benchmark.iter_with_large_drop(|| -> Poly<IrisBits> {
                 poly::flat_karatsuba_mul(p1, p2)
             })
         },
@@ -383,7 +383,7 @@ pub fn bench_inv_iris(settings: &mut Criterion) {
         t: 1024,
         delta: 3.2,
     };
-    let ctx: Yashe<IRIS_BIT_LENGTH> = Yashe::new(params);
+    let ctx: Yashe<IrisBits> = Yashe::new(params);
 
     let p = ctx.sample_gaussian(&mut rng);
 
@@ -395,7 +395,7 @@ pub fn bench_inv_iris(settings: &mut Criterion) {
         &(p),
         |benchmark, p| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> Result<Poly<IRIS_BIT_LENGTH>, &'static str> {
+            benchmark.iter_with_large_drop(|| -> Result<Poly<IrisBits>, &'static str> {
                 p.inverse()
             })
         },
@@ -439,7 +439,7 @@ pub fn bench_keygen_iris(settings: &mut Criterion) {
         t: 1024,
         delta: 3.2,
     };
-    let ctx: Yashe<IRIS_BIT_LENGTH> = Yashe::new(params);
+    let ctx: Yashe<IrisBits> = Yashe::new(params);
 
     settings.bench_with_input(
         BenchmarkId::new(
@@ -450,7 +450,7 @@ pub fn bench_keygen_iris(settings: &mut Criterion) {
         |benchmark, ctx| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
             benchmark.iter_with_large_drop(
-                || -> (yashe::PrivateKey<IRIS_BIT_LENGTH>, yashe::PublicKey<IRIS_BIT_LENGTH>) {
+                || -> (yashe::PrivateKey<IrisBits>, yashe::PublicKey<IRIS_BIT_LENGTH>) {
                     ctx.keygen(&mut rand::thread_rng())
                 },
             )
