@@ -1,10 +1,17 @@
 //! The underlying integer field.
 //!
-//! Outside this module, use [`fq::Coeff`](Coeff) instead of `fq79` or `fq_tiny`.
+//! Outside this module, use [`PolyConf::Coeff`] instead of [`Fq79`] or [`FqTiny`].
 //! This automatically enables CI tests on both fields.
+
+pub use fq79::Fq79;
+pub use fq_tiny::Fq4 as FqTiny;
 
 use ark_ff::Zero;
 use lazy_static::lazy_static;
+
+// Doc links only
+#[allow(unused_imports)]
+use crate::primitives::poly::PolyConf;
 
 mod fq79;
 mod fq_tiny;

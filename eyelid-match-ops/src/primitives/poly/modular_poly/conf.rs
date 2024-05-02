@@ -2,6 +2,8 @@
 
 use std::fmt::Debug;
 
+use crate::primitives::poly::Fq79;
+
 /// The polynomial config used in tests.
 //
 // We use the full resolution by default, but TinyTest when cfg(tiny_poly) is set.
@@ -19,7 +21,8 @@ pub trait PolyConf: Copy + Clone + Debug + Eq + PartialEq {
     /// The maximum exponent in the polynomial.
     const MAX_POLY_DEGREE: usize;
 
-    // TODO: add Coeff type
+    /// The type of the coefficient.
+    type Coeff: ark_ff::PrimeField;
 }
 
 /// Iris bit length polynomial parameters.
@@ -30,6 +33,7 @@ pub struct IrisBits;
 
 impl PolyConf for IrisBits {
     const MAX_POLY_DEGREE: usize = crate::IRIS_BIT_LENGTH;
+    type Coeff = Fq79;
 }
 
 /// Full resolution polynomial parameters.
@@ -42,6 +46,7 @@ pub struct FullRes;
 #[cfg(not(tiny_poly))]
 impl PolyConf for FullRes {
     const MAX_POLY_DEGREE: usize = 2048;
+    type Coeff = Fq79;
 }
 
 /// Tiny test polynomials, used for finding edge cases in tests.
@@ -54,4 +59,5 @@ pub struct TinyTest;
 #[cfg(tiny_poly)]
 impl PolyConf for TinyTest {
     const MAX_POLY_DEGREE: usize = 8;
+    type Coeff = FqTiny;
 }
