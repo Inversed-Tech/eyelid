@@ -18,7 +18,7 @@ use eyelid_match_ops::{
         poly::{
             self, modular_poly::inv::inverse, test::gen::rand_poly, Poly, FULL_RES_POLY_DEGREE,
         },
-        yashe::{Yashe, YasheParams},
+        yashe::{self, Yashe, YasheParams},
     },
     IRIS_BIT_LENGTH,
 };
@@ -65,6 +65,14 @@ criterion_group! {
     targets = bench_inv
 }
 
+criterion_group! {
+    name = bench_key_generation;
+    // This can be any expression that returns a `Criterion` object.
+    config = Criterion::default().sample_size(10);
+    // List key generation implementations here.
+    targets = bench_keygen
+}
+
 // Iris-length polynomial benchmarks.
 // These benchmarks provide an upper bound for the performance of iris operations.
 // They also help us decide if we need smaller or larger polynomial sizes.
@@ -84,6 +92,14 @@ criterion_group! {
     targets = bench_inv_iris
 }
 
+criterion_group! {
+    name = bench_key_generation_iris;
+    // This can be any expression that returns a `Criterion` object.
+    config = Criterion::default().sample_size(10);
+    // List key generation implementations here.
+    targets = bench_keygen_iris
+}
+
 // List groups here.
 criterion_main!(
     bench_full_match,
@@ -91,8 +107,10 @@ criterion_main!(
     bench_poly_split_karatsuba,
     bench_polynomial_modulus,
     bench_inverse,
+    bench_key_generation,
     bench_cyclotomic_multiplication_iris,
-    bench_inverse_iris
+    bench_inverse_iris,
+    bench_key_generation_iris
 );
 
 /// Run [`plaintext::is_iris_match()`] as a Criterion benchmark with random data.
@@ -128,8 +146,8 @@ pub fn bench_naive_cyclotomic_mul(settings: &mut Criterion) {
         ),
         &(p1, p2),
         |benchmark, (p1, p2)| {
-            benchmark.iter_with_large_drop(|| {
-                // To avoid timing dropping the return value, this line must not end in ';'
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Poly<FULL_RES_POLY_DEGREE> {
                 poly::naive_cyclotomic_mul(p1, p2)
             })
         },
@@ -149,8 +167,8 @@ pub fn bench_naive_cyclotomic_mul_iris(settings: &mut Criterion) {
         ),
         &(p1, p2),
         |benchmark, (p1, p2)| {
-            benchmark.iter_with_large_drop(|| {
-                // To avoid timing dropping the return value, this line must not end in ';'
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Poly<IRIS_BIT_LENGTH> {
                 poly::naive_cyclotomic_mul(p1, p2)
             })
         },
@@ -170,8 +188,8 @@ pub fn bench_rec_karatsuba_mul(settings: &mut Criterion) {
         ),
         &(p1, p2),
         |benchmark, (p1, p2)| {
-            benchmark.iter_with_large_drop(|| {
-                // To avoid timing dropping the return value, this line must not end in ';'
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Poly<FULL_RES_POLY_DEGREE> {
                 poly::rec_karatsuba_mul(p1, p2)
             })
         },
@@ -191,8 +209,8 @@ pub fn bench_rec_karatsuba_mul_iris(settings: &mut Criterion) {
         ),
         &(p1, p2),
         |benchmark, (p1, p2)| {
-            benchmark.iter_with_large_drop(|| {
-                // To avoid timing dropping the return value, this line must not end in ';'
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Poly<IRIS_BIT_LENGTH> {
                 poly::rec_karatsuba_mul(p1, p2)
             })
         },
@@ -212,8 +230,8 @@ pub fn bench_flat_karatsuba_mul(settings: &mut Criterion) {
         ),
         &(p1, p2),
         |benchmark, (p1, p2)| {
-            benchmark.iter_with_large_drop(|| {
-                // To avoid timing dropping the return value, this line must not end in ';'
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Poly<FULL_RES_POLY_DEGREE> {
                 poly::flat_karatsuba_mul(p1, p2)
             })
         },
@@ -233,8 +251,8 @@ pub fn bench_flat_karatsuba_mul_iris(settings: &mut Criterion) {
         ),
         &(p1, p2),
         |benchmark, (p1, p2)| {
-            benchmark.iter_with_large_drop(|| {
-                // To avoid timing dropping the return value, this line must not end in ';'
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Poly<IRIS_BIT_LENGTH> {
                 poly::flat_karatsuba_mul(p1, p2)
             })
         },
@@ -250,10 +268,12 @@ pub fn bench_poly_split_half(settings: &mut Criterion) {
         BenchmarkId::new("Karatsuba: poly split half", "random poly of degree N"),
         &(p),
         |benchmark, p| {
-            benchmark.iter_with_large_drop(|| {
-                // To avoid timing dropping the return value, this line must not end in ';'
-                poly::poly_split_half(p, FULL_RES_POLY_DEGREE)
-            })
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(
+                || -> (Poly<FULL_RES_POLY_DEGREE>, Poly<FULL_RES_POLY_DEGREE>) {
+                    poly::poly_split_half(p, FULL_RES_POLY_DEGREE)
+                },
+            )
         },
     );
 }
@@ -267,8 +287,8 @@ pub fn bench_poly_split_2(settings: &mut Criterion) {
         BenchmarkId::new("Karatsuba: poly split 2", "random poly of degree N"),
         &(p),
         |benchmark, p| {
-            benchmark.iter_with_large_drop(|| {
-                // To avoid timing dropping the return value, this line must not end in ';'
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Vec<Poly<FULL_RES_POLY_DEGREE>> {
                 poly::poly_split(p, 2)
             })
         },
@@ -284,14 +304,14 @@ pub fn bench_mod_poly_manual(settings: &mut Criterion) {
         BenchmarkId::new("Manual polynomial modulus", "A random poly of degree 2N"),
         &dividend,
         |benchmark, dividend| {
-            benchmark.iter_with_large_drop(|| {
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Poly<FULL_RES_POLY_DEGREE> {
                 // TODO: work out how to avoid timing this clone
                 // (The production code already avoids cloning where possible.)
                 let mut dividend = dividend.clone();
 
                 poly::mod_poly_manual_mut(&mut dividend);
 
-                // To avoid timing dropping dividend, we return it instead
                 dividend
             })
         },
@@ -307,8 +327,8 @@ pub fn bench_mod_poly_ark(settings: &mut Criterion) {
         BenchmarkId::new("ark-poly polynomial modulus", "A random poly of degree 2N"),
         &dividend,
         |benchmark, dividend| {
-            benchmark.iter_with_large_drop(|| {
-                // To avoid timing dropping the return value, this line must not end in ';'
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Poly<FULL_RES_POLY_DEGREE> {
                 poly::mod_poly_ark_ref_slow(dividend)
             })
         },
@@ -336,8 +356,8 @@ pub fn bench_inv(settings: &mut Criterion) {
         ),
         &(p),
         |benchmark, p| {
-            benchmark.iter_with_large_drop(|| {
-                // To avoid timing dropping the return value, this line must not end in ';'
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Result<Poly<FULL_RES_POLY_DEGREE>, String> {
                 inverse(p)
             })
         },
@@ -365,8 +385,9 @@ pub fn bench_inv_iris(settings: &mut Criterion) {
         ),
         &(p),
         |benchmark, p| {
-            benchmark.iter_with_large_drop(|| {
-                // To avoid timing dropping the return value, this line must not end in ';'
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Result<Poly<IRIS_BIT_LENGTH>, String> {
+                // TODO: consider benchmarking the inverse of a uniform random polynomial as well
                 inverse(p)
             })
         },
@@ -386,10 +407,14 @@ pub fn bench_keygen(settings: &mut Criterion) {
         BenchmarkId::new("YASHE keygen", "standard parameters with degree N"),
         &ctx,
         |benchmark, ctx| {
-            benchmark.iter_with_large_drop(|| {
-                // To avoid timing dropping the return value, this line must not end in ';'
-                ctx.keygen(&mut rand::thread_rng())
-            })
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(
+                || -> (yashe::PrivateKey<FULL_RES_POLY_DEGREE>, yashe::PublicKey<FULL_RES_POLY_DEGREE>) {
+                    // The thread_rng() call is efficient, because it only clones a small amount of memory,
+                    // which is dedicated to the current thread.
+                    ctx.keygen(&mut rand::thread_rng())
+                },
+            )
         },
     );
 }
@@ -410,10 +435,12 @@ pub fn bench_keygen_iris(settings: &mut Criterion) {
         ),
         &ctx,
         |benchmark, ctx| {
-            benchmark.iter_with_large_drop(|| {
-                // To avoid timing dropping the return value, this line must not end in ';'
-                ctx.keygen(&mut rand::thread_rng())
-            })
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(
+                || -> (yashe::PrivateKey<IRIS_BIT_LENGTH>, yashe::PublicKey<IRIS_BIT_LENGTH>) {
+                    ctx.keygen(&mut rand::thread_rng())
+                },
+            )
         },
     );
 }
