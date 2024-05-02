@@ -1,6 +1,8 @@
 //! Implementation of YASHE cryptosystem
 //! `<https://eprint.iacr.org/2013/075.pdf>`
 
+use std::marker::PhantomData;
+
 use ark_ff::{One, UniformRand};
 use rand::rngs::ThreadRng;
 use rand_distr::{Distribution, Normal};
@@ -23,7 +25,11 @@ pub struct YasheParams {
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Yashe<C: PolyConf> {
     /// Cryptosystem parameters
+    /// TODO: turn these into a trait and marker type, with a `PolyConf` type in the cryptosystem trait
     params: YasheParams,
+
+    /// A zero-sized marker, which binds the config type to the outer type.
+    _conf: PhantomData<C>,
 }
 
 /// Private key struct
@@ -47,7 +53,10 @@ pub struct PublicKey<C: PolyConf> {
 impl<C: PolyConf> Yashe<C> {
     /// Yashe constructor
     pub fn new(params: YasheParams) -> Self {
-        Self { params }
+        Self {
+            params,
+            _conf: PhantomData,
+        }
     }
 
     /// Generate the private key
