@@ -348,7 +348,9 @@ pub fn bench_mod_poly_ark(settings: &mut Criterion) {
     );
 }
 
-/// Run [`poly::inverse()`] as a Criterion benchmark with random data.
+/// Run [`poly::inverse()`] as a Criterion benchmark with gaussian random data.
+///
+/// TODO: consider benchmarking the inverse of a uniform random polynomial as well
 pub fn bench_inv(settings: &mut Criterion) {
     // Setup: generate random cyclotomic polynomials
 
@@ -370,14 +372,14 @@ pub fn bench_inv(settings: &mut Criterion) {
         &(p),
         |benchmark, p| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> Result<Poly<FULL_RES_POLY_DEGREE>, String> {
-                p.inverse()
-            })
+            benchmark.iter_with_large_drop(
+                || -> Result<Poly<FULL_RES_POLY_DEGREE>, &'static str> { p.inverse() },
+            )
         },
     );
 }
 
-/// Run [`poly::inverse()`] as a Criterion benchmark with random data on the full number of iris bits.
+/// Run [`poly::inverse()`] as a Criterion benchmark with gaussian random data on the full number of iris bits.
 pub fn bench_inv_iris(settings: &mut Criterion) {
     // Tweak configuration for a long-running test
     let mut settings = settings.benchmark_group("Slow Benchmarks");
@@ -404,8 +406,7 @@ pub fn bench_inv_iris(settings: &mut Criterion) {
         &(p),
         |benchmark, p| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> Result<Poly<IRIS_BIT_LENGTH>, String> {
-                // TODO: consider benchmarking the inverse of a uniform random polynomial as well
+            benchmark.iter_with_large_drop(|| -> Result<Poly<IRIS_BIT_LENGTH>, &'static str> {
                 p.inverse()
             })
         },

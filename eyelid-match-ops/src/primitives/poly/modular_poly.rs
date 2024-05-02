@@ -161,7 +161,7 @@ impl<const MAX_POLY_DEGREE: usize> Poly<MAX_POLY_DEGREE> {
 
     /// Returns the primitive inverse of this polynomial in the cyclotomic ring, if it exists.
     /// Otherwise, returns an error.
-    pub fn inverse(&self) -> Result<Self, String> {
+    pub fn inverse(&self) -> Result<Self, &'static str> {
         inv::inverse(self)
     }
 

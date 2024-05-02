@@ -16,7 +16,7 @@ use ark_poly::Polynomial;
 /// multiplicative inverse of `y`.
 pub fn inverse<const MAX_POLY_DEGREE: usize>(
     a: &Poly<MAX_POLY_DEGREE>,
-) -> Result<Poly<MAX_POLY_DEGREE>, String> {
+) -> Result<Poly<MAX_POLY_DEGREE>, &'static str> {
     let unreduced_mod_pol = Poly::new_unreduced_poly_modulus_slow();
 
     let (_x, y, d) = extended_gcd(&unreduced_mod_pol, a);
@@ -24,9 +24,9 @@ pub fn inverse<const MAX_POLY_DEGREE: usize>(
     // If `d` is a non-zero constant, we can compute the inverse of `d`,
     // and calculate the final primitive inverse.
     if d.is_zero() {
-        Err("Can't invert the zero polynomial".to_string())
+        Err("Can't invert the zero polynomial")
     } else if d.degree() > 0 {
-        Err("Non-invertible polynomial".to_string())
+        Err("Non-invertible polynomial")
     } else {
         // Reduce to a primitive polynomial.
         let mut inv: Poly<MAX_POLY_DEGREE> = y;
