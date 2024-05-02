@@ -1,5 +1,7 @@
 //! Fixed parameters for modular polynomial types.
 
+use std::fmt::Debug;
+
 /// The polynomial config used in tests.
 //
 // We use the full resolution by default, but TinyTest when cfg(tiny_poly) is set.
@@ -13,7 +15,7 @@ pub type TestRes = TinyTest;
 /// Fixed polynomial parameters.
 ///
 /// Polynomials with different parameters are incompatible.
-pub trait PolyConf {
+pub trait PolyConf: Copy + Clone + Debug + Eq + PartialEq {
     /// The maximum exponent in the polynomial.
     const MAX_POLY_DEGREE: usize;
 

@@ -6,7 +6,7 @@
 use std::{
     borrow::Borrow,
     marker::PhantomData,
-    ops::{Add, AddAssign, Mul, Sub, SubAssign},
+    ops::{Add, AddAssign, Mul, Neg, Sub, SubAssign},
 };
 
 use ark_ff::{One, Zero};
@@ -58,11 +58,27 @@ impl<C: PolyConf> One for Poly<C> {
     }
 }
 
-// Poly + Poly and similar are provided by the derive
+// Poly / Poly and Poly % Poly are provided by the derives
 
 // TODO:
 // Some missing truncate_leading_zeroes() can cause a panic in degree():
 // <https://github.com/Inversed-Tech/eyelid/issues/43>
+
+impl<C: PolyConf> Neg for Poly<C> {
+    type Output = Self;
+
+    fn neg(self) -> Self {
+        Poly(-self.0, PhantomData)
+    }
+}
+
+impl<C: PolyConf> Add<Poly<C>> for Poly<C> {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self {
+        Poly(&self.0 + &rhs.0, PhantomData)
+    }
+}
 
 impl<C: PolyConf> Add<&Poly<C>> for Poly<C> {
     type Output = Self;

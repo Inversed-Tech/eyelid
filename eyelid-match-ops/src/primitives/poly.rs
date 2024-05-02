@@ -11,6 +11,10 @@ pub use modular_poly::{
     Poly,
 };
 
+// Only for tests.
+#[cfg(any(test, feature = "benchmark"))]
+pub use modular_poly::conf::TestRes;
+
 // Use `mod_poly` outside this module, it is set to the fastest modulus operation.
 #[cfg(any(test, feature = "benchmark"))]
 pub use modular_poly::modulus::{mod_poly_ark_ref_slow, mod_poly_manual_mut};

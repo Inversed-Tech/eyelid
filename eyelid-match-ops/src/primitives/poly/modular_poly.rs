@@ -20,7 +20,7 @@ use ark_ff::{One, Zero};
 use ark_poly::polynomial::univariate::{
     DenseOrSparsePolynomial, DensePolynomial, SparsePolynomial,
 };
-use derive_more::{Add, AsRef, Deref, DerefMut, Div, Into, Neg, Rem};
+use derive_more::{AsRef, Deref, DerefMut, Div, Into, Rem};
 
 use crate::primitives::poly::{
     mod_poly, mul_poly, new_unreduced_poly_modulus_slow, Coeff, PolyConf,
@@ -54,8 +54,9 @@ mod trivial;
     Deref,
     DerefMut,
     Into,
-    Neg,
-    Add,
+    // We can't derive Add or Neg because they add unnecessary bounds on PhantomData
+    //Neg,
+    //Add,
     // We can't derive Sub because the inner type doesn't have the expected impls.
     //Sub,
     // We don't implement DivAssign and RemAssign, because they have hidden clones.
