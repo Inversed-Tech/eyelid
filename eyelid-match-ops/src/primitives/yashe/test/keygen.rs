@@ -8,7 +8,10 @@ use ark_ff::One;
 use ark_poly::Polynomial;
 
 /// Auxiliary function for testing key generation
-fn keygen_helper<C: PolyConf>() {
+fn keygen_helper<C: PolyConf>()
+where
+    C::Coeff: From<i64> + From<u64>,
+{
     // TODO: how to deal with different sets of parameters?
     // We must be able to test all the different parameterizations
     let mut rng = rand::thread_rng();

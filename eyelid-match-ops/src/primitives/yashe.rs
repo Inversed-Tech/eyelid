@@ -23,7 +23,10 @@ pub struct YasheParams {
 
 /// Yashe scheme
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct Yashe<C: PolyConf> {
+pub struct Yashe<C: PolyConf>
+where
+    C::Coeff: From<i64> + From<u64>,
+{
     /// Cryptosystem parameters
     /// TODO: turn these into a trait and marker type, with a `PolyConf` type in the cryptosystem trait
     params: YasheParams,
@@ -50,7 +53,10 @@ pub struct PublicKey<C: PolyConf> {
     pub h: Poly<C>,
 }
 
-impl<C: PolyConf> Yashe<C> {
+impl<C: PolyConf> Yashe<C>
+where
+    C::Coeff: From<i64> + From<u64>,
+{
     /// Yashe constructor
     pub fn new(params: YasheParams) -> Self {
         Self {

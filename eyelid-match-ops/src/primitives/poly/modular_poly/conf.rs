@@ -60,12 +60,13 @@ impl PolyConf for IrisBits {
     type Coeff = Fq79;
 
     fn coeff_zero() -> &'static Self::Coeff {
-        &*FQ79_ZERO
+        &FQ79_ZERO
     }
 }
 
 lazy_static! {
-    pub static ref FQ79_ZERO: Fq79 = Fq79::zero();
+    /// The zero coefficient as a static constant value.
+    static ref FQ79_ZERO: Fq79 = Fq79::zero();
 }
 
 // TODO: try generic_singleton and see if it performs better:
@@ -85,7 +86,7 @@ impl PolyConf for FullRes {
     type Coeff = Fq79;
 
     fn coeff_zero() -> &'static Self::Coeff {
-        &*FQ79_ZERO
+        &FQ79_ZERO
     }
 }
 
@@ -109,5 +110,6 @@ impl PolyConf for TinyTest {
 
 #[cfg(tiny_poly)]
 lazy_static! {
-    pub static ref FQ_TINY_ZERO: FqTiny = FqTiny::zero();
+    /// The zero coefficient as a static constant value.
+    static ref FQ_TINY_ZERO: FqTiny = FqTiny::zero();
 }

@@ -6,7 +6,7 @@
 use std::{
     borrow::Borrow,
     marker::PhantomData,
-    ops::{Add, AddAssign, Mul, Neg, Sub, SubAssign},
+    ops::{Add, AddAssign, Neg, Sub, SubAssign},
 };
 
 use ark_ff::{One, Zero};
@@ -160,19 +160,5 @@ impl<C: PolyConf> SubAssign<&Poly<C>> for Poly<C> {
     }
 }
 
-// Multiplying by a scalar can't increase the degree, so it is trivial.
-impl<C: PolyConf> Mul<C::Coeff> for Poly<C> {
-    type Output = Self;
-
-    fn mul(self, rhs: C::Coeff) -> Self {
-        Poly(&self.0 * rhs, PhantomData)
-    }
-}
-
-impl<C: PolyConf> Mul<C::Coeff> for &Poly<C> {
-    type Output = Poly<C>;
-
-    fn mul(self, rhs: C::Coeff) -> Self::Output {
-        Poly(&self.0 * rhs, PhantomData)
-    }
-}
+// `Mul` by a scalar conflicts with multiplying by a polynomial.
+// Use `MulAssign` or `*=` instead.

@@ -1,6 +1,6 @@
 //! The underlying integer field.
 //!
-//! Outside this module, use [`PolyConf::C::Coeff`] instead of [`Fq79`] or `FqTiny`.
+//! Outside this module, use [`PolyConf::Coeff`] instead of [`Fq79`] or `FqTiny`.
 //! This automatically enables CI tests on both fields.
 
 pub use fq79::Fq79;

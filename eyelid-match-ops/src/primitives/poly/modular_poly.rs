@@ -266,7 +266,7 @@ impl<'a, C: PolyConf> From<&DenseOrSparsePolynomial<'a, C::Coeff>> for Poly<C> {
 }
 
 impl<C: PolyConf> Index<usize> for Poly<C> {
-    type Output = C::C::Coeff;
+    type Output = C::Coeff;
 
     /// Read the coefficient at `index`, panicking only when reading a leading zero index above
     /// the maximum degree.
