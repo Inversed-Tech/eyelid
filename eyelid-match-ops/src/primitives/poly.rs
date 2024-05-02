@@ -5,10 +5,15 @@
 
 pub use fq::Coeff;
 pub use modular_poly::{
-    modulus::{mod_poly, new_unreduced_poly_modulus_slow, FULL_RES_POLY_DEGREE},
+    conf::PolyConf,
+    modulus::{mod_poly, new_unreduced_poly_modulus_slow},
     mul::mul_poly,
     Poly,
 };
+
+// Only for tests.
+#[cfg(any(test, feature = "benchmark"))]
+pub use modular_poly::conf::{IrisBits, TestRes};
 
 // Use `mod_poly` outside this module, it is set to the fastest modulus operation.
 #[cfg(any(test, feature = "benchmark"))]

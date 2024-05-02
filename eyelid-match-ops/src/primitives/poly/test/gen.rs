@@ -3,18 +3,18 @@
 use ark_poly::{univariate::DensePolynomial, DenseUVPolynomial, Polynomial};
 use rand::Rng;
 
-use crate::primitives::poly::Poly;
+use crate::primitives::poly::{Poly, PolyConf};
 
 // Doc links only
 #[allow(unused_imports)]
 use crate::primitives::poly::Coeff;
 
 /// Returns an un-reduced cyclotomic polynomial of `degree`, with random coefficients in [`Coeff`].
-/// `degree` must be less than or equal to `MAX_POLY_DEGREE`.
+/// `degree` must be less than or equal to `C::MAX_POLY_DEGREE`.
 ///
 /// In rare cases, the degree can be less than `degree`,
-/// because the random coefficient of `X^[MAX_POLY_DEGREE]` is zero.
-pub fn rand_poly<const MAX_POLY_DEGREE: usize>(degree: usize) -> Poly<MAX_POLY_DEGREE> {
+/// because the random coefficient of `X^[C::MAX_POLY_DEGREE]` is zero.
+pub fn rand_poly<C: PolyConf>(degree: usize) -> Poly<C> {
     use rand::thread_rng;
 
     // We can't use test_rng() here, because a deterministic RNG can make benchmarks inaccurate.
@@ -28,7 +28,7 @@ pub fn rand_poly<const MAX_POLY_DEGREE: usize>(degree: usize) -> Poly<MAX_POLY_D
     poly
 }
 
-impl<const MAX_POLY_DEGREE: usize> Poly<MAX_POLY_DEGREE> {
+impl<C: PolyConf> Poly<C> {
     // Shadow DenseUVPolynomial methods, but only make the method available in test code.
 
     /// Returns a random polynomial with degree `d`.
