@@ -6,7 +6,7 @@ use super::{IrisCode, IrisMask};
 
 pub mod gen;
 
-mod matching;
+pub mod matching;
 
 /// Assert that iris comparison results are the same regardless of the order of the iris codes.
 pub fn assert_iris_compare(
