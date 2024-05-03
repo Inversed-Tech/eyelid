@@ -1,14 +1,14 @@
 //! Unit tests for Key Generation
 
 use crate::primitives::{
-    poly::TestRes,
-    yashe::{Poly, PolyConf, Yashe},
+    poly::{Poly, TestRes},
+    yashe::{Yashe, YasheConf},
 };
 use ark_ff::One;
 use ark_poly::Polynomial;
 
 /// Auxiliary function for testing key generation
-fn keygen_helper<C: PolyConf>()
+fn keygen_helper<C: YasheConf>()
 where
     C::Coeff: From<i64> + From<u64>,
 {
@@ -23,7 +23,7 @@ where
 
     //dbg!(private_key.priv_key[0].clone());
     assert_eq!(
-        private_key.f[0] * C::Coeff::from(params.t) + C::Coeff::one(),
+        private_key.f[0] * C::t_as_coeff() + C::Coeff::one(),
         private_key.priv_key[0]
     );
 

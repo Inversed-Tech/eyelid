@@ -7,7 +7,7 @@ use ark_ff::{One, UniformRand};
 use rand::rngs::ThreadRng;
 use rand_distr::{Distribution, Normal};
 
-use crate::primitives::poly::{Poly, PolyConf};
+use crate::primitives::poly::Poly;
 
 pub use conf::YasheConf;
 
@@ -28,7 +28,10 @@ where
 
 /// Private key struct
 #[derive(Debug, Clone)]
-pub struct PrivateKey<C: YasheConf> {
+pub struct PrivateKey<C: YasheConf>
+where
+    C::Coeff: From<i64> + From<u64>,
+{
     /// Sampled with small coefficients (and invertible)
     pub f: Poly<C>,
     /// The inverse of f
@@ -39,7 +42,10 @@ pub struct PrivateKey<C: YasheConf> {
 
 /// Public key struct
 #[derive(Debug)]
-pub struct PublicKey<C: YasheConf> {
+pub struct PublicKey<C: YasheConf>
+where
+    C::Coeff: From<i64> + From<u64>,
+{
     /// Public key
     pub h: Poly<C>,
 }
@@ -64,7 +70,7 @@ where
             };
 
             let mut priv_key = f.clone();
-            priv_key *= C::Coeff::from(self.params.t);
+            priv_key *= C::t_as_coeff();
             priv_key[0] += C::Coeff::one();
             priv_key.truncate_to_canonical_form();
 
@@ -84,7 +90,7 @@ where
     ) -> PublicKey<C> {
         let mut h = self.sample_uniform(rng);
 
-        h *= C::Coeff::from(self.params.t);
+        h *= C::t_as_coeff();
         h.truncate_to_canonical_form();
         h = h * &private_key.finv;
 
@@ -105,7 +111,7 @@ where
         for i in 0..C::MAX_POLY_DEGREE {
             // TODO SECURITY: check that the generated integers are secure:
             // <https://github.com/Inversed-Tech/eyelid/issues/70>
-            let normal = Normal::new(0.0, self.params.delta).unwrap();
+            let normal = Normal::new(0.0, C::DELTA).expect("constant paramters are valid");
             let v: f64 = normal.sample(rng);
 
             // TODO: try i128, i32, i16, or i8 here

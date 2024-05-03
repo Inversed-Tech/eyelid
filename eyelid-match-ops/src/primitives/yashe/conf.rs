@@ -6,8 +6,6 @@
 //! RUSTFLAGS="--cfg tiny_poly" cargo bench --features benchmark
 //! ```
 
-use std::fmt::Debug;
-
 use crate::{
     primitives::poly::{modular_poly::conf::IrisBits, PolyConf},
     IRIS_BIT_LENGTH,
@@ -25,12 +23,20 @@ use crate::primitives::poly::modular_poly::conf::TinyTest;
 /// The [`PolyConf`] supertrait is the configuration of the polynomials used in the scheme.
 ///
 /// Encryption keys and ciphertexts with different parameters are incompatible.
-pub trait YasheConf: PolyConf + Copy + Clone + Debug + Eq + PartialEq {
+pub trait YasheConf: PolyConf
+where
+    Self::Coeff: From<u64> + From<i64>,
+{
     /// The plaintext coefficient modulus
     const T: u64;
 
     /// The standard deviation
     const DELTA: f64;
+
+    /// A convenience method to convert `T` to the `Coeff` type.
+    fn t_as_coeff() -> Self::Coeff {
+        Self::Coeff::from(Self::T)
+    }
 }
 
 /// Iris bit length polynomial parameters.
