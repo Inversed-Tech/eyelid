@@ -107,7 +107,7 @@ impl PolyConf for TinyTest {
     type Coeff = FqTiny;
 
     fn coeff_zero() -> &'static Self::Coeff {
-        &*FQ_TINY_ZERO
+        &FQ_TINY_ZERO
     }
 }
 
