@@ -7,6 +7,9 @@ use lazy_static::lazy_static;
 
 use crate::primitives::poly::Fq79;
 
+#[cfg(tiny_poly)]
+use crate::primitives::poly::fq::FqTiny;
+
 /// The polynomial config used in tests.
 //
 // We use the full resolution by default, but TinyTest when cfg(tiny_poly) is set.
