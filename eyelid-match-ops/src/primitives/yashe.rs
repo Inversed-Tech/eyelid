@@ -111,7 +111,7 @@ where
         for i in 0..C::MAX_POLY_DEGREE {
             // TODO SECURITY: check that the generated integers are secure:
             // <https://github.com/Inversed-Tech/eyelid/issues/70>
-            let normal = Normal::new(0.0, C::DELTA).expect("constant paramters are valid");
+            let normal = Normal::new(0.0, C::DELTA).expect("constant parameters are valid");
             let v: f64 = normal.sample(rng);
 
             // TODO: try i128, i32, i16, or i8 here

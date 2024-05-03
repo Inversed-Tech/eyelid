@@ -1,7 +1,7 @@
 //! Fixed parameters for the YASHE encryption scheme.
 //!
 //! Temporarily switch to tiny parameters to make test errors easier to debug:
-//! ```no_run
+//! ```text
 //! RUSTFLAGS="--cfg tiny_poly" cargo test
 //! RUSTFLAGS="--cfg tiny_poly" cargo bench --features benchmark
 //! ```
