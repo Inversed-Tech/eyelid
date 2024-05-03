@@ -17,7 +17,7 @@ pub mod conf;
 pub mod test;
 
 /// Yashe scheme
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
 pub struct Yashe<C: YasheConf>
 where
     C::Coeff: From<i64> + From<u64>,
@@ -27,7 +27,7 @@ where
 }
 
 /// Private key struct
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PrivateKey<C: YasheConf>
 where
     C::Coeff: From<i64> + From<u64>,
@@ -41,7 +41,7 @@ where
 }
 
 /// Public key struct
-#[derive(Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PublicKey<C: YasheConf>
 where
     C::Coeff: From<i64> + From<u64>,
