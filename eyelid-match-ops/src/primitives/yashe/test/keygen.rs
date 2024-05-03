@@ -2,7 +2,7 @@
 
 use crate::primitives::{
     poly::TestRes,
-    yashe::{Poly, PolyConf, Yashe, YasheParams},
+    yashe::{Poly, PolyConf, Yashe},
 };
 use ark_ff::One;
 use ark_poly::Polynomial;
@@ -15,11 +15,7 @@ where
     // TODO: how to deal with different sets of parameters?
     // We must be able to test all the different parameterizations
     let mut rng = rand::thread_rng();
-    let params = YasheParams {
-        t: 1024,
-        delta: 3.2,
-    };
-    let ctx: Yashe<C> = Yashe::new(params);
+    let ctx: Yashe<C> = Yashe::new();
     let (private_key, public_key) = ctx.keygen(&mut rng);
 
     let f_inv = private_key.f.inverse();

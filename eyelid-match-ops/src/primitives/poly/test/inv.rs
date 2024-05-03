@@ -8,7 +8,7 @@ use crate::primitives::{
         test::gen::rand_poly,
         Poly, PolyConf, TestRes,
     },
-    yashe::{Yashe, YasheParams},
+    yashe::Yashe,
 };
 
 #[cfg(test)]
@@ -50,11 +50,7 @@ fn inverse_test_helper<C: PolyConf>(f: &Poly<C>) {
 fn test_key_generation_and_inverse() {
     let mut rng = rand::thread_rng();
 
-    let params = YasheParams {
-        t: 1024,
-        delta: 3.2,
-    };
-    let ctx: Yashe<TestRes> = Yashe::new(params);
+    let ctx: Yashe<TestRes> = Yashe::new();
     let f = ctx.sample_gaussian(&mut rng);
 
     // REMARK: For our parameter choices it is very likely to find
