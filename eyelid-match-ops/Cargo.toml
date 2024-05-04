@@ -36,6 +36,7 @@ derive_more.workspace = true
 lazy_static.workspace = true
 
 rand.workspace = true
+rand_distr.workspace = true
 
 static_assertions.workspace = true
 
@@ -44,9 +45,6 @@ criterion = {workspace = true, optional = true}
 
 [dev-dependencies]
 eyelid-test.workspace = true
-
-lazy_static.workspace = true
-rand.workspace = true
 
 [lib]
 bench = false

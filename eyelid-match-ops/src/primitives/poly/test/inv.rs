@@ -1,17 +1,20 @@
 //! Tests for polynomial inverse.
 
-use crate::primitives::poly::sample;
 use ark_ff::{One, Zero};
 
-use crate::primitives::poly::test::gen::rand_poly;
-use crate::primitives::poly::Poly;
+use crate::primitives::{
+    poly::{
+        modular_poly::inv::{extended_gcd, inverse},
+        test::gen::rand_poly,
+        Poly, PolyConf, TestRes,
+    },
+    yashe::{Yashe, YasheParams},
+};
 
-#[cfg(test)]
-use crate::primitives::poly::{extended_gcd, inverse, FULL_RES_POLY_DEGREE};
 #[cfg(test)]
 use ark_poly::Polynomial;
 
-fn inverse_test_helper<const MAX_POLY_DEGREE: usize>(f: &Poly<MAX_POLY_DEGREE>) {
+fn inverse_test_helper<C: PolyConf>(f: &Poly<C>) {
     // REMARK: For our parameter choices it is very likely to find
     // the inverse in the first attempt.
     let out = inverse(f);
@@ -44,9 +47,15 @@ fn inverse_test_helper<const MAX_POLY_DEGREE: usize>(f: &Poly<MAX_POLY_DEGREE>) 
 }
 
 #[test]
-fn test_inverse_with_small_random_coefficients() {
-    let rng = rand::thread_rng();
-    let f = sample::<FULL_RES_POLY_DEGREE>(rng);
+fn test_key_generation_and_inverse() {
+    let mut rng = rand::thread_rng();
+
+    let params = YasheParams {
+        t: 1024,
+        delta: 3.2,
+    };
+    let ctx: Yashe<TestRes> = Yashe::new(params);
+    let f = ctx.sample_gaussian(&mut rng);
 
     // REMARK: For our parameter choices it is very likely to find
     // the inverse in the first attempt.
@@ -55,25 +64,25 @@ fn test_inverse_with_small_random_coefficients() {
 
 #[test]
 fn test_inverse_with_random_coefficients() {
-    let f: Poly<FULL_RES_POLY_DEGREE> = rand_poly(FULL_RES_POLY_DEGREE);
+    let f: Poly<TestRes> = rand_poly(TestRes::MAX_POLY_DEGREE);
     inverse_test_helper(&f);
 }
 
 #[test]
 fn test_edge_cases() {
     // Inverse of one is one
-    let one_poly: Poly<FULL_RES_POLY_DEGREE> = Poly::one();
+    let one_poly: Poly<TestRes> = Poly::one();
     let mut out = inverse(&one_poly.clone());
     assert_eq!(out, Ok(one_poly.clone()));
 
     // Inverse of minus one is minus one
-    let zero_poly: Poly<FULL_RES_POLY_DEGREE> = Poly::zero();
+    let zero_poly: Poly<TestRes> = Poly::zero();
     let minus_one_poly = zero_poly - one_poly.clone();
     out = inverse(&minus_one_poly.clone());
     assert_eq!(out, Ok(minus_one_poly));
 
     // Inverse of zero is error
-    let zero_poly: Poly<FULL_RES_POLY_DEGREE> = Poly::zero();
+    let zero_poly: Poly<TestRes> = Poly::zero();
     out = inverse(&zero_poly.clone());
     assert!(out.is_err());
 }

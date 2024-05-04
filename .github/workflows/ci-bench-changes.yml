@@ -52,7 +52,7 @@ jobs:
        run: |
          export RUSTFLAGS="-D warnings"
          echo "Warning: benchmark timings are unreliable in CI due to virtualization"
-         cargo bench --features benchmark -- 'match|multiplication|inv' --output-format bencher | tee output.txt
+         cargo bench --features benchmark -- 'match|multiplication|inv|keygen' --output-format bencher | tee output.txt
          echo "Warning: benchmark timings are unreliable in CI due to virtualization"
 
      # Download previous benchmark result from the most recent `main` branch cache (if any exists).
