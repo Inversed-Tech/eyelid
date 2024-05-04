@@ -3,7 +3,8 @@
 use itertools::Itertools;
 
 use crate::plaintext::{IrisCode, IrisMask};
-use crate::primitives::poly::{Coeff, Poly, FULL_RES_POLY_DEGREE};
+use crate::primitives::poly::modular_poly::conf::FullRes;
+use crate::primitives::poly::{Coeff, Poly, PolyConf};
 use crate::{
     IRIS_BIT_LENGTH, IRIS_COLUMNS as NUM_COLS, IRIS_COLUMN_LENGTH as NUM_ROWS,
     IRIS_MATCH_DENOMINATOR, IRIS_MATCH_NUMERATOR, IRIS_ROTATION_COMPARISONS, IRIS_ROTATION_LIMIT,
@@ -19,13 +20,13 @@ const NUM_BLOCKS: usize = NUM_ROWS / ROWS_PER_BLOCK;
 
 /// An Iris code, encoded in polynomials. To be stored in the database.
 pub struct PolyCode {
-    polys: Vec<Poly<FULL_RES_POLY_DEGREE>>,
+    polys: Vec<Poly<FullRes>>,
     mask: IrisMask,
 }
 
 /// An Iris code, encoded in polynomials. To be matched against PolyCode.
 pub struct PolyQuery {
-    polys: Vec<Poly<FULL_RES_POLY_DEGREE>>,
+    polys: Vec<Poly<FullRes>>,
     mask: IrisMask,
 }
 
@@ -43,17 +44,13 @@ impl PolyCode {
         Self { polys, mask: *mask }
     }
 
-    fn from_plaintext_block(
-        value: &IrisCode,
-        mask: &IrisMask,
-        block_i: usize,
-    ) -> Poly<FULL_RES_POLY_DEGREE> {
+    fn from_plaintext_block(value: &IrisCode, mask: &IrisMask, block_i: usize) -> Poly<FullRes> {
         let k = NUM_COLS as i32;
         let v: i32 = IRIS_ROTATION_LIMIT as i32;
         let u = -v;
         let delta = (k + v - u) as usize;
 
-        let mut coeffs = vec![Coeff::zero(); FULL_RES_POLY_DEGREE];
+        let mut coeffs = vec![Coeff::zero(); FullRes::MAX_POLY_DEGREE];
         for m in 0..ROWS_PER_BLOCK {
             let row_i = block_i * ROWS_PER_BLOCK + ROWS_PER_BLOCK - 1 - m;
 
@@ -91,17 +88,13 @@ impl PolyQuery {
         Self { polys, mask: *mask }
     }
 
-    fn from_plaintext_block(
-        value: &IrisCode,
-        mask: &IrisMask,
-        block_i: usize,
-    ) -> Poly<FULL_RES_POLY_DEGREE> {
+    fn from_plaintext_block(value: &IrisCode, mask: &IrisMask, block_i: usize) -> Poly<FullRes> {
         let k = NUM_COLS as i32;
         let v: i32 = IRIS_ROTATION_LIMIT as i32;
         let u = -v;
         let delta = (k + v - u) as usize;
 
-        let mut coeffs = vec![Coeff::zero(); FULL_RES_POLY_DEGREE];
+        let mut coeffs = vec![Coeff::zero(); FullRes::MAX_POLY_DEGREE];
         for m in 0..ROWS_PER_BLOCK {
             let row_i = block_i * ROWS_PER_BLOCK + m;
 
