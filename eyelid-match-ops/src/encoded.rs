@@ -125,37 +125,38 @@ impl PolyQuery {
         let s = ROWS_PER_BLOCK;
         let delta = (k + v - u) as usize;
 
-        // TODO: all polys.
-        let product = &self.polys[0] * &code.polys[0];
-        let differences = product
-            .iter()
-            .skip(s * delta - (v - u) as usize - 1) // From left-most rotation…
-            .take((v - u + 1) as usize) // … to right-most rotation.
-            .map(|c| coeff_to_int(*c))
-            .collect::<Vec<i64>>();
+        let mut differences = vec![0; IRIS_ROTATION_COMPARISONS];
+
+        for (a, b) in self.polys.iter().zip_eq(code.polys.iter()) {
+            // Multiply the polynomials, which will yield inner products in particular coefficients.
+            let product = a * b;
+            product
+                .iter()
+                .skip(s * delta - (v - u) as usize - 1) // From left-most rotation…
+                .take((v - u + 1) as usize) // … to right-most rotation.
+                .zip(differences.iter_mut())
+                .for_each(|(c, d)| {
+                    *d += coeff_to_int(*c);
+                });
+        }
 
         // TODO: simplify, compute the mask overlap sizes separately.
         let mut query_mask = self.mask;
         query_mask.rotate_left(IRIS_ROTATION_LIMIT * NUM_ROWS); // From left-most rotation…
-        let mut mask_counts: Vec<i64> = vec![];
 
-        for _rotation in 0..IRIS_ROTATION_COMPARISONS {
-            let mask = query_mask & code.mask;
-            let unmasked = mask.count_ones() as i64;
+        let mask_counts = (0..IRIS_ROTATION_COMPARISONS)
+            .map(|_| {
+                let mask = query_mask & code.mask;
+                let unmasked = mask.count_ones() as i64;
 
-            mask_counts.push(unmasked);
-            query_mask.rotate_right(NUM_ROWS); // … to right-most rotation.
-        }
+                query_mask.rotate_right(NUM_ROWS); // … to right-most rotation.
+                unmasked
+            })
+            .collect_vec();
 
-        for (d, t) in differences.into_iter().zip(mask_counts.into_iter()) {
-            //let t = BigUint::from(t);
-            let denom = BigUint::from(IRIS_MATCH_DENOMINATOR as u64);
-            let numer = BigUint::from(IRIS_MATCH_NUMERATOR as u64);
-            let two = BigUint::from(2u64);
-
+        for (d, t) in differences.into_iter().zip_eq(mask_counts.into_iter()) {
             // Match if the Hamming distance is less than a percentage threshold:
             // (t - d) / 2t <= 36%
-            //if (t - d) * denom <= two * t * numer {
             if (t - d) * (IRIS_MATCH_DENOMINATOR as i64) <= 2 * t * (IRIS_MATCH_NUMERATOR as i64) {
                 return true;
             }
@@ -167,13 +168,9 @@ impl PolyQuery {
 
 // TODO: validation and error handling.
 fn coeff_to_int(c: Coeff) -> i64 {
-    if c >= Coeff::zero() {
-        let bi = BigUint::from(c);
-        let bi = i64::try_from(bi).unwrap();
-        bi
+    if c <= Coeff::from(IRIS_BIT_LENGTH as u64) {
+        i64::try_from(BigUint::from(c)).unwrap()
     } else {
-        let bi = BigUint::from(-c);
-        let bi = i64::try_from(bi).unwrap();
-        -bi
+        -i64::try_from(BigUint::from(-c)).unwrap()
     }
 }
