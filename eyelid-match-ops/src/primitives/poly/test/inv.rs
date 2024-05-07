@@ -55,7 +55,7 @@ fn test_key_generation_and_inverse() {
         delta: 3.2,
     };
     let ctx: Yashe<TestRes> = Yashe::new(params);
-    let f = ctx.sample_gaussian(&mut rng);
+    let f = ctx.sample_gaussian(3.2, &mut rng);
 
     // REMARK: For our parameter choices it is very likely to find
     // the inverse in the first attempt.
