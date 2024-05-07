@@ -35,11 +35,9 @@ impl PolyConf for IrisBits {
 /// Full resolution polynomial parameters.
 ///
 /// These are the parameters for full resolution, according to the Inversed Tech report.
-#[cfg(not(tiny_poly))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct FullRes;
 
-#[cfg(not(tiny_poly))]
 impl PolyConf for FullRes {
     const MAX_POLY_DEGREE: usize = 2048;
 }

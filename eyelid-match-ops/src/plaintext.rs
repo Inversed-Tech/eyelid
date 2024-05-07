@@ -31,6 +31,22 @@ pub type IrisCode = BitArr![for IRIS_BIT_LENGTH];
 ///       correctly.
 pub type IrisMask = IrisCode;
 
+/// Returns the 1D index of a bit from 2D indices.
+pub fn index_1d(row_i: usize, col_i: usize) -> usize {
+    col_i * IRIS_COLUMN_LENGTH + row_i
+}
+
+/// Rotates the iris code by the given amount along the second dimension.
+#[allow(clippy::cast_sign_loss)]
+pub fn rotate(mut code: IrisCode, amount: isize) -> IrisCode {
+    if amount < 0 {
+        code.rotate_left((-amount) as usize * IRIS_COLUMN_LENGTH);
+    } else {
+        code.rotate_right(amount as usize * IRIS_COLUMN_LENGTH);
+    }
+    code
+}
+
 /// Returns true if `eye_new` and `eye_store` have enough identical bits to meet the threshold,
 /// after masking with `mask_new` and `mask_store`, and rotating from
 /// [`-IRIS_ROTATION_LIMIT..IRIS_ROTATION_LIMIT`](IRIS_ROTATION_LIMIT).

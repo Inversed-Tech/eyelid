@@ -3,7 +3,10 @@
 use lazy_static::lazy_static;
 use rand::Rng;
 
-use crate::plaintext::{IrisCode, IrisMask};
+use crate::{
+    plaintext::{rotate, IrisCode, IrisMask},
+    IRIS_ROTATION_LIMIT,
+};
 
 lazy_static! {
     /// A list of all codes. Random codes are only listed once.
@@ -35,6 +38,29 @@ pub fn random_iris_code() -> IrisCode {
     rng.fill(code.data.as_mut_slice());
 
     code
+}
+
+/// Returns an iris code that is similar to the given code.
+pub fn similar_iris_code(base: &IrisCode) -> IrisCode {
+    let mut similar = *base;
+    // Flip a third of the bits.
+    for i in 0..base.len() / 3 {
+        let mut b = similar.get_mut(i * 3).unwrap();
+        *b ^= true;
+    }
+    similar
+}
+
+/// Rotate the given iris code within tolerance, such that it should still match.
+#[allow(clippy::cast_possible_wrap)]
+pub fn rotate_not_too_much(base: &IrisCode) -> IrisCode {
+    rotate(*base, IRIS_ROTATION_LIMIT as isize)
+}
+
+/// Rotate the given iris code so much that it should not match.
+#[allow(clippy::cast_possible_wrap)]
+pub fn rotate_too_much(base: &IrisCode) -> IrisCode {
+    rotate(*base, IRIS_ROTATION_LIMIT as isize + 1)
 }
 
 /// Returns an iris mask with uniformly random bits.
