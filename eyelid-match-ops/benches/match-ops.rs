@@ -2,6 +2,12 @@
 //!
 //! To add a benchmark to the PR comparison, change the benchmark selection regex in
 //! `ci-bench-changes.yml`(https://github.com/Inversed-Tech/eyelid/blob/3668934d68780513ea61ede8f4ccfb2d6a7eaedb/.github/workflows/ci-bench-changes.yml#L55).
+//!
+//! Benchmarks that take longer than a minute are disabled by default.
+//! Use this command to run the benchmarks that are very slow:
+//! ```sh
+//! RUSTFLAGS="--cfg slow_benchmarks" cargo bench --features benchmark
+//! ```
 
 #![cfg(feature = "benchmark")]
 // Allow missing docs in macro-produced code.
@@ -76,14 +82,25 @@ criterion_group! {
 // Iris-length polynomial benchmarks.
 // These benchmarks provide an upper bound for the performance of iris operations.
 // They also help us decide if we need smaller or larger polynomial sizes.
+#[cfg(not(slow_benchmarks))]
 criterion_group! {
     name = bench_cyclotomic_multiplication_iris;
     // This can be any expression that returns a `Criterion` object.
-    config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(40));
+    config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(50));
+    // List iris-length polynomial multiplication implementations here.
+    targets = bench_rec_karatsuba_mul_iris, bench_flat_karatsuba_mul_iris
+}
+
+#[cfg(slow_benchmarks)]
+criterion_group! {
+    name = bench_cyclotomic_multiplication_iris;
+    // This can be any expression that returns a `Criterion` object.
+    config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(50));
     // List iris-length polynomial multiplication implementations here.
     targets = bench_naive_cyclotomic_mul_iris, bench_rec_karatsuba_mul_iris, bench_flat_karatsuba_mul_iris
 }
 
+#[cfg(slow_benchmarks)]
 criterion_group! {
     name = bench_inverse_iris;
     // This can be any expression that returns a `Criterion` object.
@@ -92,6 +109,7 @@ criterion_group! {
     targets = bench_inv_iris
 }
 
+#[cfg(slow_benchmarks)]
 criterion_group! {
     name = bench_key_generation_iris;
     // This can be any expression that returns a `Criterion` object.
@@ -101,6 +119,18 @@ criterion_group! {
 }
 
 // List groups here.
+#[cfg(not(slow_benchmarks))]
+criterion_main!(
+    bench_full_match,
+    bench_cyclotomic_multiplication,
+    bench_poly_split_karatsuba,
+    bench_polynomial_modulus,
+    bench_inverse,
+    bench_key_generation,
+    bench_cyclotomic_multiplication_iris,
+);
+
+#[cfg(slow_benchmarks)]
 criterion_main!(
     bench_full_match,
     bench_cyclotomic_multiplication,
@@ -160,6 +190,7 @@ pub fn bench_naive_cyclotomic_mul(settings: &mut Criterion) {
 }
 
 /// Run [`poly::naive_cyclotomic_mul()`] as a Criterion benchmark with random data on the full number of iris bits.
+#[cfg(slow_benchmarks)]
 pub fn bench_naive_cyclotomic_mul_iris(settings: &mut Criterion) {
     // Tweak configuration for a long-running test
     let mut settings = settings.benchmark_group(SLOW_BENCH_NAME);
@@ -351,6 +382,7 @@ pub fn bench_inv(settings: &mut Criterion) {
 }
 
 /// Run [`poly::inverse()`] as a Criterion benchmark with gaussian random data on the full number of iris bits.
+#[cfg(slow_benchmarks)]
 pub fn bench_inv_iris(settings: &mut Criterion) {
     // Tweak configuration for a long-running test
     let mut settings = settings.benchmark_group(SLOW_BENCH_NAME);
@@ -398,6 +430,7 @@ pub fn bench_keygen(settings: &mut Criterion) {
 }
 
 /// Run [`Yashe::keygen()`] as a Criterion benchmark with random data on the full number of iris bits.
+#[cfg(slow_benchmarks)]
 pub fn bench_keygen_iris(settings: &mut Criterion) {
     // Tweak configuration for a long-running test
     let mut settings = settings.benchmark_group(SLOW_BENCH_NAME);
