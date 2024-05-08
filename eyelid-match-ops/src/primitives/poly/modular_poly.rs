@@ -33,14 +33,21 @@ pub(super) mod mul;
 mod trivial;
 
 /// A modular polynomial with coefficients in [`PolyConf::Coeff`], and a generic maximum degree
-/// [`PolyConf::MAX_POLY_DEGREE`]. The un-reduced polynomial modulus is the polynomial modulus. TODO
+/// [`PolyConf::MAX_POLY_DEGREE`]. The polynomial modulus is `X^MAX_POLY_DEGREE + 1`. Polynomials
+/// are always in their canonical, modular reduced form.
 ///
-/// In its canonical form, a polynomial is a list of coefficients from the constant term `X^0`
-/// to the degree `X^n`, where the highest coefficient is non-zero. Leading zero coefficients are
-/// not stored.
+/// In this canonical form, a polynomial is a list of coefficients from the constant term `X^0`
+/// to `X^{MAX_POLY_DEGREE - 1}`, where the highest coefficient is non-zero.
 ///
-/// There is one more coefficient than the degree, because of the constant term. If the polynomial
-/// is the zero polynomial, the degree is `0`, and there are no coefficients.
+/// This canonical form is stored and maintained as follows:
+/// - The coefficient of `X^i` is stored at `self[i]`.
+/// - `X^MAX_POLY_DEGREE` is reduced to `PolyConf::Coeff::MODULUS - 1`.
+/// - Leading zero coefficients are not stored.
+/// - If the polynomial is the zero polynomial, the degree is `0`, and there are no coefficients.
+///
+/// Every operation which can change the degree must call [`Poly::reduce_mod_poly()`].
+/// If an operation can create leading zero coefficients, but will never increase the degree, it can call
+/// [`Poly::truncate_to_canonical_form()`] instead.
 #[derive(
     Clone,
     Debug,
