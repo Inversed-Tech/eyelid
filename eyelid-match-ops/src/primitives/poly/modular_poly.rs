@@ -79,7 +79,9 @@ impl<C: PolyConf> Poly<C> {
     /// Converts the `coeffs` vector into a dense polynomial.
     pub fn from_coefficients_vec(coeffs: Vec<C::Coeff>) -> Self {
         let mut poly = Self(DensePolynomial { coeffs }, PhantomData);
-        poly.truncate_to_canonical_form();
+
+        poly.reduce_mod_poly();
+
         poly
     }
 

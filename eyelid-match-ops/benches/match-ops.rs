@@ -16,7 +16,7 @@ use eyelid_match_ops::{
     },
     primitives::{
         poly::{self, test::gen::rand_poly, IrisBits, Poly, PolyConf, TestRes},
-        yashe::{self, Yashe, YasheParams},
+        yashe::{self, Yashe},
     },
 };
 
@@ -341,11 +341,7 @@ pub fn bench_inv(settings: &mut Criterion) {
 
     let mut rng = rand::thread_rng();
 
-    let params = YasheParams {
-        t: 1024,
-        delta: 3.2,
-    };
-    let ctx: Yashe<TestRes> = Yashe::new(params);
+    let ctx: Yashe<TestRes> = Yashe::new();
 
     let p = ctx.sample_gaussian(&mut rng);
 
@@ -374,11 +370,7 @@ pub fn bench_inv_iris(settings: &mut Criterion) {
 
     let mut rng = rand::thread_rng();
 
-    let params = YasheParams {
-        t: 1024,
-        delta: 3.2,
-    };
-    let ctx: Yashe<IrisBits> = Yashe::new(params);
+    let ctx: Yashe<IrisBits> = Yashe::new();
 
     let p = ctx.sample_gaussian(&mut rng);
 
@@ -399,11 +391,7 @@ pub fn bench_inv_iris(settings: &mut Criterion) {
 /// Run [`Yashe::keygen()`] as a Criterion benchmark with random data.
 pub fn bench_keygen(settings: &mut Criterion) {
     // Setup parameters
-    let params = YasheParams {
-        t: 1024,
-        delta: 3.2,
-    };
-    let ctx: Yashe<TestRes> = Yashe::new(params);
+    let ctx: Yashe<TestRes> = Yashe::new();
 
     settings.bench_with_input(
         BenchmarkId::new("YASHE keygen", "standard parameters with degree N"),
@@ -429,11 +417,7 @@ pub fn bench_keygen_iris(settings: &mut Criterion) {
     settings.sampling_mode(Flat);
 
     // Setup parameters
-    let params = YasheParams {
-        t: 1024,
-        delta: 3.2,
-    };
-    let ctx: Yashe<IrisBits> = Yashe::new(params);
+    let ctx: Yashe<IrisBits> = Yashe::new();
 
     settings.bench_with_input(
         BenchmarkId::new(

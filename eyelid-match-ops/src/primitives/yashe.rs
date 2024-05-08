@@ -7,37 +7,31 @@ use ark_ff::{One, UniformRand};
 use rand::rngs::ThreadRng;
 use rand_distr::{Distribution, Normal};
 
-use crate::primitives::poly::{Poly, PolyConf};
+use crate::primitives::poly::Poly;
+
+pub use conf::YasheConf;
+
+pub mod conf;
 
 #[cfg(test)]
 pub mod test;
 
-/// Yashe parameters
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub struct YasheParams {
-    /// Plaintext coefficient modulus
-    pub t: u64,
-    /// Standard deviation
-    pub delta: f64,
-}
-
 /// Yashe scheme
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub struct Yashe<C: PolyConf>
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
+pub struct Yashe<C: YasheConf>
 where
     C::Coeff: From<i64> + From<u64>,
 {
-    /// Cryptosystem parameters
-    /// TODO: turn these into a trait and marker type, with a `PolyConf` type in the cryptosystem trait
-    params: YasheParams,
-
     /// A zero-sized marker, which binds the config type to the outer type.
     _conf: PhantomData<C>,
 }
 
 /// Private key struct
-#[derive(Debug, Clone)]
-pub struct PrivateKey<C: PolyConf> {
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PrivateKey<C: YasheConf>
+where
+    C::Coeff: From<i64> + From<u64>,
+{
     /// Sampled with small coefficients (and invertible)
     pub f: Poly<C>,
     /// The inverse of f
@@ -47,22 +41,22 @@ pub struct PrivateKey<C: PolyConf> {
 }
 
 /// Public key struct
-#[derive(Debug)]
-pub struct PublicKey<C: PolyConf> {
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PublicKey<C: YasheConf>
+where
+    C::Coeff: From<i64> + From<u64>,
+{
     /// Public key
     pub h: Poly<C>,
 }
 
-impl<C: PolyConf> Yashe<C>
+impl<C: YasheConf> Yashe<C>
 where
     C::Coeff: From<i64> + From<u64>,
 {
     /// Yashe constructor
-    pub fn new(params: YasheParams) -> Self {
-        Self {
-            params,
-            _conf: PhantomData,
-        }
+    pub fn new() -> Self {
+        Self { _conf: PhantomData }
     }
 
     /// Generate the private key
@@ -76,7 +70,7 @@ where
             };
 
             let mut priv_key = f.clone();
-            priv_key *= C::Coeff::from(self.params.t);
+            priv_key *= C::t_as_coeff();
             priv_key[0] += C::Coeff::one();
             priv_key.truncate_to_canonical_form();
 
@@ -96,7 +90,7 @@ where
     ) -> PublicKey<C> {
         let mut h = self.sample_uniform(rng);
 
-        h *= C::Coeff::from(self.params.t);
+        h *= C::t_as_coeff();
         h.truncate_to_canonical_form();
         h = h * &private_key.finv;
 
@@ -117,7 +111,7 @@ where
         for i in 0..C::MAX_POLY_DEGREE {
             // TODO SECURITY: check that the generated integers are secure:
             // <https://github.com/Inversed-Tech/eyelid/issues/70>
-            let normal = Normal::new(0.0, self.params.delta).unwrap();
+            let normal = Normal::new(0.0, C::DELTA).expect("constant parameters are valid");
             let v: f64 = normal.sample(rng);
 
             // TODO: try i128, i32, i16, or i8 here
