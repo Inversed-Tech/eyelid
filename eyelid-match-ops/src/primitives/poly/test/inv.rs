@@ -39,7 +39,7 @@ fn inverse_test_helper<C: PolyConf>(f: &Poly<C>) {
             Poly::one(),
             "incorrect inverse() impl: the inverse of f was y, because f * y == 1"
         );
-        // Since all non-zero `Coeff` values *are* invertible in the integer field, `f * y` can't be a constant, either.
+        // Since all non-zero `C::Coeff` values *are* invertible in the integer field, `f * y` can't be a constant, either.
         if fy != Poly::zero() {
             assert_ne!(fy.degree(), 0, "incorrect inverse() impl: the inverse of f was y*(c^1), because f * y is a non-zero constant c");
         }

@@ -5,12 +5,8 @@ use rand::Rng;
 
 use crate::primitives::poly::{Poly, PolyConf};
 
-// Doc links only
-#[allow(unused_imports)]
-use crate::primitives::poly::Coeff;
-
-/// Returns an un-reduced cyclotomic polynomial of `degree`, with random coefficients in [`Coeff`].
-/// `degree` must be less than or equal to `C::MAX_POLY_DEGREE`.
+/// Returns an un-reduced cyclotomic polynomial of `degree`, with random coefficients in [`PolyConf::Coeff`].
+/// `degree` must be less than or equal to [`PolyConf::MAX_POLY_DEGREE`].
 ///
 /// In rare cases, the degree can be less than `degree`,
 /// because the random coefficient of `X^[C::MAX_POLY_DEGREE]` is zero.

@@ -2,13 +2,16 @@
 
 use crate::primitives::{
     poly::TestRes,
-    yashe::{Coeff, Poly, PolyConf, Yashe, YasheParams},
+    yashe::{Poly, PolyConf, Yashe, YasheParams},
 };
 use ark_ff::One;
 use ark_poly::Polynomial;
 
 /// Auxiliary function for testing key generation
-fn keygen_helper<C: PolyConf>() {
+fn keygen_helper<C: PolyConf>()
+where
+    C::Coeff: From<i64> + From<u64>,
+{
     // TODO: how to deal with different sets of parameters?
     // We must be able to test all the different parameterizations
     let mut rng = rand::thread_rng();
@@ -24,7 +27,7 @@ fn keygen_helper<C: PolyConf>() {
 
     //dbg!(private_key.priv_key[0].clone());
     assert_eq!(
-        private_key.f[0] * Coeff::from(params.t) + Coeff::one(),
+        private_key.f[0] * C::Coeff::from(params.t) + C::Coeff::one(),
         private_key.priv_key[0]
     );
 

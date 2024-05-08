@@ -2,7 +2,7 @@
 use ark_ff::{Field, One, Zero};
 use ark_poly::Polynomial;
 
-use crate::primitives::poly::{Coeff, Poly, PolyConf};
+use crate::primitives::poly::{Poly, PolyConf};
 
 /// Returns the primitive polynomial which is the inverse of `a` in the
 /// cyclotomic ring, if it exists. Otherwise, returns an error.
@@ -30,7 +30,7 @@ pub fn inverse<C: PolyConf>(a: &Poly<C>) -> Result<Poly<C>, &'static str> {
         // Reduce to a primitive polynomial.
         let mut inv: Poly<C> = y;
         // Compute the inverse of the content
-        let content_inv: Coeff = d[0].inverse().expect("just checked for zero");
+        let content_inv: C::Coeff = d[0].inverse().expect("just checked for zero");
         // Divide by `content_inv`
         inv *= content_inv;
 
