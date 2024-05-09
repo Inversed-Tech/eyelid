@@ -156,12 +156,12 @@ impl<C: PolyConf> Yashe<C> {
                 // TODO: how to divide 2 bigints?
                 coeff_res = self.divq(coeff_res);
             }
-            dbg!(coeff_res);
+            //dbg!(coeff_res);
             // TODO: validate the following
             // REMARK: since t is a power of 2, we have that coeff_res.0[i] is zero for i > 0
             // then we can apply the following formula
             let result = coeff_res.0[0] % self.params.t;
-            dbg!(result);
+            //dbg!(result);
             res[i] = result.into();
         }
         Message { m: res }
@@ -179,8 +179,10 @@ impl<C: PolyConf> Yashe<C> {
         let q_num_bits = q.num_bits(); // TODO: this is just a constant, precompute it
 
         let mut diff_bits = 0;
-        if a_num_bits > q_num_bits {
+        if a_num_bits >= q_num_bits {
             diff_bits = a_num_bits - q_num_bits;
+        } else {
+            return BigInt::zero();
         }
 
         let base: u64 = 2;
@@ -191,27 +193,26 @@ impl<C: PolyConf> Yashe<C> {
         qmuldiff.muln(diff_bits);
 
         let mut diff = a.clone();
-        let mut borrow = diff.sub_with_borrow(&qmuldiff);
-        if borrow {
-            qmuldiff = q.clone();
-            qmuldiff.muln(diff_bits-1);
-            diff = a.clone();
-            borrow = diff.sub_with_borrow(&qmuldiff);
-            assert!(!borrow);
-        }
+        let borrow = diff.sub_with_borrow(&qmuldiff);
         let mut res = pow2diff;
+
+        if borrow {
+            return BigInt::zero();
+        }
 
         // if diff is negative, adjust by adding q a sufficient number of times
         while diff < BigInt::zero() {
             // TODO: deal with carry
             diff.add_with_carry(&q);
             res -= 1;
+            //dbg!(res);
         }
         // if diff is larger than q, adjust it by subtracting a sufficient number of times
         while diff > q {
             // TODO: deal with borrow
             diff.sub_with_borrow(&q);
             res += 1;
+            //dbg!(res);
         }
         res.into()
     }
