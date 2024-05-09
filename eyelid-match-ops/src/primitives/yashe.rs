@@ -2,6 +2,7 @@
 //! `<https://eprint.iacr.org/2013/075.pdf>`
 
 use std::marker::PhantomData;
+use rand::Rng;
 
 use ark_ff::{BigInt, BigInteger, One, PrimeField, UniformRand};
 use rand::rngs::ThreadRng;
@@ -44,21 +45,21 @@ pub struct PrivateKey<C: PolyConf> {
 }
 
 /// Public key struct
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PublicKey<C: PolyConf> {
     /// Public key
     pub h: Poly<C>,
 }
 
 /// Message struct
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Message<C: PolyConf> {
     /// Message encoded as a polynomial
     pub m: Poly<C>,
 }
 
 /// Ciphertext struct
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Ciphertext<C: PolyConf> {
     /// Ciphertext encoded as a polynomial
     pub c: Poly<C>,
@@ -118,6 +119,8 @@ impl<C: PolyConf> Yashe<C> {
         (priv_key, pub_key)
     }
 
+    /// REMARK: Encryption and decryption requires bigint arithmetic, then we would like to maximize
+    /// utilization of mul or div by powers of 2.
     pub fn encrypt(&self, m: Message<C>, public_key: PublicKey<C>, rng: &mut ThreadRng) -> Ciphertext<C> {
         let logt = self.params.t.ilog2();
         let s = self.sample_err(rng);
@@ -142,24 +145,75 @@ impl<C: PolyConf> Yashe<C> {
             let mut coeff_res = res[i].into_bigint();
             // Multiply by t
             coeff_res.muln(logt);
-            if coeff_res >= BigInt::from(0) {
+            if coeff_res >= BigInt::zero() {
                 // TODO: deal with carry
                 coeff_res.add_with_carry(&qm1d2);
                 // TODO: how to divide 2 bigints?
-                coeff_res = coeff_res / q;
+                coeff_res = self.divq(coeff_res);
             } else {
                 // TODO: deal with borrow
                 coeff_res.sub_with_borrow(&qm1d2);
                 // TODO: how to divide 2 bigints?
-                coeff_res = coeff_res / q;
+                coeff_res = self.divq(coeff_res);
             }
+            dbg!(coeff_res);
             // TODO: validate the following
             // REMARK: since t is a power of 2, we have that coeff_res.0[i] is zero for i > 0
             // then we can apply the following formula
             let result = coeff_res.0[0] % self.params.t;
+            dbg!(result);
             res[i] = result.into();
         }
         Message { m: res }
+    }
+
+    /// REMARK: this function operates over bigint, but it depends on q, therefore it is not clear
+    /// if here is the best place for it. Since it is very specialized construction, it lives here for now.
+    pub fn divq(&self, a: BigInt<2>) -> BigInt<2> {
+        let q = Coeff::MODULUS;
+        // Customized for decryption operation, this function doesn't work in general
+
+        // if we know the number of bits of a, then we can compare with size of q, which is fixed.
+        // The difference will give us something close to the final result
+        let a_num_bits = a.num_bits();
+        let q_num_bits = q.num_bits(); // TODO: this is just a constant, precompute it
+
+        let mut diff_bits = 0;
+        if a_num_bits > q_num_bits {
+            diff_bits = a_num_bits - q_num_bits;
+        }
+
+        let base: u64 = 2;
+        let pow2diff = base.pow(diff_bits);
+
+        // Compute the diff itself
+        let mut qmuldiff = q.clone();
+        qmuldiff.muln(diff_bits);
+
+        let mut diff = a.clone();
+        let mut borrow = diff.sub_with_borrow(&qmuldiff);
+        if borrow {
+            qmuldiff = q.clone();
+            qmuldiff.muln(diff_bits-1);
+            diff = a.clone();
+            borrow = diff.sub_with_borrow(&qmuldiff);
+            assert!(!borrow);
+        }
+        let mut res = pow2diff;
+
+        // if diff is negative, adjust by adding q a sufficient number of times
+        while diff < BigInt::zero() {
+            // TODO: deal with carry
+            diff.add_with_carry(&q);
+            res -= 1;
+        }
+        // if diff is larger than q, adjust it by subtracting a sufficient number of times
+        while diff > q {
+            // TODO: deal with borrow
+            diff.sub_with_borrow(&q);
+            res += 1;
+        }
+        res.into()
     }
 
     /// Sample a polynomial with small random coefficients using a gaussian distribution.
@@ -205,5 +259,16 @@ impl<C: PolyConf> Yashe<C> {
         }
         res.truncate_to_canonical_form();
         res
+    }
+
+    /// Sample from message space
+    pub fn sample_message(&self, rng: &mut ThreadRng) -> Message<C> {
+        let mut res = Poly::non_canonical_zeroes(C::MAX_POLY_DEGREE);
+        for i in 0..C::MAX_POLY_DEGREE {
+            let coeff_rand: u64 = rng.gen_range(0..self.params.t);
+            res[i] = coeff_rand.into();
+        }
+        res.truncate_to_canonical_form();
+        Message { m: res }
     }
 }
