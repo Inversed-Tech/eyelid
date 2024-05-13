@@ -6,18 +6,10 @@
 //! RUSTFLAGS="--cfg tiny_poly" cargo bench --features benchmark
 //! ```
 
-use crate::{
-    primitives::poly::{modular_poly::conf::IrisBits, PolyConf},
-    IRIS_BIT_LENGTH,
-};
-
-pub use crate::primitives::poly::modular_poly::conf::TestRes;
-
-#[cfg(not(tiny_poly))]
-use crate::primitives::poly::modular_poly::conf::FullRes;
+use crate::{primitives::poly::PolyConf, FullRes, IrisBits};
 
 #[cfg(tiny_poly)]
-use crate::primitives::poly::modular_poly::conf::TinyTest;
+use crate::TinyTest;
 
 /// Fixed YASHE encryption scheme parameters.
 /// The [`PolyConf`] supertrait is the configuration of the polynomials used in the scheme.
@@ -43,7 +35,7 @@ where
 ///
 /// This uses the full number of iris bits, which gives an upper bound on benchmarks.
 impl YasheConf for IrisBits {
-    const T: u64 = IRIS_BIT_LENGTH as u64;
+    const T: u64 = crate::IRIS_BIT_LENGTH as u64;
 
     const DELTA: f64 = 3.2;
 }
@@ -51,7 +43,6 @@ impl YasheConf for IrisBits {
 /// Full resolution polynomial parameters.
 ///
 /// These are the parameters for full resolution, according to the Inversed Tech report.
-#[cfg(not(tiny_poly))]
 impl YasheConf for FullRes {
     const T: u64 = 1024;
 

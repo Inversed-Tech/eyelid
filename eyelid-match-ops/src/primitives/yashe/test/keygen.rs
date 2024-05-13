@@ -1,11 +1,15 @@
 //! Unit tests for Key Generation
 
-use crate::primitives::{
-    poly::{Poly, TestRes},
-    yashe::{Yashe, YasheConf},
-};
 use ark_ff::One;
 use ark_poly::Polynomial;
+
+use crate::{
+    primitives::{
+        poly::Poly,
+        yashe::{Yashe, YasheConf},
+    },
+    TestRes,
+};
 
 /// Auxiliary function for testing key generation
 fn keygen_helper<C: YasheConf>()

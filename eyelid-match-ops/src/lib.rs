@@ -13,11 +13,20 @@
 #[macro_use]
 extern crate static_assertions;
 
+pub mod conf;
 pub mod encoded;
 pub mod encrypted;
 pub mod iris;
 pub mod plaintext;
 pub mod primitives;
+
+pub use conf::{FullRes, IrisBits};
+
+#[cfg(any(test, feature = "benchmark"))]
+pub use conf::TestRes;
+
+#[cfg(tiny_poly)]
+pub use conf::TinyTest;
 
 /// The number of rows in a raw iris code or iris mask, in bits.
 pub const IRIS_COLUMN_LENGTH: usize = 80;

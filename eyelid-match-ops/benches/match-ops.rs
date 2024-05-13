@@ -24,9 +24,10 @@ use eyelid_match_ops::{
         test::gen::{random_iris_code, random_iris_mask},
     },
     primitives::{
-        poly::{self, test::gen::rand_poly, IrisBits, Poly, PolyConf, TestRes},
+        poly::{self, test::gen::rand_poly, Poly, PolyConf},
         yashe::{self, Yashe},
     },
+    IrisBits, TestRes,
 };
 
 // Configure Criterion:
