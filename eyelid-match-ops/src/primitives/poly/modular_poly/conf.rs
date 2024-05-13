@@ -5,7 +5,7 @@ use std::fmt::Debug;
 use ark_ff::{PrimeField, Zero};
 use lazy_static::lazy_static;
 
-use crate::{primitives::poly::Fq79, FullRes, IrisBits};
+use crate::{iris::conf::IrisConf, primitives::poly::Fq79, FullRes, IrisBits};
 
 #[cfg(tiny_poly)]
 use crate::{primitives::poly::fq::FqTiny, TinyTest};
@@ -36,7 +36,7 @@ pub trait PolyConf: Copy + Clone + Debug + Eq + PartialEq {
 }
 
 impl PolyConf for IrisBits {
-    const MAX_POLY_DEGREE: usize = crate::IRIS_BIT_LENGTH;
+    const MAX_POLY_DEGREE: usize = Self::BIT_LENGTH;
 
     type Coeff = Fq79;
 
@@ -44,6 +44,8 @@ impl PolyConf for IrisBits {
         &FQ79_ZERO
     }
 }
+// The polynomial must have enough coefficients to store the underlying iris data.
+const_assert!(IrisBits::MAX_POLY_DEGREE >= IrisBits::BIT_LENGTH);
 
 lazy_static! {
     /// The zero coefficient as a static constant value.
@@ -62,6 +64,7 @@ impl PolyConf for FullRes {
         &FQ79_ZERO
     }
 }
+const_assert!(FullRes::MAX_POLY_DEGREE >= FullRes::BIT_LENGTH);
 
 #[cfg(tiny_poly)]
 impl PolyConf for TinyTest {
@@ -73,6 +76,9 @@ impl PolyConf for TinyTest {
         &FQ_TINY_ZERO
     }
 }
+
+#[cfg(tiny_poly)]
+const_assert!(TinyTest::MAX_POLY_DEGREE >= TinyTest::BIT_LENGTH);
 
 #[cfg(tiny_poly)]
 lazy_static! {

@@ -46,15 +46,8 @@ pub const IRIS_ROTATION_LIMIT: usize = 15;
 /// This includes the comparison with no rotations.
 pub const IRIS_ROTATION_COMPARISONS: usize = IRIS_ROTATION_LIMIT * 2 + 1;
 
-// Rotating more than the number of columns is redundant.
-const_assert!(IRIS_ROTATION_COMPARISONS <= IRIS_COLUMNS);
-
 /// The numerator of the bit match threshold for a successful iris match.
 pub const IRIS_MATCH_NUMERATOR: usize = 36;
 
 /// The denominator of the bit match threshold for a successful iris match.
 pub const IRIS_MATCH_DENOMINATOR: usize = 100;
-
-// The match fraction should be strictly between 0 and 1.
-const_assert!(IRIS_MATCH_NUMERATOR < IRIS_MATCH_DENOMINATOR);
-const_assert!(IRIS_MATCH_NUMERATOR > 0);

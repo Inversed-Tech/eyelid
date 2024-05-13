@@ -6,7 +6,7 @@
 //! RUSTFLAGS="--cfg tiny_poly" cargo bench --features benchmark
 //! ```
 
-use crate::{primitives::poly::PolyConf, FullRes, IrisBits};
+use crate::{iris::conf::IrisConf, primitives::poly::PolyConf, FullRes, IrisBits};
 
 #[cfg(tiny_poly)]
 use crate::TinyTest;
@@ -35,10 +35,15 @@ where
 ///
 /// This uses the full number of iris bits, which gives an upper bound on benchmarks.
 impl YasheConf for IrisBits {
-    const T: u64 = crate::IRIS_BIT_LENGTH as u64;
+    const T: u64 = Self::BIT_LENGTH as u64;
 
     const DELTA: f64 = 3.2;
 }
+// TODO: work out how to constant assert these constraints for each config type:
+// The encrypted coefficient modulus can't be smaller than the plaintext modulus.
+// const_assert!(IrisBits::T <= <IrisBits as PolyConf>::Coeff::MODULUS as u128);
+// The standard deviation must fit within the encrypted coefficient modulus, with six sigma probability.
+// const_assert!(IrisBits::DELTA <= <IrisBits as PolyConf>::Coeff::MODULUS as f64 / 6.0);
 
 /// Full resolution polynomial parameters.
 ///
