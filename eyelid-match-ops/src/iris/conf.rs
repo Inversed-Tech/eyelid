@@ -62,6 +62,8 @@ impl IrisConf for TinyTest {
     const COLUMNS: usize = 3;
     const ROTATION_LIMIT: usize = 1;
 }
+
+/// This module avoids repeating `#[cfg(tiny_poly)]` for each assertion.
 #[cfg(tiny_poly)]
 mod tiny_test_asserts {
     use super::*;
