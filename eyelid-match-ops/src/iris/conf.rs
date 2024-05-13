@@ -1,4 +1,4 @@
-//! Iris configurations for encoding and encrption schemes.
+//! Iris configurations for encoding and encryption schemes.
 
 use crate::{FullRes, IrisBits};
 
@@ -64,6 +64,8 @@ impl IrisConf for TinyTest {
 }
 #[cfg(tiny_poly)]
 mod tiny_test_asserts {
+    use super::*;
+
     const_assert!(TinyTest::BIT_LENGTH >= TinyTest::COLUMN_LENGTH * TinyTest::COLUMNS);
     const_assert!(TinyTest::ROTATION_COMPARISONS <= TinyTest::COLUMNS);
     const_assert!(TinyTest::MATCH_NUMERATOR <= TinyTest::MATCH_DENOMINATOR);
