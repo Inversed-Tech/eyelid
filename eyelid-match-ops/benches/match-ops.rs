@@ -74,7 +74,7 @@ criterion_group! {
     name = bench_encryption;
     // This can be any expression that returns a `Criterion` object.
     config = Criterion::default().sample_size(10);
-    // List key generation implementations here.
+    // List encryption implementations here.
     targets = bench_enc
 }
 
@@ -82,7 +82,7 @@ criterion_group! {
     name = bench_decryption;
     // This can be any expression that returns a `Criterion` object.
     config = Criterion::default().sample_size(10);
-    // List key generation implementations here.
+    // List decryption implementations here.
     targets = bench_dec
 }
 
@@ -455,8 +455,6 @@ pub fn bench_enc(settings: &mut Criterion) {
         |benchmark, ctx| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
             benchmark.iter_with_large_drop(|| -> Ciphertext<TestRes> {
-                // The thread_rng() call is efficient, because it only clones a small amount of memory,
-                // which is dedicated to the current thread.
                 ctx.encrypt(m.clone(), public_key.clone(), &mut rng)
             })
         },
@@ -482,8 +480,6 @@ pub fn bench_dec(settings: &mut Criterion) {
         |benchmark, ctx| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
             benchmark.iter_with_large_drop(|| -> Message<TestRes> {
-                // The thread_rng() call is efficient, because it only clones a small amount of memory,
-                // which is dedicated to the current thread.
                 ctx.decrypt(c.clone(), private_key.clone())
             })
         },
