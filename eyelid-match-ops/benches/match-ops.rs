@@ -16,7 +16,7 @@ use eyelid_match_ops::{
     },
     primitives::{
         poly::{self, test::gen::rand_poly, IrisBits, Poly, PolyConf, TestRes},
-        yashe::{self, Yashe, YasheParams},
+        yashe::{self, Ciphertext, Message, Yashe, YasheParams},
     },
 };
 
@@ -68,6 +68,22 @@ criterion_group! {
     config = Criterion::default().sample_size(10);
     // List key generation implementations here.
     targets = bench_keygen
+}
+
+criterion_group! {
+    name = bench_encryption;
+    // This can be any expression that returns a `Criterion` object.
+    config = Criterion::default().sample_size(10);
+    // List key generation implementations here.
+    targets = bench_enc
+}
+
+criterion_group! {
+    name = bench_decryption;
+    // This can be any expression that returns a `Criterion` object.
+    config = Criterion::default().sample_size(10);
+    // List key generation implementations here.
+    targets = bench_dec
 }
 
 // Iris-length polynomial benchmarks.
@@ -421,6 +437,59 @@ pub fn bench_keygen(settings: &mut Criterion) {
     );
 }
 
+/// Run [`Yashe::enc()`] as a Criterion benchmark with random data.
+pub fn bench_enc(settings: &mut Criterion) {
+    // Setup parameters
+    let mut rng = rand::thread_rng();
+    let params = YasheParams {
+        t: 1024,
+        delta: 3.2,
+    };
+    let ctx: Yashe<TestRes> = Yashe::new(params);
+    let (_private_key, public_key) = ctx.keygen(&mut rng);
+    let m = ctx.sample_message(&mut rng);
+
+    settings.bench_with_input(
+        BenchmarkId::new("YASHE enc", "standard parameters with degree N"),
+        &ctx,
+        |benchmark, ctx| {
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Ciphertext<TestRes> {
+                // The thread_rng() call is efficient, because it only clones a small amount of memory,
+                // which is dedicated to the current thread.
+                ctx.encrypt(m.clone(), public_key.clone(), &mut rng)
+            })
+        },
+    );
+}
+
+/// Run [`Yashe::dec()`] as a Criterion benchmark with random data.
+pub fn bench_dec(settings: &mut Criterion) {
+    // Setup parameters
+    let mut rng = rand::thread_rng();
+    let params = YasheParams {
+        t: 1024,
+        delta: 3.2,
+    };
+    let ctx: Yashe<TestRes> = Yashe::new(params);
+    let (private_key, public_key) = ctx.keygen(&mut rng);
+    let m = ctx.sample_message(&mut rng);
+    let c = ctx.encrypt(m, public_key, &mut rng);
+
+    settings.bench_with_input(
+        BenchmarkId::new("YASHE dec", "standard parameters with degree N"),
+        &ctx,
+        |benchmark, ctx| {
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Message<TestRes> {
+                // The thread_rng() call is efficient, because it only clones a small amount of memory,
+                // which is dedicated to the current thread.
+                ctx.decrypt(c.clone(), private_key.clone())
+            })
+        },
+    );
+}
+
 /// Run [`Yashe::keygen()`] as a Criterion benchmark with random data on the full number of iris bits.
 pub fn bench_keygen_iris(settings: &mut Criterion) {
     // Tweak configuration for a long-running test
@@ -431,7 +500,8 @@ pub fn bench_keygen_iris(settings: &mut Criterion) {
     // Setup parameters
     let params = YasheParams {
         t: 1024,
-        delta: 3.2,
+        err_delta: 3.2,
+        err_delta: 1.0,
     };
     let ctx: Yashe<IrisBits> = Yashe::new(params);
 

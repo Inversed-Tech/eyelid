@@ -18,8 +18,10 @@ pub mod test;
 pub struct YasheParams {
     /// Plaintext coefficient modulus
     pub t: u64,
-    /// Standard deviation
-    pub delta: f64,
+    /// Standard deviation for errors
+    pub err_delta: f64,
+    /// Standard deviation for keys
+    pub key_delta: f64,
 }
 
 /// Yashe scheme
@@ -52,7 +54,7 @@ pub struct PublicKey<C: PolyConf> {
 }
 
 /// Message struct
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Message<C: PolyConf> {
     /// Message encoded as a polynomial
     pub m: Poly<C>,
@@ -170,17 +172,15 @@ impl<C: PolyConf> Yashe<C> {
     }
 
     /// Sample a polynomial with small random coefficients using a gaussian distribution.
-    #[allow(clippy::cast_possible_truncation)]
     pub fn sample_err(&self, rng: &mut ThreadRng) -> Poly<C> {
-        self.sample_gaussian(self.params.delta, rng)
+        self.sample_gaussian(self.params.err_delta, rng)
     }
 
     /// Sample a polynomial with small random coefficients using a gaussian distribution.
     /// TODO: this function seems to be returning too few non-zero elements
-    #[allow(clippy::cast_possible_truncation)]
     pub fn sample_key(&self, rng: &mut ThreadRng) -> Poly<C> {
         // standard deviation whose output coefficients are -1, 0, 1 with high probability
-        self.sample_gaussian(self.params.delta / 8.0, rng)
+        self.sample_gaussian(self.params.key_delta, rng)
     }
 
     /// Sample a polynomial with small random coefficients using a gaussian distribution.
