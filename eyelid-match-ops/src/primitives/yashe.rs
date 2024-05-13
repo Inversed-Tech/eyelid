@@ -8,36 +8,31 @@ use ark_ff::{BigInt, BigInteger, One, PrimeField, UniformRand};
 use rand::rngs::ThreadRng;
 use rand_distr::{Distribution, Normal};
 
-use crate::primitives::poly::{Coeff, Poly, PolyConf};
+use crate::primitives::poly::Poly;
+
+pub use conf::YasheConf;
+
+pub mod conf;
 
 #[cfg(test)]
 pub mod test;
 
-/// Yashe parameters
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub struct YasheParams {
-    /// Plaintext coefficient modulus
-    pub t: u64,
-    /// Standard deviation for errors
-    pub err_delta: f64,
-    /// Standard deviation for keys
-    pub key_delta: f64,
-}
-
 /// Yashe scheme
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub struct Yashe<C: PolyConf> {
-    /// Cryptosystem parameters
-    /// TODO: turn these into a trait and marker type, with a `PolyConf` type in the cryptosystem trait
-    params: YasheParams,
-
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
+pub struct Yashe<C: YasheConf>
+where
+    C::Coeff: From<i64> + From<u64>,
+{
     /// A zero-sized marker, which binds the config type to the outer type.
     _conf: PhantomData<C>,
 }
 
 /// Private key struct
-#[derive(Debug, Clone)]
-pub struct PrivateKey<C: PolyConf> {
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PrivateKey<C: YasheConf>
+where
+    C::Coeff: From<i64> + From<u64>,
+{
     /// Sampled with small coefficients (and invertible)
     pub f: Poly<C>,
     /// The inverse of f
@@ -47,33 +42,42 @@ pub struct PrivateKey<C: PolyConf> {
 }
 
 /// Public key struct
-#[derive(Debug, Clone)]
-pub struct PublicKey<C: PolyConf> {
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PublicKey<C: YasheConf>
+where
+    C::Coeff: From<i64> + From<u64>,
+{
     /// Public key
     pub h: Poly<C>,
 }
 
 /// Message struct
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Message<C: PolyConf> {
+pub struct Message<C: YasheConf>
+where
+    C::Coeff: From<i64> + From<u64>,
+{
     /// Message encoded as a polynomial
     pub m: Poly<C>,
 }
 
 /// Ciphertext struct
 #[derive(Debug, Clone)]
-pub struct Ciphertext<C: PolyConf> {
+pub struct Ciphertext<C: YasheConf>
+where
+    C::Coeff: From<i64> + From<u64>,
+{
     /// Ciphertext encoded as a polynomial
     pub c: Poly<C>,
 }
 
-impl<C: PolyConf> Yashe<C> {
+impl<C: YasheConf> Yashe<C> 
+where
+    C::Coeff: From<i64> + From<u64>,
+{
     /// Yashe constructor
-    pub fn new(params: YasheParams) -> Self {
-        Self {
-            params,
-            _conf: PhantomData,
-        }
+    pub fn new() -> Self {
+        Self { _conf: PhantomData }
     }
 
     /// Generate the private key
@@ -82,8 +86,8 @@ impl<C: PolyConf> Yashe<C> {
             let f = self.sample_key(rng);
 
             let mut priv_key = f.clone();
-            priv_key *= Coeff::from(self.params.t);
-            priv_key[0] += Coeff::one();
+            priv_key *= C::t_as_coeff();
+            priv_key[0] += C::Coeff::one();
             priv_key.truncate_to_canonical_form();
 
             let priv_key_inv = priv_key.inverse();
@@ -106,7 +110,7 @@ impl<C: PolyConf> Yashe<C> {
     ) -> PublicKey<C> {
         let mut h = self.sample_key(rng);
 
-        h *= Coeff::from(self.params.t);
+        h *= C::t_as_coeff();
         h.truncate_to_canonical_form();
         h = h * &private_key.priv_key_inv;
 
@@ -190,15 +194,15 @@ impl<C: PolyConf> Yashe<C> {
         for i in 0..C::MAX_POLY_DEGREE {
             // TODO SECURITY: check that the generated integers are secure:
             // <https://github.com/Inversed-Tech/eyelid/issues/70>
-            let normal = Normal::new(0.0, delta).unwrap();
+            let normal = Normal::new(0.0, C::DELTA).expect("constant parameters are valid");
             let v: f64 = normal.sample(rng);
 
             // TODO: try i128, i32, i16, or i8 here
             //
             // Until we've checked the security of using fewer bits, use a large and performant type.
             // Larger values are extremely rare, and will saturate to MIN or MAX.
-            // This is ok because the Coeff modulus is smaller than MIN/MAX.
-            res[i] = Coeff::from(v as i64);
+            // This is ok because the C::Coeff modulus is smaller than MIN/MAX.
+            res[i] = C::Coeff::from(v as i64);
         }
         res.truncate_to_canonical_form();
         res
@@ -208,7 +212,7 @@ impl<C: PolyConf> Yashe<C> {
     pub fn sample_uniform(&self, mut rng: &mut ThreadRng) -> Poly<C> {
         let mut res = Poly::non_canonical_zeroes(C::MAX_POLY_DEGREE);
         for i in 0..C::MAX_POLY_DEGREE {
-            let coeff_rand = Coeff::rand(&mut rng);
+            let coeff_rand = C::Coeff::rand(&mut rng);
             res[i] = coeff_rand;
         }
         res.truncate_to_canonical_form();

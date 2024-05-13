@@ -1,23 +1,21 @@
 //! Unit tests for Key Generation
 
 use crate::primitives::{
-    poly::TestRes,
-    yashe::{Coeff, Poly, PolyConf, Yashe, YasheParams},
+    poly::{Poly, TestRes},
+    yashe::{Yashe, YasheConf},
 };
 use ark_ff::One;
 use ark_poly::Polynomial;
 
 /// Auxiliary function for testing key generation
-fn keygen_helper<C: PolyConf>() {
+fn keygen_helper<C: YasheConf>()
+where
+    C::Coeff: From<i64> + From<u64>,
+{
     // TODO: how to deal with different sets of parameters?
     // We must be able to test all the different parameterizations
     let mut rng = rand::thread_rng();
-    let params = YasheParams {
-        t: 1024,
-        err_delta: 3.2,
-        key_delta: 1.0,
-    };
-    let ctx: Yashe<C> = Yashe::new(params);
+    let ctx: Yashe<C> = Yashe::new();
     let (private_key, public_key) = ctx.keygen(&mut rng);
 
     let f_inv = private_key.f.inverse();
@@ -25,7 +23,7 @@ fn keygen_helper<C: PolyConf>() {
 
     //dbg!(private_key.priv_key[0].clone());
     assert_eq!(
-        private_key.f[0] * Coeff::from(params.t) + Coeff::one(),
+        private_key.f[0] * C::t_as_coeff() + C::Coeff::one(),
         private_key.priv_key[0]
     );
 

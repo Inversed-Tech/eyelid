@@ -29,10 +29,11 @@ ark-poly = "0.4.2"
 ark-std = "0.4.0"
 
 bitvec = "1.0.1"
+
 # Automatically deriving trivial impls
 # Full list at <https://github.com/JelteF/derive_more/blob/v0.99.17/Cargo.toml#L42>
 # When we upgrade to 1.0.0, it will be at <https://github.com/JelteF/derive_more/blob/master/Cargo.toml#L49>
-derive_more = { version = "0.99.17", default-features = false, features = ["add", "add_assign", "as_ref", "deref", "deref_mut", "into", "mul", "mul_assign", "not"] }
+derive_more = { version = "0.99.17", default-features = false, features = ["as_ref", "deref", "deref_mut", "into", "mul"] }
 
 # Static constants
 lazy_static = "1.4.0"

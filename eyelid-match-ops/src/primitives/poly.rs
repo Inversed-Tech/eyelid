@@ -1,9 +1,9 @@
 //! Cyclotomic polynomials using ark-poly.
 //! This module file is import-only, code is in submodules:
 //! - [`Poly`] is in [`modular_poly`] and its submodules,
-//! - [`Coeff`] is in [`fq`] and submodules.
+//! - `Fq*` coefficient types are in [`fq`] and submodules.
 
-pub use fq::Coeff;
+pub use fq::Fq79;
 pub use modular_poly::{
     conf::PolyConf,
     modulus::{mod_poly, new_unreduced_poly_modulus_slow},

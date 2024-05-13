@@ -3,7 +3,7 @@
 use ark_ff::{One, Zero};
 use ark_poly::polynomial::Polynomial;
 
-use crate::primitives::poly::{Coeff, Poly, PolyConf};
+use crate::primitives::poly::{Poly, PolyConf};
 
 /// The fastest available modular polynomial operation.
 pub use mod_poly_manual_mut as mod_poly;
@@ -80,8 +80,8 @@ pub fn new_unreduced_poly_modulus_slow<C: PolyConf>() -> Poly<C> {
 
     // Since the leading coefficient is non-zero, this is in canonical form.
     // Resize to the maximum size first, to avoid repeated reallocations.
-    poly[C::MAX_POLY_DEGREE] = Coeff::one();
-    poly[0] = Coeff::one();
+    poly[C::MAX_POLY_DEGREE] = C::Coeff::one();
+    poly[0] = C::Coeff::one();
 
     // Check canonicity and degree.
     assert_eq!(poly.degree(), C::MAX_POLY_DEGREE);

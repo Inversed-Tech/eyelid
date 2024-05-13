@@ -7,7 +7,7 @@
 
 // Optional TODOs:
 // - re-implement IndexMut manually, to enforce the canonical form (highest coefficient is non-zero) and modular arithmetic
-//   (this can be done by returning a new type with `DerefMut<Target = Coeff>``, but it could have performance impacts)
+//   (this can be done by returning a new type with `DerefMut<Target = C::Coeff>``, but it could have performance impacts)
 // Trivial:
 // - implement Sum manually
 
@@ -22,9 +22,7 @@ use ark_poly::polynomial::univariate::{
 };
 use derive_more::{AsRef, Deref, DerefMut, Div, Into, Rem};
 
-use crate::primitives::poly::{
-    mod_poly, mul_poly, new_unreduced_poly_modulus_slow, Coeff, PolyConf,
-};
+use crate::primitives::poly::{mod_poly, mul_poly, new_unreduced_poly_modulus_slow, PolyConf};
 
 pub mod conf;
 
@@ -34,15 +32,22 @@ pub(super) mod mul;
 
 mod trivial;
 
-/// A modular polynomial with coefficients in [`Coeff`], and a generic maximum degree
-/// `C::MAX_POLY_DEGREE`. The un-reduced polynomial modulus is the polynomial modulus. TODO
+/// A modular polynomial with coefficients in [`PolyConf::Coeff`], and a generic maximum degree
+/// [`PolyConf::MAX_POLY_DEGREE`]. The polynomial modulus is `X^MAX_POLY_DEGREE + 1`. Polynomials
+/// are always in their canonical, modular reduced form.
 ///
-/// In its canonical form, a polynomial is a list of coefficients from the constant term `X^0`
-/// to the degree `X^n`, where the highest coefficient is non-zero. Leading zero coefficients are
-/// not stored.
+/// In this canonical form, a polynomial is a list of coefficients from the constant term `X^0`
+/// to `X^{MAX_POLY_DEGREE - 1}`, where the highest coefficient is non-zero.
 ///
-/// There is one more coefficient than the degree, because of the constant term. If the polynomial
-/// is the zero polynomial, the degree is `0`, and there are no coefficients.
+/// This canonical form is stored and maintained as follows:
+/// - The coefficient of `X^i` is stored at `self[i]`.
+/// - `X^MAX_POLY_DEGREE` is reduced to `PolyConf::Coeff::MODULUS - 1`.
+/// - Leading zero coefficients are not stored.
+/// - If the polynomial is the zero polynomial, the degree is `0`, and there are no coefficients.
+///
+/// Every operation which can change the degree must call [`Poly::reduce_mod_poly()`].
+/// If an operation can create leading zero coefficients, but will never increase the degree, it can call
+/// [`Poly::truncate_to_canonical_form()`] instead.
 #[derive(
     Clone,
     Debug,
@@ -67,7 +72,7 @@ pub struct Poly<C: PolyConf>(
     /// The inner polynomial.
     #[deref]
     #[deref_mut]
-    DensePolynomial<Coeff>,
+    DensePolynomial<C::Coeff>,
     /// A zero-sized marker, which binds the config type to the outer polynomial type.
     PhantomData<C>,
 );
@@ -79,14 +84,16 @@ impl<C: PolyConf> Poly<C> {
     // Shadow DenseUVPolynomial methods, so we don't have to implement Polynomial and all its supertraits.
 
     /// Converts the `coeffs` vector into a dense polynomial.
-    pub fn from_coefficients_vec(coeffs: Vec<Coeff>) -> Self {
+    pub fn from_coefficients_vec(coeffs: Vec<C::Coeff>) -> Self {
         let mut poly = Self(DensePolynomial { coeffs }, PhantomData);
-        poly.truncate_to_canonical_form();
+
+        poly.reduce_mod_poly();
+
         poly
     }
 
     /// Converts the `coeffs` slice into a dense polynomial.
-    pub fn from_coefficients_slice(coeffs: &[Coeff]) -> Self {
+    pub fn from_coefficients_slice(coeffs: &[C::Coeff]) -> Self {
         Self::from_coefficients_vec(coeffs.to_vec())
     }
 
@@ -115,7 +122,7 @@ impl<C: PolyConf> Poly<C> {
     /// Returns `X^n` as a polynomial in reduced form.
     pub fn xn(n: usize) -> Self {
         let mut poly = Self::zero();
-        poly[n] = Coeff::one();
+        poly[n] = C::Coeff::one();
 
         poly.reduce_mod_poly();
 
@@ -125,7 +132,7 @@ impl<C: PolyConf> Poly<C> {
     /// Multiplies `self` by `X^n`, then reduces if needed.
     pub fn mul_xn(&mut self, n: usize) {
         // Insert `n` zeroes to the lowest coefficients of the polynomial, and shifts the rest up.
-        self.coeffs.splice(0..0, vec![Coeff::zero(); n]);
+        self.coeffs.splice(0..0, vec![C::Coeff::zero(); n]);
 
         self.reduce_mod_poly();
     }
@@ -194,7 +201,7 @@ impl<C: PolyConf> Poly<C> {
     }
 
     /// Reduce this polynomial so it is less than the polynomial modulus.
-    /// This also ensures its degree is less than [`C::MAX_POLY_DEGREE`](Self::N).
+    /// This also ensures its degree is less than [[`PolyConf::MAX_POLY_DEGREE`]](Self::N).
     ///
     /// This operation should be performed after every [`Poly`] method that increases the degree of the polynomial.
     /// [`DensePolynomial`] methods *do not* do this reduction.
@@ -207,7 +214,7 @@ impl<C: PolyConf> Poly<C> {
     /// This operation must be performed after every [`Poly`] method that changes the degree or coefficients of the polynomial.
     /// (`DensePolynomial` methods already do this.)
     pub fn truncate_to_canonical_form(&mut self) {
-        while self.coeffs.last() == Some(&Coeff::zero()) {
+        while self.coeffs.last() == Some(&C::Coeff::zero()) {
             self.coeffs.pop();
         }
     }
@@ -219,23 +226,23 @@ impl<C: PolyConf> Poly<C> {
     pub(crate) fn non_canonical_zeroes(n: usize) -> Self {
         Self(
             DensePolynomial {
-                coeffs: vec![Coeff::zero(); n],
+                coeffs: vec![C::Coeff::zero(); n],
             },
             PhantomData,
         )
     }
 }
 
-impl<C: PolyConf> From<DensePolynomial<Coeff>> for Poly<C> {
-    fn from(poly: DensePolynomial<Coeff>) -> Self {
+impl<C: PolyConf> From<DensePolynomial<C::Coeff>> for Poly<C> {
+    fn from(poly: DensePolynomial<C::Coeff>) -> Self {
         let mut poly = Self(poly, PhantomData);
         poly.reduce_mod_poly();
         poly
     }
 }
 
-impl<C: PolyConf> From<&DensePolynomial<Coeff>> for Poly<C> {
-    fn from(poly: &DensePolynomial<Coeff>) -> Self {
+impl<C: PolyConf> From<&DensePolynomial<C::Coeff>> for Poly<C> {
+    fn from(poly: &DensePolynomial<C::Coeff>) -> Self {
         let mut poly = Self(poly.clone(), PhantomData);
         poly.reduce_mod_poly();
         poly
@@ -243,32 +250,32 @@ impl<C: PolyConf> From<&DensePolynomial<Coeff>> for Poly<C> {
 }
 
 // These are less likely to be called, so it's ok to have sub-optimal performance.
-impl<C: PolyConf> From<SparsePolynomial<Coeff>> for Poly<C> {
-    fn from(poly: SparsePolynomial<Coeff>) -> Self {
+impl<C: PolyConf> From<SparsePolynomial<C::Coeff>> for Poly<C> {
+    fn from(poly: SparsePolynomial<C::Coeff>) -> Self {
         DensePolynomial::from(poly).into()
     }
 }
 
-impl<C: PolyConf> From<&SparsePolynomial<Coeff>> for Poly<C> {
-    fn from(poly: &SparsePolynomial<Coeff>) -> Self {
+impl<C: PolyConf> From<&SparsePolynomial<C::Coeff>> for Poly<C> {
+    fn from(poly: &SparsePolynomial<C::Coeff>) -> Self {
         DensePolynomial::from(poly.clone()).into()
     }
 }
 
-impl<'a, C: PolyConf> From<DenseOrSparsePolynomial<'a, Coeff>> for Poly<C> {
-    fn from(poly: DenseOrSparsePolynomial<'a, Coeff>) -> Self {
+impl<'a, C: PolyConf> From<DenseOrSparsePolynomial<'a, C::Coeff>> for Poly<C> {
+    fn from(poly: DenseOrSparsePolynomial<'a, C::Coeff>) -> Self {
         DensePolynomial::from(poly).into()
     }
 }
 
-impl<'a, C: PolyConf> From<&DenseOrSparsePolynomial<'a, Coeff>> for Poly<C> {
-    fn from(poly: &DenseOrSparsePolynomial<'a, Coeff>) -> Self {
+impl<'a, C: PolyConf> From<&DenseOrSparsePolynomial<'a, C::Coeff>> for Poly<C> {
+    fn from(poly: &DenseOrSparsePolynomial<'a, C::Coeff>) -> Self {
         DensePolynomial::from(poly.clone()).into()
     }
 }
 
 impl<C: PolyConf> Index<usize> for Poly<C> {
-    type Output = Coeff;
+    type Output = C::Coeff;
 
     /// Read the coefficient at `index`, panicking only when reading a leading zero index above
     /// the maximum degree.
@@ -282,7 +289,7 @@ impl<C: PolyConf> Index<usize> for Poly<C> {
     ///
     /// Only panics if index is:
     /// - a leading zero coefficient (which is not represented in the underlying data), and
-    /// - above [`C::MAX_POLY_DEGREE`](Self::N).
+    /// - above [[`PolyConf::MAX_POLY_DEGREE`]](Self::N).
     ///
     /// Panics indicate redundant code which should have stopped at the highest non-zero
     /// coefficient. Using `self.coeffs.iter()` is one way to ensure the code only accesses real
@@ -296,7 +303,7 @@ impl<C: PolyConf> Index<usize> for Poly<C> {
             Some(coeff) => coeff,
             None => {
                 if index <= C::MAX_POLY_DEGREE {
-                    &super::fq::COEFF_ZERO
+                    C::coeff_zero()
                 } else {
                     panic!("accessed virtual leading zero coefficient: improve performance by stopping at the highest non-zero coefficient")
                 }
@@ -318,7 +325,7 @@ impl<C: PolyConf> IndexMut<usize> for Poly<C> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         // Make sure there is a coefficient entry for `index`, but don't truncate if the index already exists.
         if index + 1 > self.coeffs.len() {
-            self.coeffs.resize(index + 1, Coeff::zero());
+            self.coeffs.resize(index + 1, C::Coeff::zero());
         }
 
         self.coeffs.get_mut(index).expect("just resized")
@@ -362,22 +369,22 @@ impl<C: PolyConf> Mul<Poly<C>> for &Poly<C> {
     }
 }
 
-impl<C: PolyConf> Mul<DensePolynomial<Coeff>> for Poly<C> {
+impl<C: PolyConf> Mul<DensePolynomial<C::Coeff>> for Poly<C> {
     type Output = Self;
 
     /// Multiplies then reduces by the polynomial modulus.
-    fn mul(self, rhs: DensePolynomial<Coeff>) -> Self {
+    fn mul(self, rhs: DensePolynomial<C::Coeff>) -> Self {
         mul_poly(&self, &Self(rhs, PhantomData))
     }
 }
 
 // TODO: if we need this method, remove the clone() using unsafe code
 #[cfg(inefficient)]
-impl<C: PolyConf> Mul<&DensePolynomial<Coeff>> for Poly<C> {
+impl<C: PolyConf> Mul<&DensePolynomial<C::Coeff>> for Poly<C> {
     type Output = Self;
 
     /// Multiplies then reduces by the polynomial modulus.
-    fn mul(self, rhs: &DensePolynomial<Coeff>) -> Self {
+    fn mul(self, rhs: &DensePolynomial<C::Coeff>) -> Self {
         mul_poly(&self, &Self(rhs.clone()), PhantomData)
     }
 }
