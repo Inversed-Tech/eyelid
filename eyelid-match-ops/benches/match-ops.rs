@@ -347,7 +347,7 @@ pub fn bench_inv(settings: &mut Criterion) {
     };
     let ctx: Yashe<TestRes> = Yashe::new(params);
 
-    let p = ctx.sample_gaussian(&mut rng);
+    let p = ctx.sample_gaussian(params.delta, &mut rng);
 
     settings.bench_with_input(
         BenchmarkId::new(
@@ -380,7 +380,7 @@ pub fn bench_inv_iris(settings: &mut Criterion) {
     };
     let ctx: Yashe<IrisBits> = Yashe::new(params);
 
-    let p = ctx.sample_gaussian(&mut rng);
+    let p = ctx.sample_gaussian(params.delta, &mut rng);
 
     settings.bench_with_input(
         BenchmarkId::new(
