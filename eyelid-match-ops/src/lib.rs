@@ -15,6 +15,7 @@ extern crate static_assertions;
 
 pub mod encoded;
 pub mod encrypted;
+pub mod iris;
 pub mod plaintext;
 pub mod primitives;
 
