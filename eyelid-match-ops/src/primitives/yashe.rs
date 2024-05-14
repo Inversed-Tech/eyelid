@@ -130,7 +130,6 @@ where
         public_key: PublicKey<C>,
         rng: &mut ThreadRng,
     ) -> Ciphertext<C> {
-        let logt = C::T.ilog2();
         let s = self.sample_err(rng);
         let e = self.sample_err(rng);
         let mut c = s * public_key.h + e;

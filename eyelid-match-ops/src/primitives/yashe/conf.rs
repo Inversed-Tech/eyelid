@@ -6,6 +6,10 @@
 //! RUSTFLAGS="--cfg tiny_poly" cargo bench --features benchmark
 //! ```
 
+use ark_ff::PrimeField;
+use num_bigint::BigUint;
+use num_traits::ToPrimitive;
+
 use crate::{
     primitives::poly::{modular_poly::conf::IrisBits, PolyConf},
     IRIS_BIT_LENGTH,
@@ -25,7 +29,7 @@ use crate::primitives::poly::modular_poly::conf::TinyTest;
 /// Encryption keys and ciphertexts with different parameters are incompatible.
 pub trait YasheConf: PolyConf
 where
-    Self::Coeff: From<u64> + From<i64>,
+    Self::Coeff: From<u128> + From<u64> + From<i64>,
 {
     /// The plaintext coefficient modulus
     const T: u64;
@@ -38,9 +42,23 @@ where
     /// The default parameters are as recommended in the paper.
     const ERROR_DELTA: f64 = 1.0;
 
-    /// A convenience method to convert `T` to the `Coeff` type.
+    /// A convenience method to convert [`T`](Self::T) to the [`Coeff`](PolyConf::Coeff) type.
     fn t_as_coeff() -> Self::Coeff {
         Self::Coeff::from(Self::T)
+    }
+
+    /// A convenience method to convert [`T`](Self::T) to `u128`.
+    fn t_as_u128() -> u128 {
+        u128::from(Self::T)
+    }
+
+    /// A convenience method to convert [`Coeff::MODULUS`](PrimeField::MODULUS) to `u128`.
+    fn modulus_as_u128() -> u128 {
+        let modulus: BigUint = Self::Coeff::MODULUS.into();
+
+        modulus
+            .to_u128()
+            .expect("constant modulus is small enough for u128")
     }
 }
 
