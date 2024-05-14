@@ -457,7 +457,7 @@ pub fn bench_enc(settings: &mut Criterion) {
     let m = ctx.sample_message(&mut rng);
 
     settings.bench_with_input(
-        BenchmarkId::new("YASHE enc", "standard parameters with degree N"),
+        BenchmarkId::new("YASHE enc", SMALL_RANDOM_NAME),
         &ctx,
         |benchmark, ctx| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
@@ -479,7 +479,7 @@ pub fn bench_dec(settings: &mut Criterion) {
     let c = ctx.encrypt(m, public_key, &mut rng);
 
     settings.bench_with_input(
-        BenchmarkId::new("YASHE dec", "standard parameters with degree N"),
+        BenchmarkId::new("YASHE dec", SMALL_RANDOM_NAME),
         &ctx,
         |benchmark, ctx| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
