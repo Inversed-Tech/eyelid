@@ -30,8 +30,13 @@ where
     /// The plaintext coefficient modulus
     const T: u64;
 
-    /// The standard deviation
-    const DELTA: f64;
+    /// The standard deviation for key generation sampling.
+    /// The default parameters are as recommended in the paper.
+    const KEY_DELTA: f64 = 3.2;
+
+    /// The standard deviation for encryption error sampling
+    /// The default parameters are as recommended in the paper.
+    const ERROR_DELTA: f64 = 1.0;
 
     /// A convenience method to convert `T` to the `Coeff` type.
     fn t_as_coeff() -> Self::Coeff {
@@ -44,8 +49,6 @@ where
 /// This uses the full number of iris bits, which gives an upper bound on benchmarks.
 impl YasheConf for IrisBits {
     const T: u64 = IRIS_BIT_LENGTH as u64;
-
-    const DELTA: f64 = 3.2;
 }
 
 /// Full resolution polynomial parameters.
@@ -54,8 +57,6 @@ impl YasheConf for IrisBits {
 #[cfg(not(tiny_poly))]
 impl YasheConf for FullRes {
     const T: u64 = 1024;
-
-    const DELTA: f64 = 3.2;
 }
 
 /// Tiny test polynomials, used for finding edge cases in tests.
@@ -68,5 +69,8 @@ impl YasheConf for TinyTest {
     const T: u64 = 7;
 
     /// Limited to 1/6 of the modulus, so that the sampled values are valid within 6 sigmas.
-    const DELTA: f64 = 0.9;
+    const KEY_DELTA: f64 = 0.9;
+
+    /// Limited to 1/3 of KEY_DELTA, so that the error is small enough for valid decryption.
+    const ERROR_DELTA: f64 = 0.3;
 }

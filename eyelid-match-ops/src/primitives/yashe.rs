@@ -176,14 +176,14 @@ where
 
     /// Sample a polynomial with small random coefficients using a gaussian distribution.
     pub fn sample_err(&self, rng: &mut ThreadRng) -> Poly<C> {
-        self.sample_gaussian(self.params.err_delta, rng)
+        self.sample_gaussian(C::ERROR_DELTA, rng)
     }
 
     /// Sample a polynomial with small random coefficients using a gaussian distribution.
     /// TODO: this function seems to be returning too few non-zero elements
     pub fn sample_key(&self, rng: &mut ThreadRng) -> Poly<C> {
         // standard deviation whose output coefficients are -1, 0, 1 with high probability
-        self.sample_gaussian(self.params.key_delta, rng)
+        self.sample_gaussian(C::KEY_DELTA, rng)
     }
 
     /// Sample a polynomial with small random coefficients using a gaussian distribution.
@@ -193,7 +193,7 @@ where
         for i in 0..C::MAX_POLY_DEGREE {
             // TODO SECURITY: check that the generated integers are secure:
             // <https://github.com/Inversed-Tech/eyelid/issues/70>
-            let normal = Normal::new(0.0, C::DELTA).expect("constant parameters are valid");
+            let normal = Normal::new(0.0, delta).expect("constant parameters are valid");
             let v: f64 = normal.sample(rng);
 
             // TODO: try i128, i32, i16, or i8 here
