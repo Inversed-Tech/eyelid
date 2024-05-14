@@ -1,5 +1,9 @@
 [workspace]
-members = ["eyelid-matcher", "eyelid-match-ops", "eyelid-test"]
+members = [
+    "eyelid-matcher",
+    "eyelid-match-ops",
+    "eyelid-test",
+]
 resolver = "2"
 
 # Shared configuration
@@ -40,10 +44,7 @@ lazy_static = "1.4.0"
 static_assertions = "1.1.0"
 
 # Testing & Benchmarking
-criterion = { version = "0.5.1", default-features = false, features = [
-    "cargo_bench_support",
-    "rayon",
-] }
+criterion = { version = "0.5.1", default-features = false, features = ["cargo_bench_support", "rayon"] }
 rand = "0.8.5"
 rand_distr = "0.4.3"
 

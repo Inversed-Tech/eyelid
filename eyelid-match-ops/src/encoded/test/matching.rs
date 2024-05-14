@@ -9,7 +9,7 @@ fn matching_codes() {
     for (description, eye_a, mask_a, eye_b, mask_b) in MATCHING.iter() {
         let poly_query = PolyQuery::from_plaintext(eye_a, mask_a);
         let poly_code = PolyCode::from_plaintext(eye_b, mask_b);
-        let res = poly_query.is_match(&poly_code).unwrap();
+        let res = poly_query.is_match(&poly_code).expect("matching must work");
         assert!(res, "{} must match", description);
     }
 }
@@ -20,7 +20,7 @@ fn different_codes() {
     for (description, eye_a, mask_a, eye_b, mask_b) in DIFFERENT.iter() {
         let poly_query = PolyQuery::from_plaintext(eye_a, mask_a);
         let poly_code = PolyCode::from_plaintext(eye_b, mask_b);
-        let res = poly_query.is_match(&poly_code).unwrap();
+        let res = poly_query.is_match(&poly_code).expect("matching must work");
         assert!(!res, "{} must not match", description);
     }
 }

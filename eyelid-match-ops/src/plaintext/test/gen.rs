@@ -45,7 +45,7 @@ pub fn similar_iris_code(base: &IrisCode) -> IrisCode {
     let mut similar = *base;
     // Flip a third of the bits.
     for i in 0..base.len() / 3 {
-        let mut b = similar.get_mut(i * 3).unwrap();
+        let mut b = similar.get_mut(i * 3).expect("bit should exist");
         *b ^= true;
     }
     similar
