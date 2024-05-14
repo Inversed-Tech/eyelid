@@ -1,16 +1,14 @@
 //! Unit tests for Encryption and Decryption
 
-use crate::primitives::poly::TestRes;
-use crate::primitives::yashe::{PolyConf, Yashe, YasheParams};
+use crate::primitives::{
+    poly::TestRes,
+    yashe::{Yashe, YasheConf},
+};
 
-fn encrypt_decrypt_helper<C: PolyConf>() {
+fn encrypt_decrypt_helper<C: YasheConf>() {
     let mut rng = rand::thread_rng();
-    let params = YasheParams {
-        t: 1024,
-        err_delta: 3.2,
-        key_delta: 1.0,
-    };
-    let ctx: Yashe<C> = Yashe::new(params);
+    let ctx: Yashe<C> = Yashe::new();
+
     let (private_key, public_key) = ctx.keygen(&mut rng);
     let m = ctx.sample_message(&mut rng);
     let c = ctx.encrypt(m.clone(), public_key, &mut rng);
