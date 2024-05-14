@@ -60,6 +60,15 @@ where
             .to_u128()
             .expect("constant modulus is small enough for u128")
     }
+
+    /// A convenience method to convert [`Coeff::MODULUS_MINUS_ONE_DIV_TWO`](PrimeField::MODULUS_MINUS_ONE_DIV_TWO) to `u128`.
+    fn modulus_minus_one_div_two_as_u128() -> u128 {
+        let modulus: BigUint = Self::Coeff::MODULUS_MINUS_ONE_DIV_TWO.into();
+
+        modulus
+            .to_u128()
+            .expect("constant modulus is small enough for u128")
+    }
 }
 
 /// Iris bit length polynomial parameters.
