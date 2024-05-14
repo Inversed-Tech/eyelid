@@ -29,6 +29,10 @@ use crate::primitives::poly::modular_poly::conf::TinyTest;
 /// Encryption keys and ciphertexts with different parameters are incompatible.
 pub trait YasheConf: PolyConf
 where
+    // The `Field` trait is already `From<u128> + From<u64>` (and all the other unsigned types).
+    // The `Fp` types are `From<i64>` (and all the other signed types).
+    // But there are no trait bounds guaranteeing these conversions, so we need to require them.
+    // Unfortunately, these bounds also need to be copied to each generic type and impl block.
     Self::Coeff: From<u128> + From<u64> + From<i64>,
 {
     /// The plaintext coefficient modulus
@@ -50,6 +54,16 @@ where
     /// A convenience method to convert [`T`](Self::T) to `u128`.
     fn t_as_u128() -> u128 {
         u128::from(Self::T)
+    }
+
+    /// A convenience method to convert a [`Coeff`](PolyConf::Coeff) to `u128`.
+    /// TODO: move this method to a trait implemented on `Coeff` instead.
+    fn coeff_as_u128(coeff: Self::Coeff) -> u128 {
+        let coeff: BigUint = coeff.into();
+
+        coeff
+            .to_u128()
+            .expect("coefficients are small enough for u128")
     }
 
     /// A convenience method to convert [`Coeff::MODULUS`](PrimeField::MODULUS) to `u128`.
