@@ -143,6 +143,8 @@ criterion_main!(
     bench_polynomial_modulus,
     bench_inverse,
     bench_key_generation,
+    bench_encryption,
+    bench_decryption,
     bench_cyclotomic_multiplication_iris,
 );
 
@@ -471,7 +473,7 @@ pub fn bench_dec(settings: &mut Criterion) {
     // Setup parameters
     let mut rng = rand::thread_rng();
     let ctx: Yashe<TestRes> = Yashe::new();
-    
+
     let (private_key, public_key) = ctx.keygen(&mut rng);
     let m = ctx.sample_message(&mut rng);
     let c = ctx.encrypt(m, public_key, &mut rng);
@@ -512,3 +514,5 @@ pub fn bench_keygen_iris(settings: &mut Criterion) {
         },
     );
 }
+
+// TODO: add iris-length encryption and decryption benchmarks
