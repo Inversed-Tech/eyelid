@@ -386,7 +386,7 @@ pub fn bench_inv(settings: &mut Criterion) {
 
     let ctx: Yashe<TestRes> = Yashe::new();
 
-    let p = ctx.sample_gaussian(params.delta, &mut rng);
+    let p = ctx.sample_key(&mut rng);
 
     settings.bench_with_input(
         BenchmarkId::new("Inverse poly", SMALL_RANDOM_NAME),

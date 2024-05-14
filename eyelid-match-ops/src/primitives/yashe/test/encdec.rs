@@ -5,7 +5,10 @@ use crate::primitives::{
     yashe::{Yashe, YasheConf},
 };
 
-fn encrypt_decrypt_helper<C: YasheConf>() {
+fn encrypt_decrypt_helper<C: YasheConf>()
+where
+    C::Coeff: From<u128> + From<u64> + From<i64>,
+{
     let mut rng = rand::thread_rng();
     let ctx: Yashe<C> = Yashe::new();
 
