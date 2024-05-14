@@ -4,7 +4,11 @@
 use std::marker::PhantomData;
 
 use ark_ff::{One, UniformRand};
-use rand::{rngs::ThreadRng, Rng};
+use rand::{
+    distributions::uniform::{SampleRange, SampleUniform},
+    rngs::ThreadRng,
+    Rng,
+};
 use rand_distr::{Distribution, Normal};
 
 use crate::primitives::poly::Poly;
@@ -206,7 +210,7 @@ where
 
     /// Sample a polynomial with small random coefficients using a gaussian distribution.
     #[allow(clippy::cast_possible_truncation)]
-    pub fn sample_gaussian(&self, delta: f64, rng: &mut ThreadRng) -> Poly<C> {
+    fn sample_gaussian(&self, delta: f64, rng: &mut ThreadRng) -> Poly<C> {
         let mut res = Poly::non_canonical_zeroes(C::MAX_POLY_DEGREE);
 
         for i in 0..C::MAX_POLY_DEGREE {
@@ -230,35 +234,46 @@ where
     }
 
     /// Sample a polynomial with unlimited size random coefficients using a uniform distribution.
-    pub fn sample_uniform(&self, mut rng: &mut ThreadRng) -> Poly<C> {
+    pub fn sample_uniform_coeff(&self, mut rng: &mut ThreadRng) -> Poly<C> {
         let mut res = Poly::non_canonical_zeroes(C::MAX_POLY_DEGREE);
         for i in 0..C::MAX_POLY_DEGREE {
             let coeff_rand = C::Coeff::rand(&mut rng);
             res[i] = coeff_rand;
         }
+
+        // Raw coefficient access must be followed by a truncation check.
         res.truncate_to_canonical_form();
         res
     }
 
     /// Sample from message space
     pub fn sample_message(&self, rng: &mut ThreadRng) -> Message<C> {
-        let mut res = Poly::non_canonical_zeroes(C::MAX_POLY_DEGREE);
-        for i in 0..C::MAX_POLY_DEGREE {
-            let coeff_rand: u64 = rng.gen_range(0..C::T);
-            res[i] = coeff_rand.into();
-        }
-        res.truncate_to_canonical_form();
-        Message { m: res }
+        let m = self.sample_uniform_range(0..C::T, rng);
+        Message { m }
     }
 
     /// Sample from binary message space
     pub fn sample_binary_message(&self, rng: &mut ThreadRng) -> Message<C> {
+        // TODO: this might be implemented more efficiently using `Rng::gen_bool()`
+        let m = self.sample_uniform_range(0..=1_u64, rng);
+        Message { m }
+    }
+
+    /// Sample a polynomial with random coefficients in `range` using a uniform distribution.
+    fn sample_uniform_range<T, R>(&self, range: R, rng: &mut ThreadRng) -> Poly<C>
+    where
+        T: SampleUniform,
+        R: SampleRange<T> + Clone,
+        C::Coeff: From<T>,
+    {
         let mut res = Poly::non_canonical_zeroes(C::MAX_POLY_DEGREE);
         for i in 0..C::MAX_POLY_DEGREE {
-            let coeff_rand: u64 = rng.gen_range(0..2);
+            let coeff_rand = rng.gen_range(range.clone());
             res[i] = coeff_rand.into();
         }
+
+        // Raw coefficient access must be followed by a truncation check.
         res.truncate_to_canonical_form();
-        Message { m: res }
+        res
     }
 }
