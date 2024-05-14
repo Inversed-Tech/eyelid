@@ -449,11 +449,8 @@ pub fn bench_keygen(settings: &mut Criterion) {
 pub fn bench_enc(settings: &mut Criterion) {
     // Setup parameters
     let mut rng = rand::thread_rng();
-    let params = YasheParams {
-        t: 1024,
-        delta: 3.2,
-    };
-    let ctx: Yashe<TestRes> = Yashe::new(params);
+    let ctx: Yashe<TestRes> = Yashe::new();
+
     let (_private_key, public_key) = ctx.keygen(&mut rng);
     let m = ctx.sample_message(&mut rng);
 
@@ -473,11 +470,8 @@ pub fn bench_enc(settings: &mut Criterion) {
 pub fn bench_dec(settings: &mut Criterion) {
     // Setup parameters
     let mut rng = rand::thread_rng();
-    let params = YasheParams {
-        t: 1024,
-        delta: 3.2,
-    };
-    let ctx: Yashe<TestRes> = Yashe::new(params);
+    let ctx: Yashe<TestRes> = Yashe::new();
+    
     let (private_key, public_key) = ctx.keygen(&mut rng);
     let m = ctx.sample_message(&mut rng);
     let c = ctx.encrypt(m, public_key, &mut rng);
