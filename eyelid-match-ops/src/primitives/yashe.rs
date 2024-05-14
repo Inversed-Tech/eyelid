@@ -126,28 +126,28 @@ where
     /// Encrypt a message m encoded in the polynomial ring
     pub fn encrypt(
         &self,
-        m: Message<C>,
+        mut m: Message<C>,
         public_key: PublicKey<C>,
         rng: &mut ThreadRng,
     ) -> Ciphertext<C> {
+        // Sample error polynomials and apply them to the public key.
         let s = self.sample_err(rng);
         let e = self.sample_err(rng);
         let mut c = s * public_key.h + e;
 
-        let mut qdt: BigInt<2> = C::Coeff::MODULUS;
-        qdt.divn(logt);
-        let mqdt = m.m * C::Coeff::from(qdt);
-        c += mqdt;
-        c.truncate_to_canonical_form();
-        Ciphertext { c }
-    }
+        // Divide the polynomial coefficient modulus by T, using basic integer arithmetic.
+        let qdt = C::modulus_as_u128() / C::t_as_u128();
+        let qdt = C::Coeff::from(qdt);
 
-    /// Convert bigint to u128
-    // TODO: implement u128::from
-    pub fn convert_to_u128(&self, a: BigInt<2>) -> u128 {
-        let mut res: u128 = u128::from(a.0[0]);
-        res += u128::from(a.0[1]) * 2u128.pow(64);
-        res
+        // Multiply the message by the qdt scalar, and add it to the ciphertext.
+        m.m *= qdt;
+        c += m.m;
+
+        // Make sure the polynomial is stored in the canonical form.
+        // There's no need to reduce, because we're using operations that already do that.
+        c.truncate_to_canonical_form();
+
+        Ciphertext { c }
     }
 
     /// Decrypt a ciphertext
