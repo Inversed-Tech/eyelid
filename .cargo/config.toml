@@ -64,13 +64,15 @@ rustflags = [
     "-Wclippy::todo",
 
     # Manual debugging output.
-    # TODO: decide on a tracing / inspection library, ask WorldCoin what they use.
+    # TODO: use tracing then activate these lints
     #"-Wclippy::print_stdout",
     #"-Wclippy::print_stderr",
 
     # Panics
     "-Wclippy::fallible_impl_from",
     "-Wclippy::unwrap_in_result",
+    # Use expect() or handle the error case instead
+    "-Wclippy::unwrap_used",
 
     # Documentation
     "-Wmissing_docs",

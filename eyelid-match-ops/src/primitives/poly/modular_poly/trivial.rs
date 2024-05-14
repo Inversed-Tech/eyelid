@@ -6,28 +6,28 @@
 use std::{
     borrow::Borrow,
     marker::PhantomData,
-    ops::{Add, AddAssign, Mul, Neg, Sub, SubAssign},
+    ops::{Add, AddAssign, Neg, Sub, SubAssign},
 };
 
 use ark_ff::{One, Zero};
 use ark_poly::polynomial::univariate::{DenseOrSparsePolynomial, DensePolynomial};
 
-use crate::primitives::poly::{modular_poly::Poly, Coeff, PolyConf};
+use crate::primitives::poly::{modular_poly::Poly, PolyConf};
 
-impl<C: PolyConf> Borrow<DensePolynomial<Coeff>> for Poly<C> {
-    fn borrow(&self) -> &DensePolynomial<Coeff> {
+impl<C: PolyConf> Borrow<DensePolynomial<C::Coeff>> for Poly<C> {
+    fn borrow(&self) -> &DensePolynomial<C::Coeff> {
         &self.0
     }
 }
 
-impl<C: PolyConf> From<Poly<C>> for DenseOrSparsePolynomial<'static, Coeff> {
-    fn from(poly: Poly<C>) -> DenseOrSparsePolynomial<'static, Coeff> {
+impl<C: PolyConf> From<Poly<C>> for DenseOrSparsePolynomial<'static, C::Coeff> {
+    fn from(poly: Poly<C>) -> DenseOrSparsePolynomial<'static, C::Coeff> {
         poly.0.into()
     }
 }
 
-impl<'a, C: PolyConf> From<&'a Poly<C>> for DenseOrSparsePolynomial<'a, Coeff> {
-    fn from(poly: &'a Poly<C>) -> DenseOrSparsePolynomial<'a, Coeff> {
+impl<'a, C: PolyConf> From<&'a Poly<C>> for DenseOrSparsePolynomial<'a, C::Coeff> {
+    fn from(poly: &'a Poly<C>) -> DenseOrSparsePolynomial<'a, C::Coeff> {
         (&poly.0).into()
     }
 }
@@ -45,16 +45,16 @@ impl<C: PolyConf> Zero for Poly<C> {
 impl<C: PolyConf> One for Poly<C> {
     fn one() -> Self {
         let mut poly = Self::zero();
-        poly[0] = Coeff::one();
+        poly[0] = C::Coeff::one();
         poly
     }
 
     fn set_one(&mut self) {
-        self.coeffs = vec![Coeff::one()];
+        self.coeffs = vec![C::Coeff::one()];
     }
 
     fn is_one(&self) -> bool {
-        self.coeffs == vec![Coeff::one()]
+        self.coeffs == vec![C::Coeff::one()]
     }
 }
 
@@ -160,19 +160,5 @@ impl<C: PolyConf> SubAssign<&Poly<C>> for Poly<C> {
     }
 }
 
-// Multiplying by a scalar can't increase the degree, so it is trivial.
-impl<C: PolyConf> Mul<Coeff> for Poly<C> {
-    type Output = Self;
-
-    fn mul(self, rhs: Coeff) -> Self {
-        Poly(&self.0 * rhs, PhantomData)
-    }
-}
-
-impl<C: PolyConf> Mul<Coeff> for &Poly<C> {
-    type Output = Poly<C>;
-
-    fn mul(self, rhs: Coeff) -> Self::Output {
-        Poly(&self.0 * rhs, PhantomData)
-    }
-}
+// `Mul` by a scalar conflicts with multiplying by a polynomial.
+// Use `MulAssign` or `*=` instead.

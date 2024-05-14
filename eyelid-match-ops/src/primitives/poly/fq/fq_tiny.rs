@@ -3,12 +3,7 @@
 //! These test parameters are specifically chosen to make failing tests easy to read and diagnose.
 //! q = 2ˆ4
 
-#![cfg_attr(not(tiny_poly), allow(dead_code))]
-
 use ark_ff::{Fp64, MontBackend, MontConfig};
-
-/// The modular field used for test polynomial coefficients, with precomputed primes and generators.
-pub type Coeff = Fq4;
 
 /// The configuration of the test-only modular field, used for polynomial coefficients.
 ///
