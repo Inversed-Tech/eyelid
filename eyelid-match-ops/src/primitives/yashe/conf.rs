@@ -35,7 +35,8 @@ where
     // Unfortunately, these bounds also need to be copied to each generic type and impl block.
     Self::Coeff: From<u128> + From<u64> + From<i64>,
 {
-    /// The plaintext coefficient modulus
+    /// The plaintext coefficient modulus.
+    /// Must be a power of two, and smaller than the modulus.
     const T: u64;
 
     /// The standard deviation for key generation sampling.
@@ -89,7 +90,7 @@ where
 ///
 /// This uses the full number of iris bits, which gives an upper bound on benchmarks.
 impl YasheConf for IrisBits {
-    const T: u64 = IRIS_BIT_LENGTH as u64;
+    const T: u64 = 2048;
 }
 
 /// Full resolution polynomial parameters.
@@ -107,7 +108,7 @@ impl YasheConf for FullRes {
 #[cfg(tiny_poly)]
 impl YasheConf for TinyTest {
     /// Limited to the modulus of the underlying `Coeff` type.
-    const T: u64 = 7;
+    const T: u64 = 4;
 
     /// Limited to 1/6 of the modulus, so that the sampled values are valid within 6 sigmas.
     const KEY_DELTA: f64 = 0.9;
