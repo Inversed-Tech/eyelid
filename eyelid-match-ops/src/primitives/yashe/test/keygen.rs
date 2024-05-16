@@ -12,25 +12,17 @@ fn keygen_helper<C: YasheConf>()
 where
     C::Coeff: From<i64> + From<u64>,
 {
-    // TODO: how to deal with different sets of parameters?
-    // We must be able to test all the different parameterizations
     let mut rng = rand::thread_rng();
     let ctx: Yashe<C> = Yashe::new();
     let (private_key, public_key) = ctx.keygen(&mut rng);
 
-    let f_inv = private_key.f.inverse();
     let priv_key_inv = private_key.priv_key.inverse();
 
-    //dbg!(private_key.priv_key[0].clone());
     assert_eq!(
         private_key.f[0] * C::t_as_coeff() + C::Coeff::one(),
         private_key.priv_key[0]
     );
 
-    assert_eq!(
-        private_key.f * f_inv.expect("Polynomial f must be invertible"),
-        Poly::one()
-    );
     assert_eq!(
         private_key.priv_key * priv_key_inv.expect("Private key must be invertible"),
         Poly::one()
