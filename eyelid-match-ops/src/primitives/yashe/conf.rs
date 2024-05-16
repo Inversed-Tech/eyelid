@@ -11,9 +11,7 @@ use num_bigint::BigUint;
 use num_traits::ToPrimitive;
 
 use crate::primitives::poly::{modular_poly::conf::IrisBits, PolyConf};
-pub use crate::primitives::poly::modular_poly::conf::TestRes;
 
-#[cfg(not(tiny_poly))]
 use crate::primitives::poly::modular_poly::conf::FullRes;
 
 #[cfg(tiny_poly)]
@@ -92,7 +90,6 @@ impl YasheConf for IrisBits {
 /// Full resolution polynomial parameters.
 ///
 /// These are the parameters for full resolution, according to the Inversed Tech report.
-#[cfg(not(tiny_poly))]
 impl YasheConf for FullRes {
     const T: u64 = 1024;
 }
