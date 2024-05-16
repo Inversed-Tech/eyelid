@@ -10,10 +10,7 @@ use ark_ff::PrimeField;
 use num_bigint::BigUint;
 use num_traits::ToPrimitive;
 
-use crate::{
-    primitives::poly::{modular_poly::conf::IrisBits, PolyConf},
-};
-
+use crate::primitives::poly::{modular_poly::conf::IrisBits, PolyConf};
 pub use crate::primitives::poly::modular_poly::conf::TestRes;
 
 #[cfg(not(tiny_poly))]
