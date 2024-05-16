@@ -24,6 +24,7 @@ benchmark = [
 # RUSTFLAGS="--cfg tiny_poly" cargo bench --features benchmark
 
 [dependencies]
+itertools.workspace = true
 ark-ff.workspace = true
 ark-poly.workspace = true
 num-bigint.workspace = true
