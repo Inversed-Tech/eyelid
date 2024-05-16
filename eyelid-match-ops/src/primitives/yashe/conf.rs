@@ -12,7 +12,6 @@ use num_traits::ToPrimitive;
 
 use crate::{
     primitives::poly::{modular_poly::conf::IrisBits, PolyConf},
-    IRIS_BIT_LENGTH,
 };
 
 pub use crate::primitives::poly::modular_poly::conf::TestRes;
