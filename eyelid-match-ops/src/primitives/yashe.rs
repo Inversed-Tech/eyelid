@@ -224,7 +224,9 @@ where
             // Until we've checked the security of using fewer bits, use a large and performant type.
             // Larger values are extremely rare, and will saturate to MIN or MAX.
             // This is ok because the C::Coeff modulus is smaller than MIN/MAX.
-            res[i] = C::Coeff::from(v as i64);
+            //
+            // `as` truncates by default, but we want to round to the nearest integer.
+            res[i] = C::Coeff::from(v.round() as i64);
         }
 
         // Raw coefficient access must be followed by a truncation check.
