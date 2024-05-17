@@ -97,6 +97,18 @@ impl<C: PolyConf> Poly<C> {
         Self::from_coefficients_vec(coeffs.to_vec())
     }
 
+    /// Returns the coefficients of `self` as a mutable slice.
+    /// `use ark_poly::DenseUVPolynomial` for the read-only `coeffs()` method.
+    ///
+    /// After using this low-level accessor, callers must ensure the polynomial is in a canonical
+    /// form, by calling either:
+    /// - [`Poly::reduce_mod_poly()`], if the degree could have increased, or
+    /// - [`Poly::truncate_to_canonical_form()`], if the degree has not increased, but coefficients
+    ///   could have been set to zero.
+    pub fn coeffs_mut(&mut self) -> &mut [C::Coeff] {
+        self.coeffs.as_mut_slice()
+    }
+
     // Shadow DensePolynomial methods, so the types are all `Poly`
 
     /// Perform a naive `O(n^2)` multiplication of `self` by `other`.
