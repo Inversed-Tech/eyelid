@@ -101,11 +101,12 @@ impl YasheConf for FullRes {
 #[cfg(tiny_poly)]
 impl YasheConf for TinyTest {
     /// Limited to the modulus of the underlying `Coeff` type.
-    const T: u64 = 6;
+    const T: u64 = 4;
 
     /// Limited to 1/6 of the modulus, so that the sampled values are valid within 6 sigmas.
-    const KEY_DELTA: f64 = 0.9;
+    const KEY_DELTA: f64 = 0.6;
 
     /// Limited to 1/3 of KEY_DELTA, so that the error is small enough for valid decryption.
-    const ERROR_DELTA: f64 = 0.3;
+    /// This makes each error term zero with 2.5 sigma probability, and the entire error zero with 95% probability.
+    const ERROR_DELTA: f64 = 0.2;
 }
