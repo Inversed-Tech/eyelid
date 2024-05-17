@@ -20,6 +20,26 @@ where
     assert_eq!(m, m_dec);
 }
 
+fn homomorphic_addition_helper<C: YasheConf>()
+where
+    C::Coeff: From<u128> + From<u64> + From<i64>,
+{
+    let mut rng = rand::thread_rng();
+    let ctx: Yashe<C> = Yashe::new();
+
+    let (private_key, public_key) = ctx.keygen(&mut rng);
+    let m1 = ctx.sample_message(&mut rng);
+    let m2 = ctx.sample_message(&mut rng);
+    let c1 = ctx.encrypt(m1.clone(), public_key.clone(), &mut rng);
+    let c2 = ctx.encrypt(m2.clone(), public_key, &mut rng);
+    let m = ctx.plaintext_add(m1, m2);
+    let c = ctx.ciphertext_add(c1, c2);
+    let m_dec = ctx.decrypt(c.clone(), private_key);
+
+    assert_eq!(m, m_dec);
+}
+
+
 #[test]
 fn encrypt_decrypt_test() {
     // The TinyTest config doesn't work for encryption, so we test full resolution,
@@ -29,4 +49,14 @@ fn encrypt_decrypt_test() {
     // TODO: find a config that does work and use it for TestRes/TinyPoly.
     encrypt_decrypt_helper::<FullRes>();
     encrypt_decrypt_helper::<IrisBits>();
+}
+
+#[test]
+fn homomorphic_addition_test() {
+    // The TinyTest config doesn't work for encryption, so we test full resolution,
+    // and a large polynomial with the same number of terms as the number of iris bits.
+    // Testing multiple configs is important for code coverage, and to check for hard-coded assumptions.
+    //
+    // TODO: find a config that does work and use it for TestRes/TinyPoly.
+    homomorphic_addition_helper::<FullRes>();
 }

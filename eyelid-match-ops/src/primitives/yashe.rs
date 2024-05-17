@@ -278,4 +278,19 @@ where
         res.truncate_to_canonical_form();
         res
     }
+
+    pub fn plaintext_add(&self, m1: Message<C>, m2: Message<C>) -> Message<C> {
+        let mut res = m1.m + m2.m;
+        for coeff in res.coeffs_mut() {
+            let mut coeff_res = C::coeff_as_u128(*coeff);
+            coeff_res %= C::t_as_u128();
+            *coeff = coeff_res.into();
+        }
+        Message { m: res }
+    }
+
+    pub fn ciphertext_add(&self, c1: Ciphertext<C>, c2: Ciphertext<C>)-> Ciphertext<C> {
+        let c = c1.c + c2.c;
+        Ciphertext { c }
+    }
 }
