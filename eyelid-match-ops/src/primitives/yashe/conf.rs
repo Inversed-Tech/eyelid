@@ -97,17 +97,15 @@ impl YasheConf for FullRes {
 /// Tiny test polynomials, used for finding edge cases in tests.
 ///
 /// The test parameters are specifically chosen to make failing tests easy to read and diagnose.
-
+/// TODO: these parameters don't work for encryption and decryption, find some that do.
 #[cfg(tiny_poly)]
 impl YasheConf for TinyTest {
     /// Limited to the modulus of the underlying `Coeff` type.
-    const T: u64 = 4;
+    const T: u64 = 6;
 
     /// Limited to 1/6 of the modulus, so that the sampled values are valid within 6 sigmas.
-    /// This effectively sets the key randomness to zero, and the key to one, to six sigma probability.
-    const KEY_DELTA: f64 = 0.01;
+    const KEY_DELTA: f64 = 0.9;
 
     /// Limited to 1/3 of KEY_DELTA, so that the error is small enough for valid decryption.
-    /// This effectively makes the error zero, to six sigma probability.
-    const ERROR_DELTA: f64 = 0.01;
+    const ERROR_DELTA: f64 = 0.3;
 }
