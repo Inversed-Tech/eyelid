@@ -104,9 +104,10 @@ impl YasheConf for TinyTest {
     const T: u64 = 4;
 
     /// Limited to 1/6 of the modulus, so that the sampled values are valid within 6 sigmas.
-    const KEY_DELTA: f64 = 0.3;
+    /// This effectively sets the key randomness to zero, and the key to one, to six sigma probability.
+    const KEY_DELTA: f64 = 0.01;
 
     /// Limited to 1/3 of KEY_DELTA, so that the error is small enough for valid decryption.
-    /// This effectively makes the error zero.
-    const ERROR_DELTA: f64 = 0.1;
+    /// This effectively makes the error zero, to six sigma probability.
+    const ERROR_DELTA: f64 = 0.01;
 }
