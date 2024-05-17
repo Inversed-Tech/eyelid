@@ -1,7 +1,7 @@
 //! Unit tests for Encryption and Decryption
 
 use crate::primitives::{
-    poly::TestRes,
+    poly::{modular_poly::conf::FullRes, IrisBits},
     yashe::{Yashe, YasheConf},
 };
 
@@ -22,5 +22,11 @@ where
 
 #[test]
 fn encrypt_decrypt_test() {
-    encrypt_decrypt_helper::<TestRes>();
+    // The TinyTest config doesn't work for encryption, so we test full resolution,
+    // and a large polynomial with the same number of terms as the number of iris bits.
+    // Testing multiple configs is important for code coverage, and to check for hard-coded assumptions.
+    //
+    // TODO: find a config that does work and use it for TestRes/TinyPoly.
+    encrypt_decrypt_helper::<FullRes>();
+    encrypt_decrypt_helper::<IrisBits>();
 }
