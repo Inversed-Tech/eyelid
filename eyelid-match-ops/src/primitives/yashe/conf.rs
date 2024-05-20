@@ -41,17 +41,23 @@ where
 
     /// A convenience method to convert [`T`](Self::T) to the [`Coeff`](PolyConf::Coeff) type.
     fn t_as_coeff() -> Self::Coeff {
+        debug_assert!(Self::check_constraints());
+
         Self::Coeff::from(Self::T)
     }
 
     /// A convenience method to convert [`T`](Self::T) to `u128`.
     fn t_as_u128() -> u128 {
+        debug_assert!(Self::check_constraints());
+
         u128::from(Self::T)
     }
 
     /// A convenience method to convert a [`Coeff`](PolyConf::Coeff) to `u128`.
     /// TODO: move this method to a trait implemented on `Coeff` instead.
     fn coeff_as_u128(coeff: Self::Coeff) -> u128 {
+        debug_assert!(Self::check_constraints());
+
         let coeff: BigUint = coeff.into();
 
         coeff
@@ -61,6 +67,8 @@ where
 
     /// A convenience method to convert [`Coeff::MODULUS`](PrimeField::MODULUS) to `u128`.
     fn modulus_as_u128() -> u128 {
+        debug_assert!(Self::check_constraints());
+
         let modulus: BigUint = Self::Coeff::MODULUS.into();
 
         modulus
@@ -70,11 +78,36 @@ where
 
     /// A convenience method to convert [`Coeff::MODULUS_MINUS_ONE_DIV_TWO`](PrimeField::MODULUS_MINUS_ONE_DIV_TWO) to `u128`.
     fn modulus_minus_one_div_two_as_u128() -> u128 {
+        debug_assert!(Self::check_constraints());
+
         let modulus: BigUint = Self::Coeff::MODULUS_MINUS_ONE_DIV_TWO.into();
 
         modulus
             .to_u128()
             .expect("constant modulus is small enough for u128")
+    }
+
+    /// Checks various constraints on the generic values.
+    ///
+    /// TODO: work out how to const_assert!() these constraints for each config type.
+    //
+    // The u64 to f64 cast keeps precision because the values are all small compared to the types.
+    // There is an assertion that checks this remains valid, even if the types or values change.
+    #[allow(clippy::cast_precision_loss)]
+    fn check_constraints() -> bool {
+        // The encrypted coefficient modulus must be larger than the plaintext modulus.
+        debug_assert!(u128::from(Self::T) < Self::modulus_as_u128());
+
+        // The key standard deviation must fit within the plaintext modulus, with six sigma probability.
+        debug_assert!(Self::KEY_DELTA < (Self::T as f64) / 6.0);
+        // Check the cast above remains valid.
+        debug_assert!(Self::T < (1 << f64::MANTISSA_DIGITS));
+
+        // The error must be small enough to allow successful message retrieval, with three sigma probability.
+        debug_assert!(Self::ERROR_DELTA < Self::KEY_DELTA / 3.0);
+
+        // This return value lets us skip calling the assertions entirely in release builds.
+        true
     }
 }
 
@@ -84,11 +117,6 @@ where
 impl YasheConf for IrisBits {
     const T: u64 = 2048;
 }
-// TODO: work out how to constant assert these constraints for each config type:
-// The encrypted coefficient modulus can't be smaller than the plaintext modulus.
-// const_assert!(IrisBits::T <= <IrisBits as PolyConf>::Coeff::MODULUS as u128);
-// The standard deviation must fit within the encrypted coefficient modulus, with six sigma probability.
-// const_assert!(IrisBits::DELTA <= <IrisBits as PolyConf>::Coeff::MODULUS as f64 / 6.0);
 
 /// Full resolution polynomial parameters.
 ///

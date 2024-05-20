@@ -38,11 +38,14 @@ impl IrisConf for IrisBits {
     const COLUMNS: usize = 160;
     const ROTATION_LIMIT: usize = 15;
 }
+// TODO: work out how to automatically apply these assertions to every trait impl.
+// (Or every config type.)
+//
 // There must be enough bits to store the underlying data.
 const_assert!(IrisBits::BIT_LENGTH >= IrisBits::COLUMN_LENGTH * IrisBits::COLUMNS);
 // Rotating more than the number of columns is redundant.
 const_assert!(IrisBits::ROTATION_COMPARISONS <= IrisBits::COLUMNS);
-// The match fraction should be strictly between 0 and 1.
+// The match fraction should be between 0 and 1.
 const_assert!(IrisBits::MATCH_NUMERATOR <= IrisBits::MATCH_DENOMINATOR);
 const_assert!(IrisBits::MATCH_DENOMINATOR > 0);
 
