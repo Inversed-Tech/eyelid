@@ -19,6 +19,7 @@ impl<C: PolyConf> MulAssign<C::Coeff> for Poly<C> {
         for coeff in &mut self.0.coeffs {
             *coeff *= rhs;
         }
+        self.truncate_to_canonical_form();
     }
 }
 
@@ -27,6 +28,7 @@ impl<C: PolyConf> MulAssign<C::Coeff> for &mut Poly<C> {
         for coeff in &mut self.0.coeffs {
             *coeff *= rhs;
         }
+        self.truncate_to_canonical_form();
     }
 }
 

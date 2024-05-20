@@ -36,7 +36,7 @@ pub trait PolyConf: Copy + Clone + Debug + Eq + PartialEq {
 }
 
 impl PolyConf for IrisBits {
-    const MAX_POLY_DEGREE: usize = Self::BIT_LENGTH;
+    const MAX_POLY_DEGREE: usize = crate::IRIS_BIT_LENGTH.next_power_of_two();
 
     type Coeff = Fq79;
 
@@ -47,13 +47,12 @@ impl PolyConf for IrisBits {
 // The polynomial must have enough coefficients to store the underlying iris data.
 const_assert!(IrisBits::MAX_POLY_DEGREE >= IrisBits::BIT_LENGTH);
 
+// TODO: try generic_singleton and see if it performs better:
+// <https://docs.rs/generic_singleton/0.5.0/generic_singleton/macro.get_or_init_thread_local.html>
 lazy_static! {
     /// The zero coefficient as a static constant value.
     static ref FQ79_ZERO: Fq79 = Fq79::zero();
 }
-
-// TODO: try generic_singleton and see if it performs better:
-// <https://docs.rs/generic_singleton/0.5.0/generic_singleton/macro.get_or_init_thread_local.html>
 
 impl PolyConf for FullRes {
     const MAX_POLY_DEGREE: usize = 2048;

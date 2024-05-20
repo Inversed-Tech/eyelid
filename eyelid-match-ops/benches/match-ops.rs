@@ -25,7 +25,7 @@ use eyelid_match_ops::{
     },
     primitives::{
         poly::{self, test::gen::rand_poly, Poly, PolyConf},
-        yashe::{self, Yashe},
+        yashe::{self, Ciphertext, Message, Yashe},
     },
     IrisBits, TestRes,
 };
@@ -80,6 +80,22 @@ criterion_group! {
     targets = bench_keygen
 }
 
+criterion_group! {
+    name = bench_encryption;
+    // This can be any expression that returns a `Criterion` object.
+    config = Criterion::default().sample_size(10);
+    // List encryption implementations here.
+    targets = bench_enc
+}
+
+criterion_group! {
+    name = bench_decryption;
+    // This can be any expression that returns a `Criterion` object.
+    config = Criterion::default().sample_size(10);
+    // List decryption implementations here.
+    targets = bench_dec
+}
+
 // Iris-length polynomial benchmarks.
 // These benchmarks provide an upper bound for the performance of iris operations.
 // They also help us decide if we need smaller or larger polynomial sizes.
@@ -128,6 +144,8 @@ criterion_main!(
     bench_polynomial_modulus,
     bench_inverse,
     bench_key_generation,
+    bench_encryption,
+    bench_decryption,
     bench_cyclotomic_multiplication_iris,
 );
 
@@ -369,7 +387,7 @@ pub fn bench_inv(settings: &mut Criterion) {
 
     let ctx: Yashe<TestRes> = Yashe::new();
 
-    let p = ctx.sample_gaussian(&mut rng);
+    let p = ctx.sample_key(&mut rng);
 
     settings.bench_with_input(
         BenchmarkId::new("Inverse poly", SMALL_RANDOM_NAME),
@@ -396,7 +414,7 @@ pub fn bench_inv_iris(settings: &mut Criterion) {
 
     let ctx: Yashe<IrisBits> = Yashe::new();
 
-    let p = ctx.sample_gaussian(&mut rng);
+    let p = ctx.sample_gaussian(params.delta, &mut rng);
 
     settings.bench_with_input(
         BenchmarkId::new("Inverse full poly", SMALL_RANDOM_NAME),
@@ -430,6 +448,49 @@ pub fn bench_keygen(settings: &mut Criterion) {
     );
 }
 
+/// Run [`Yashe::enc()`] as a Criterion benchmark with random data.
+pub fn bench_enc(settings: &mut Criterion) {
+    // Setup parameters
+    let mut rng = rand::thread_rng();
+    let ctx: Yashe<TestRes> = Yashe::new();
+
+    let (_private_key, public_key) = ctx.keygen(&mut rng);
+    let m = ctx.sample_message(&mut rng);
+
+    settings.bench_with_input(
+        BenchmarkId::new("YASHE enc", SMALL_RANDOM_NAME),
+        &ctx,
+        |benchmark, ctx| {
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Ciphertext<TestRes> {
+                ctx.encrypt(m.clone(), public_key.clone(), &mut rng)
+            })
+        },
+    );
+}
+
+/// Run [`Yashe::dec()`] as a Criterion benchmark with random data.
+pub fn bench_dec(settings: &mut Criterion) {
+    // Setup parameters
+    let mut rng = rand::thread_rng();
+    let ctx: Yashe<TestRes> = Yashe::new();
+
+    let (private_key, public_key) = ctx.keygen(&mut rng);
+    let m = ctx.sample_message(&mut rng);
+    let c = ctx.encrypt(m, public_key, &mut rng);
+
+    settings.bench_with_input(
+        BenchmarkId::new("YASHE dec", SMALL_RANDOM_NAME),
+        &ctx,
+        |benchmark, ctx| {
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Message<TestRes> {
+                ctx.decrypt(c.clone(), private_key.clone())
+            })
+        },
+    );
+}
+
 /// Run [`Yashe::keygen()`] as a Criterion benchmark with random data on the full number of iris bits.
 #[cfg(slow_benchmarks)]
 pub fn bench_keygen_iris(settings: &mut Criterion) {
@@ -454,3 +515,5 @@ pub fn bench_keygen_iris(settings: &mut Criterion) {
         },
     );
 }
+
+// TODO: add iris-length encryption and decryption benchmarks
