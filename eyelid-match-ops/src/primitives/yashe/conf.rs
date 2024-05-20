@@ -67,7 +67,7 @@ where
 
     /// A convenience method to convert [`Coeff::MODULUS`](PrimeField::MODULUS) to `u128`.
     fn modulus_as_u128() -> u128 {
-        debug_assert!(Self::check_constraints());
+        // We can't check constraints here, because this method is called by the constraint checks.
 
         let modulus: BigUint = Self::Coeff::MODULUS.into();
 
