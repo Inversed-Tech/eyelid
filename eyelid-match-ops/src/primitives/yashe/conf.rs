@@ -10,12 +10,10 @@ use ark_ff::PrimeField;
 use num_bigint::BigUint;
 use num_traits::ToPrimitive;
 
-use crate::primitives::poly::{modular_poly::conf::IrisBits, PolyConf};
-
-use crate::primitives::poly::modular_poly::conf::FullRes;
+use crate::{primitives::poly::PolyConf, FullRes, IrisBits};
 
 #[cfg(tiny_poly)]
-use crate::primitives::poly::modular_poly::conf::TinyTest;
+use crate::TinyTest;
 
 /// Fixed YASHE encryption scheme parameters.
 /// The [`PolyConf`] supertrait is the configuration of the polynomials used in the scheme.
@@ -43,17 +41,23 @@ where
 
     /// A convenience method to convert [`T`](Self::T) to the [`Coeff`](PolyConf::Coeff) type.
     fn t_as_coeff() -> Self::Coeff {
+        debug_assert!(Self::check_constraints());
+
         Self::Coeff::from(Self::T)
     }
 
     /// A convenience method to convert [`T`](Self::T) to `u128`.
     fn t_as_u128() -> u128 {
+        debug_assert!(Self::check_constraints());
+
         u128::from(Self::T)
     }
 
     /// A convenience method to convert a [`Coeff`](PolyConf::Coeff) to `u128`.
     /// TODO: move this method to a trait implemented on `Coeff` instead.
     fn coeff_as_u128(coeff: Self::Coeff) -> u128 {
+        debug_assert!(Self::check_constraints());
+
         let coeff: BigUint = coeff.into();
 
         coeff
@@ -63,6 +67,8 @@ where
 
     /// A convenience method to convert [`Coeff::MODULUS`](PrimeField::MODULUS) to `u128`.
     fn modulus_as_u128() -> u128 {
+        // We can't check constraints here, because this method is called by the constraint checks.
+
         let modulus: BigUint = Self::Coeff::MODULUS.into();
 
         modulus
@@ -72,11 +78,36 @@ where
 
     /// A convenience method to convert [`Coeff::MODULUS_MINUS_ONE_DIV_TWO`](PrimeField::MODULUS_MINUS_ONE_DIV_TWO) to `u128`.
     fn modulus_minus_one_div_two_as_u128() -> u128 {
+        debug_assert!(Self::check_constraints());
+
         let modulus: BigUint = Self::Coeff::MODULUS_MINUS_ONE_DIV_TWO.into();
 
         modulus
             .to_u128()
             .expect("constant modulus is small enough for u128")
+    }
+
+    /// Checks various constraints on the generic values.
+    ///
+    /// TODO: work out how to const_assert!() these constraints for each config type.
+    //
+    // The u64 to f64 cast keeps precision because the values are all small compared to the types.
+    // There is an assertion that checks this remains valid, even if the types or values change.
+    #[allow(clippy::cast_precision_loss)]
+    fn check_constraints() -> bool {
+        // The encrypted coefficient modulus must be larger than the plaintext modulus.
+        debug_assert!(u128::from(Self::T) < Self::modulus_as_u128());
+
+        // The key standard deviation must fit within the plaintext modulus, with six sigma probability.
+        debug_assert!(Self::KEY_DELTA < (Self::T as f64) / 6.0);
+        // Check the cast above remains valid.
+        debug_assert!(Self::T < (1 << f64::MANTISSA_DIGITS));
+
+        // The error must be small enough to allow successful message retrieval, with three sigma probability.
+        debug_assert!(Self::ERROR_DELTA < Self::KEY_DELTA / 3.0);
+
+        // This return value lets us skip calling the assertions entirely in release builds.
+        true
     }
 }
 

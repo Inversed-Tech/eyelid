@@ -1,11 +1,16 @@
 //! Iris matching operations on polynomial-encoded bit vectors.
 
-use itertools::Itertools;
 use std::error::Error;
 
-use crate::plaintext::{index_1d, IrisCode, IrisMask};
-use crate::primitives::poly::modular_poly::conf::FullRes;
-use crate::primitives::poly::{Poly, PolyConf};
+use ark_ff::{One, Zero};
+use itertools::Itertools;
+use num_bigint::BigUint;
+
+use crate::{
+    plaintext::{index_1d, IrisCode, IrisMask},
+    primitives::poly::{Poly, PolyConf},
+    FullRes,
+};
 use crate::{
     IRIS_BIT_LENGTH,
     IRIS_COLUMNS as NUM_COLS, // The number of columns of the code: `k`
@@ -15,8 +20,6 @@ use crate::{
     IRIS_ROTATION_COMPARISONS as NUM_ROTATIONS, // The number of rotations: `v - u + 1`
     IRIS_ROTATION_LIMIT,                        // The rotation limits: `v` and `u = -v`
 };
-use ark_ff::{One, Zero};
-use num_bigint::BigUint;
 
 #[cfg(any(test, feature = "benchmark"))]
 pub mod test;
