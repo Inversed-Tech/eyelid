@@ -99,6 +99,8 @@ where
         debug_assert!(u128::from(Self::T) < Self::modulus_as_u128());
 
         // The key standard deviation must fit within the plaintext modulus, with six sigma probability.
+        // We use strictly less for floatong point assertions, because floating point equality sometimes
+        // fails due to internal floating point inaccuracy, and this can vary by platform.
         debug_assert!(Self::KEY_DELTA < (Self::T as f64) / 6.0);
         // Check the cast above remains valid.
         debug_assert!(Self::T < (1 << f64::MANTISSA_DIGITS));
@@ -139,5 +141,5 @@ impl YasheConf for TinyTest {
 
     /// Limited to 1/3 of KEY_DELTA, so that the error is small enough for valid decryption.
     /// This makes each error term zero with 2.5 sigma probability, and the entire error zero with 95% probability.
-    const ERROR_DELTA: f64 = 0.2;
+    const ERROR_DELTA: f64 = 0.19;
 }
