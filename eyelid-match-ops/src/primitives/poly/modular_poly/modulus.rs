@@ -74,7 +74,8 @@ pub fn mod_poly_ark_mut<C: PolyConf>(dividend: &mut Poly<C>) {
 /// This is the canonical but un-reduced form of the modulus, because the reduced form is the zero polynomial.
 ///
 /// TODO: work out how to generically make this a lazy static.
-/// Crates like `interned` or `lazy_static` might help, but we'll have to expand their macros and make them generic.
+/// Crates like `interned`, `lazy_static`, or `generic_singleton` might help:
+// <https://docs.rs/generic_singleton/0.5.0/generic_singleton/macro.get_or_init_thread_local.html>
 pub fn new_unreduced_poly_modulus_slow<C: PolyConf>() -> Poly<C> {
     let mut poly = Poly::zero();
 

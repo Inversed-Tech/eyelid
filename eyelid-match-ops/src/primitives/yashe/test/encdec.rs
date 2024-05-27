@@ -1,8 +1,8 @@
 //! Unit tests for Encryption and Decryption
 
-use crate::primitives::{
-    poly::{modular_poly::conf::FullRes, IrisBits},
-    yashe::{Yashe, YasheConf},
+use crate::{
+    primitives::yashe::{Yashe, YasheConf},
+    FullRes, IrisBits,
 };
 
 fn encrypt_decrypt_helper<C: YasheConf>()

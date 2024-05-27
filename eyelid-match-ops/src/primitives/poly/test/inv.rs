@@ -1,18 +1,19 @@
 //! Tests for polynomial inverse.
 
 use ark_ff::{One, Zero};
-
-use crate::primitives::{
-    poly::{
-        modular_poly::inv::{extended_gcd, inverse},
-        test::gen::rand_poly,
-        Poly, PolyConf, TestRes,
-    },
-    yashe::Yashe,
-};
-
-#[cfg(test)]
 use ark_poly::Polynomial;
+
+use crate::{
+    primitives::{
+        poly::{
+            modular_poly::inv::{extended_gcd, inverse},
+            test::gen::rand_poly,
+            Poly, PolyConf,
+        },
+        yashe::Yashe,
+    },
+    TestRes,
+};
 
 fn inverse_test_helper<C: PolyConf>(f: &Poly<C>) {
     // REMARK: For our parameter choices it is very likely to find
