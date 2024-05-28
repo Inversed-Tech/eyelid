@@ -26,16 +26,13 @@ pub fn rotate<C: IrisConf, const STORE_ELEM_LEN: usize>(
 
 /// Returns true if `eye_new` and `eye_store` have enough identical bits to meet the threshold,
 /// after masking with `mask_new` and `mask_store`, and rotating from
-/// [`-IRIS_ROTATION_LIMIT..IRIS_ROTATION_LIMIT`](IRIS_ROTATION_LIMIT).
+/// [`-ROTATION_LIMIT..ROTATION_LIMIT`](IrisConf::ROTATION_LIMIT).
 ///
 /// # Performance
 ///
 /// This function takes references to avoid memory copies, which would otherwise be silent.
 /// ([`IrisCode`] and [`IrisMask`] are [`Copy`] types.)
-///
-/// # TODO
-///
-/// - split this up into functions and test/benchmark them.
+#[allow(clippy::cast_possible_wrap)]
 pub fn is_iris_match<C: IrisConf, const STORE_ELEM_LEN: usize>(
     eye_new: &IrisCode<STORE_ELEM_LEN>,
     mask_new: &IrisMask<STORE_ELEM_LEN>,
@@ -48,8 +45,10 @@ pub fn is_iris_match<C: IrisConf, const STORE_ELEM_LEN: usize>(
     // - If smaller rotations are more likely to exit early, start with them first.
     let mut eye_store = *eye_store;
     let mut mask_store = *mask_store;
-    rotate::<C, STORE_ELEM_LEN>(eye_store, -(C::ROTATION_LIMIT as isize));
-    rotate::<C, STORE_ELEM_LEN>(mask_store, -(C::ROTATION_LIMIT as isize));
+
+    // These constant are tiny compared to isize, so they will never wrap.
+    eye_store = rotate::<C, STORE_ELEM_LEN>(eye_store, -(C::ROTATION_LIMIT as isize));
+    mask_store = rotate::<C, STORE_ELEM_LEN>(mask_store, -(C::ROTATION_LIMIT as isize));
 
     for _rotation in 0..C::ROTATION_COMPARISONS {
         // TODO:

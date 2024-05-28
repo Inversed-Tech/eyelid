@@ -45,7 +45,7 @@ pub trait IrisConf {
 type IrisStore = usize;
 
 /// An iris code: the iris data from an iris scan.
-/// A fixed-length bit array which is long enough to hold at least [`IRIS_BIT_LENGTH`] bits.
+/// A fixed-length bit array which is long enough to hold at least [`IrisConf::DATA_BIT_LEN`] bits.
 ///
 /// The encoding of an iris code is arbitrary, because we just check for matching bits.
 ///
