@@ -6,7 +6,7 @@
 //!
 //! This library has 3 core modules:
 //! [`plaintext`]: operations on raw bit vectors,
-//! [`encoded`]: the same operations on polynomial-encoded bit vectors,
+//! `encoded`: the same operations on polynomial-encoded bit vectors,
 //! [`encrypted`]: the same operations on fully homomorphic encrypted, polynomial-encoded bit
 //!                vectors.
 
@@ -14,6 +14,7 @@
 extern crate static_assertions;
 
 pub mod conf;
+#[cfg(not_working_yet_delete_me)]
 pub mod encoded;
 pub mod encrypted;
 pub mod iris;
