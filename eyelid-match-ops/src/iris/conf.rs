@@ -1,14 +1,8 @@
 //! Iris configurations for encoding and encryption schemes.
 
-use std::{
-    mem::size_of,
-    ops::{BitAnd, BitXor, Deref},
-};
+use std::mem::size_of;
 
-use bitvec::{
-    mem::elts,
-    prelude::{BitArray, BitSlice},
-};
+use bitvec::{mem::elts, prelude::BitArray};
 
 use crate::{FullRes, IrisBits};
 
@@ -17,20 +11,6 @@ use crate::TinyTest;
 
 /// The dimensions and matching rules for iris codes.
 pub trait IrisConf {
-    /// The type of an iris code.
-    type IrisCode: Deref<Target = BitSlice<IrisStore>>
-        + BitAnd
-        + BitXor
-        + BitAnd<Self::IrisMask>
-        + BitXor<Self::IrisMask>;
-
-    /// The type of an iris mask.
-    type IrisMask: Deref<Target = BitSlice<IrisStore>>
-        + BitAnd
-        + BitXor
-        + BitAnd<Self::IrisCode>
-        + BitXor<Self::IrisCode>;
-
     /// The number of rows in an iris code or iris mask.
     const COLUMN_LEN: usize;
 
@@ -74,7 +54,7 @@ type IrisStore = usize;
 ///
 /// TODO: turn this into a wrapper struct, so the compiler checks IrisCode and IrisMask are used
 ///       correctly.
-type IrisCode<const STORE_ELEM_LEN: usize> = BitArray<[IrisStore; STORE_ELEM_LEN]>;
+pub type IrisCode<const STORE_ELEM_LEN: usize> = BitArray<[IrisStore; STORE_ELEM_LEN]>;
 
 /// An iris mask: the occlusion data from an iris scan.
 /// See [`IrisCode`] for details.
@@ -83,15 +63,9 @@ type IrisCode<const STORE_ELEM_LEN: usize> = BitArray<[IrisStore; STORE_ELEM_LEN
 ///
 /// TODO: turn this into a wrapper struct, so the compiler checks IrisCode and IrisMask are used
 ///       correctly.
-type IrisMask<const STORE_ELEM_LEN: usize, IrisStore = usize> =
-    BitArray<[IrisStore; STORE_ELEM_LEN]>;
+pub type IrisMask<const STORE_ELEM_LEN: usize> = BitArray<[IrisStore; STORE_ELEM_LEN]>;
 
 impl IrisConf for IrisBits {
-    // TODO: use generic associated type defaults, when it stabilises:
-    // <https://github.com/rust-lang/rust/issues/29661>
-    type IrisCode = IrisCode<{ Self::STORE_ELEM_LEN }>;
-    type IrisMask = IrisMask<{ Self::STORE_ELEM_LEN }>;
-
     const COLUMN_LEN: usize = 80;
     const COLUMNS: usize = 160;
     const ROTATION_LIMIT: usize = 15;
@@ -109,9 +83,6 @@ const_assert!(IrisBits::MATCH_NUMERATOR <= IrisBits::MATCH_DENOMINATOR);
 const_assert!(IrisBits::MATCH_DENOMINATOR > 0);
 
 impl IrisConf for FullRes {
-    type IrisCode = IrisCode<{ Self::STORE_ELEM_LEN }>;
-    type IrisMask = IrisMask<{ Self::STORE_ELEM_LEN }>;
-
     const COLUMN_LEN: usize = 10;
     const COLUMNS: usize = 160;
     const ROTATION_LIMIT: usize = IrisBits::ROTATION_LIMIT;
@@ -124,9 +95,6 @@ const_assert!(FullRes::MATCH_DENOMINATOR > 0);
 
 #[cfg(tiny_poly)]
 impl IrisConf for TinyTest {
-    type IrisCode = IrisCode<{ Self::STORE_ELEM_LEN }>;
-    type IrisMask = IrisMask<{ Self::STORE_ELEM_LEN }>;
-
     const COLUMN_LEN: usize = 2;
     const COLUMNS: usize = 3;
     const ROTATION_LIMIT: usize = 1;
