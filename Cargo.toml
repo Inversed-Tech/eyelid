@@ -1,73 +1,78 @@
 [workspace]
-members = [
-    "eyelid-matcher",
-    "eyelid-match-ops",
-    "eyelid-test",
-]
+members  = ["eyelid-match-ops", "eyelid-matcher", "eyelid-test"]
 resolver = "2"
 
-# Shared configuration
-[workspace.package]
-authors = ["Inversed Tech <https://inversed.tech/contact-us>"]
-edition = "2021"
-homepage = "https://inversed.tech/#our-portfolio"
-license = "MIT OR Apache-2.0"
-readme = "README.md"
-publish = true
-repository = "https://github.com/Inversed-Tech/eyelid"
-version = "0.1.0"
+ # Shared configuration
+ [workspace.package]
+ authors    = ["Inversed Tech <https://inversed.tech/contact-us>"]
+ edition    = "2021"
+ homepage   = "https://inversed.tech/#our-portfolio"
+ license    = "MIT OR Apache-2.0"
+ readme     = "README.md"
+ publish    = true
+ repository = "https://github.com/Inversed-Tech/eyelid"
+ version    = "0.1.0"
 
-[workspace.dependencies]
-# Workspace Crates
-# eyelid-matcher and other binary crates don't have any dependents
-eyelid-match-ops = { version = "0.1.0", path = "eyelid-match-ops" }
-eyelid-test = { version = "0.1.0", path = "eyelid-test" }
+ [workspace.dependencies]
+ # Workspace Crates
+ # eyelid-matcher and other binary crates don't have any dependents
+ eyelid-match-ops = { version = "0.1.0", path = "eyelid-match-ops" }
+ eyelid-test      = { version = "0.1.0", path = "eyelid-test" }
 
-# Production
-ark-ff = "0.4.2"
-ark-poly = "0.4.2"
-ark-std = "0.4.0"
-num-bigint = "0.4.5"
-num-traits = "0.2.19"
+ # Production
+ ark-ff     = "0.4.2"
+ ark-poly   = "0.4.2"
+ ark-std    = "0.4.0"
+ num-bigint = "0.4.5"
+ num-traits = "0.2.19"
 
-bitvec = "1.0.1"
-itertools = "0.10.5"
+ bitvec    = "1.0.1"
+ itertools = "0.10.5"
 
-# Automatically deriving trivial impls
-# Full list at <https://github.com/JelteF/derive_more/blob/v0.99.17/Cargo.toml#L42>
-# When we upgrade to 1.0.0, it will be at <https://github.com/JelteF/derive_more/blob/master/Cargo.toml#L49>
-derive_more = { version = "0.99.17", default-features = false, features = ["as_ref", "deref", "deref_mut", "into", "mul"] }
+ # Automatically deriving trivial impls
+ # Full list at <https://github.com/JelteF/derive_more/blob/v0.99.17/Cargo.toml#L42>
+ # When we upgrade to 1.0.0, it will be at <https://github.com/JelteF/derive_more/blob/master/Cargo.toml#L49>
+ derive_more = { version = "0.99.17", default-features = false, features = [
+  "as_ref",
+  "deref",
+  "deref_mut",
+  "into",
+  "mul",
+ ] }
 
-# Static constants
-lazy_static = "1.4.0"
+ # Static constants
+ lazy_static = "1.4.0"
 
-# Compile-time checks of production code
-static_assertions = "1.1.0"
+ # Compile-time checks of production code
+ static_assertions = "1.1.0"
 
-# Testing & Benchmarking
-criterion = { version = "0.5.1", default-features = false, features = ["cargo_bench_support", "rayon"] }
-rand = "0.8.5"
-rand_distr = "0.4.3"
+ # Testing & Benchmarking
+ criterion = { version = "0.5.1", default-features = false, features = [
+  "cargo_bench_support",
+  "rayon",
+ ] }
+ rand = "0.8.5"
+ rand_distr = "0.4.3"
 
 [patch.crates-io]
 # We need the AddAssign fix in <https://github.com/arkworks-rs/algebra/pull/638>, which was merged just after 0.4.2
-ark-poly = { git = "https://github.com/arkworks-rs/algebra", rev = "8233e9a3fc63370aef65ed24e0c7f6e07dac43e6" }
-ark-ff = { git = "https://github.com/arkworks-rs/algebra", rev = "8233e9a3fc63370aef65ed24e0c7f6e07dac43e6" }
-ark-ff-asm = { git = "https://github.com/arkworks-rs/algebra", rev = "8233e9a3fc63370aef65ed24e0c7f6e07dac43e6" }
-ark-serialize = { git = "https://github.com/arkworks-rs/algebra", rev = "8233e9a3fc63370aef65ed24e0c7f6e07dac43e6" }
+ark-poly             = { git = "https://github.com/arkworks-rs/algebra", rev = "8233e9a3fc63370aef65ed24e0c7f6e07dac43e6" }
+ark-ff               = { git = "https://github.com/arkworks-rs/algebra", rev = "8233e9a3fc63370aef65ed24e0c7f6e07dac43e6" }
+ark-ff-asm           = { git = "https://github.com/arkworks-rs/algebra", rev = "8233e9a3fc63370aef65ed24e0c7f6e07dac43e6" }
+ark-serialize        = { git = "https://github.com/arkworks-rs/algebra", rev = "8233e9a3fc63370aef65ed24e0c7f6e07dac43e6" }
 ark-serialize-derive = { git = "https://github.com/arkworks-rs/algebra", rev = "8233e9a3fc63370aef65ed24e0c7f6e07dac43e6" }
 
 # Compilation settings for performance
 [profile.release]
-panic = "abort"
-lto = true
-strip = "debuginfo"
+panic         = "abort"
+lto           = true
+strip         = "debuginfo"
 codegen-units = 1
 
 [profile.bench]
-panic = "abort"
-lto = true
-strip = "debuginfo"
+panic         = "abort"
+lto           = true
+strip         = "debuginfo"
 codegen-units = 1
 
 [workspace.lints.rust]
