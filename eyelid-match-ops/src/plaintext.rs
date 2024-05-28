@@ -1,48 +1,22 @@
 //! Iris matching operations on raw bit vectors.
 
-use bitvec::{mem::bits_of, prelude::*};
-
-use super::{
-    IRIS_BIT_LENGTH, IRIS_COLUMN_LENGTH, IRIS_MATCH_DENOMINATOR, IRIS_MATCH_NUMERATOR,
-    IRIS_ROTATION_COMPARISONS, IRIS_ROTATION_LIMIT,
-};
+use crate::iris::conf::IrisConf;
 
 #[cfg(any(test, feature = "benchmark"))]
 pub mod test;
 
-/// An iris code: the iris data from an iris scan.
-/// A fixed-length bit array which is long enough to hold at least [`IRIS_BIT_LENGTH`] bits.
-///
-/// The encoding of an iris code is arbitrary, because we just check for matching bits.
-///
-/// The array is rounded up to the next full `usize`, so it might contain some unused bits at the
-/// end.
-///
-/// TODO: turn this into a wrapper struct, so the compiler checks IrisCode and IrisMask are used
-///       correctly.
-pub type IrisCode = BitArr![for IRIS_BIT_LENGTH];
-
-/// An iris mask: the occlusion data from an iris scan.
-/// See [`IrisCode`] for details.
-///
-/// The encoding of an iris mask is `1` for a comparable bit, and `0` for a masked bit.
-///
-/// TODO: turn this into a wrapper struct, so the compiler checks IrisCode and IrisMask are used
-///       correctly.
-pub type IrisMask = IrisCode;
-
 /// Returns the 1D index of a bit from 2D indices.
-pub fn index_1d(row_i: usize, col_i: usize) -> usize {
-    col_i * IRIS_COLUMN_LENGTH + row_i
+pub fn index_1d<const IRIS_COLUMN_LEN: usize>(row_i: usize, col_i: usize) -> usize {
+    col_i * IRIS_COLUMN_LEN + row_i
 }
 
 /// Rotates the iris code by the given amount along the second dimension.
 #[allow(clippy::cast_sign_loss)]
-pub fn rotate(mut code: IrisCode, amount: isize) -> IrisCode {
+pub fn rotate<C: IrisConf>(mut code: C::IrisCode, amount: isize) -> C::IrisCode {
     if amount < 0 {
-        code.rotate_left((-amount) as usize * IRIS_COLUMN_LENGTH);
+        code.rotate_left((-amount) as usize * C::COLUMN_LEN);
     } else {
-        code.rotate_right(amount as usize * IRIS_COLUMN_LENGTH);
+        code.rotate_right(amount as usize * C::COLUMN_LEN);
     }
     code
 }
@@ -59,11 +33,11 @@ pub fn rotate(mut code: IrisCode, amount: isize) -> IrisCode {
 /// # TODO
 ///
 /// - split this up into functions and test/benchmark them.
-pub fn is_iris_match(
-    eye_new: &IrisCode,
-    mask_new: &IrisMask,
-    eye_store: &IrisCode,
-    mask_store: &IrisMask,
+pub fn is_iris_match<C: IrisConf>(
+    eye_new: &C::IrisCode,
+    mask_new: &C::IrisMask,
+    eye_store: &C::IrisCode,
+    mask_store: &C::IrisMask,
 ) -> bool {
     // Start comparing columns at rotation -IRIS_ROTATION_LIMIT.
     // TODO:
@@ -71,19 +45,13 @@ pub fn is_iris_match(
     // - If smaller rotations are more likely to exit early, start with them first.
     let mut eye_store = *eye_store;
     let mut mask_store = *mask_store;
-    eye_store.rotate_left(IRIS_ROTATION_LIMIT * IRIS_COLUMN_LENGTH);
-    mask_store.rotate_left(IRIS_ROTATION_LIMIT * IRIS_COLUMN_LENGTH);
+    rotate(eye_store, -(C::ROTATION_LIMIT as isize));
+    rotate(mask_store, -(C::ROTATION_LIMIT as isize));
 
-    for _rotation in 0..IRIS_ROTATION_COMPARISONS {
-        // Make sure iris codes and masks are the same size.
-        // Performance: static assertions are checked at compile time.
-        // TODO: I'm pretty sure the compiler already checks this as part of `&` or `^`,
-        //       but I need to make sure.
-        const_assert_eq!(bits_of::<IrisCode>(), bits_of::<IrisMask>());
-
-        // Make sure there are no unused bits.
-        // TODO: check unused bits are ignored in the tests instead.
-        const_assert_eq!(bits_of::<IrisCode>(), IRIS_BIT_LENGTH);
+    for _rotation in 0..C::ROTATION_COMPARISONS {
+        // TODO:
+        // - Make sure iris codes and masks are the same size.
+        // - Check unused bits are ignored in the tests.
 
         // Masking is applied to both iris codes before matching.
         //
@@ -99,13 +67,12 @@ pub fn is_iris_match(
         let unmasked = unmasked.count_ones();
         let differences = differences.count_ones();
 
-        // Make sure the threshold calculation can't overflow. Also avoids division by zero.
-        // `IRIS_BIT_LENGTH` is the highest possible value of `matching` and `unmasked`.
-        const_assert!(usize::MAX / IRIS_BIT_LENGTH > IRIS_MATCH_DENOMINATOR);
-        const_assert!(usize::MAX / IRIS_BIT_LENGTH > IRIS_MATCH_NUMERATOR);
+        // TODO:
+        // - Make sure the threshold calculation can't overflow.
+        // Currently this is only tested in debug builds.
 
         // And compare with the threshold.
-        if differences * IRIS_MATCH_DENOMINATOR <= unmasked * IRIS_MATCH_NUMERATOR {
+        if differences * C::MATCH_DENOMINATOR <= unmasked * C::MATCH_NUMERATOR {
             return true;
         }
 
@@ -113,8 +80,8 @@ pub fn is_iris_match(
         // TODO:
         // - Make this initial rotation part of the stored encoding.
         // - If smaller rotations are more likely to exit early, start with them first.
-        eye_store.rotate_right(IRIS_COLUMN_LENGTH);
-        mask_store.rotate_right(IRIS_COLUMN_LENGTH);
+        rotate(eye_store, 1);
+        rotate(mask_store, 1);
     }
 
     false

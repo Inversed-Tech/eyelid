@@ -45,7 +45,7 @@ impl PolyConf for IrisBits {
     }
 }
 // The polynomial must have enough coefficients to store the underlying iris data.
-const_assert!(IrisBits::MAX_POLY_DEGREE >= IrisBits::BIT_LENGTH);
+const_assert!(IrisBits::MAX_POLY_DEGREE >= IrisBits::DATA_BIT_LEN);
 // The degree must be a power of two.
 const_assert!(IrisBits::MAX_POLY_DEGREE.count_ones() == 1);
 
@@ -65,7 +65,7 @@ impl PolyConf for FullRes {
         &FQ79_ZERO
     }
 }
-const_assert!(FullRes::MAX_POLY_DEGREE >= FullRes::BIT_LENGTH);
+const_assert!(FullRes::MAX_POLY_DEGREE >= FullRes::DATA_BIT_LEN);
 const_assert!(FullRes::MAX_POLY_DEGREE.count_ones() == 1);
 
 #[cfg(tiny_poly)]
@@ -83,7 +83,7 @@ impl PolyConf for TinyTest {
 #[cfg(tiny_poly)]
 mod tiny_test_asserts {
     use super::*;
-    const_assert!(TinyTest::MAX_POLY_DEGREE >= TinyTest::BIT_LENGTH);
+    const_assert!(TinyTest::MAX_POLY_DEGREE >= TinyTest::DATA_BIT_LEN);
     const_assert!(TinyTest::MAX_POLY_DEGREE.count_ones() == 1);
 }
 

@@ -32,14 +32,14 @@ pub use conf::TinyTest;
 use iris::conf::IrisConf;
 
 /// The number of rows in a raw iris code or iris mask, in bits.
-pub const IRIS_COLUMN_LENGTH: usize = IrisBits::COLUMN_LENGTH;
+pub const IRIS_COLUMN_LENGTH: usize = IrisBits::COLUMN_LEN;
 
 /// The number of columns in a raw iris code or iris mask, in bits.
 pub const IRIS_COLUMNS: usize = IrisBits::COLUMNS;
 
 /// The length of a raw iris code or iris mask, in bits.
 /// Most users have two of these codes, for their left and right eyes.
-pub const IRIS_BIT_LENGTH: usize = IrisBits::BIT_LENGTH;
+pub const IRIS_BIT_LENGTH: usize = IrisBits::DATA_BIT_LEN;
 
 /// The rotation limit when comparing irises.
 /// Each column is compared to the [`IRIS_ROTATION_LIMIT`] columns to its left and right.

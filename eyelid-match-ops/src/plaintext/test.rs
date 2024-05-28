@@ -1,21 +1,19 @@
 //! Plaintext iris matching tests.
 
-use crate::plaintext::is_iris_match;
-
-use super::{IrisCode, IrisMask};
+use crate::{iris::conf::IrisConf, plaintext::is_iris_match};
 
 pub mod gen;
 
 pub mod matching;
 
 /// Assert that iris comparison results are the same regardless of the order of the iris codes.
-pub fn assert_iris_compare(
+pub fn assert_iris_compare<C: IrisConf>(
     expected_result: bool,
     description: &str,
-    eye_a: &IrisCode,
-    mask_a: &IrisMask,
-    eye_b: &IrisCode,
-    mask_b: &IrisMask,
+    eye_a: &C::IrisCode,
+    mask_a: &C::IrisMask,
+    eye_b: &C::IrisCode,
+    mask_b: &C::IrisMask,
 ) {
     assert_eq!(
         expected_result,
