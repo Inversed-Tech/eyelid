@@ -1,3 +1,5 @@
+//! Tests for plaintext iris code matching.
+
 use crate::{
     encoded::{PolyCode, PolyQuery},
     plaintext::test::matching::{DIFFERENT, MATCHING},

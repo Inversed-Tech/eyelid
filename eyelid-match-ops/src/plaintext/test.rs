@@ -1,5 +1,7 @@
 //! Plaintext iris matching tests.
 
+use std::any::type_name;
+
 use crate::{
     iris::conf::{IrisCode, IrisConf, IrisMask},
     plaintext::is_iris_match,
@@ -21,11 +23,13 @@ pub fn assert_iris_compare<C: IrisConf, const STORE_ELEM_LEN: usize>(
     assert_eq!(
         expected_result,
         is_iris_match::<C, STORE_ELEM_LEN>(eye_a, mask_a, eye_b, mask_b),
-        "{description}: test case order",
+        "{} {description}: test case order",
+        type_name::<C>(),
     );
     assert_eq!(
         expected_result,
         is_iris_match::<C, STORE_ELEM_LEN>(eye_b, mask_b, eye_a, mask_a),
-        "{description}: reverse order",
+        "{} {description}: reverse order",
+        type_name::<C>(),
     );
 }
