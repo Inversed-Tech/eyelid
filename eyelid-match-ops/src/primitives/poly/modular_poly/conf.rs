@@ -6,6 +6,7 @@ use ark_ff::{PrimeField, Zero};
 use lazy_static::lazy_static;
 
 use crate::primitives::poly::Fq79;
+use crate::primitives::poly::fq::Fq79bn;
 
 #[cfg(tiny_poly)]
 use crate::primitives::poly::fq::FqTiny;
@@ -35,6 +36,8 @@ pub trait PolyConf: Copy + Clone + Debug + Eq + PartialEq {
 
     /// The type of the polynomial coefficient.
     type Coeff: PrimeField;
+    /// The type of the lifted polynomial coefficient.
+    type CoeffBN: PrimeField;
 
     /// The zero coefficient as a static constant value.
     ///
@@ -61,6 +64,7 @@ impl PolyConf for IrisBits {
     const MAX_POLY_DEGREE: usize = crate::IRIS_BIT_LENGTH.next_power_of_two();
 
     type Coeff = Fq79;
+    type CoeffBN = Fq79bn;
 
     fn coeff_zero() -> &'static Self::Coeff {
         &FQ79_ZERO
@@ -82,9 +86,10 @@ lazy_static! {
 pub struct FullRes;
 
 impl PolyConf for FullRes {
-    const MAX_POLY_DEGREE: usize = 2048;
+    const MAX_POLY_DEGREE: usize = 16;
 
     type Coeff = Fq79;
+    type CoeffBN = Fq79bn;
 
     fn coeff_zero() -> &'static Self::Coeff {
         &FQ79_ZERO
@@ -103,6 +108,7 @@ impl PolyConf for TinyTest {
     const MAX_POLY_DEGREE: usize = 8;
 
     type Coeff = FqTiny;
+    type CoeffBN = FqTiny;
 
     fn coeff_zero() -> &'static Self::Coeff {
         &FQ_TINY_ZERO
