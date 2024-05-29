@@ -114,7 +114,7 @@ pub fn rec_karatsuba_mul<C: PolyConf>(a: &Poly<C>, b: &Poly<C>) -> Poly<C> {
 /// Returns `a * b` followed by reduction mod `XˆN + 1` using recursive Karatsuba method.
 /// The returned polynomial has a degree less than or equal to `chunk`.
 ///
-/// At each recusrsion level, polynomials start with maximum degree `chunk`, and are split to maximum degree `chunk/2`.
+/// At each recursion level, polynomials start with maximum degree `chunk`, and are split to maximum degree `chunk/2`.
 fn rec_karatsuba_mul_inner<C: PolyConf>(a: &Poly<C>, b: &Poly<C>, chunk: usize) -> Poly<C> {
     debug_assert!(a.degree() <= chunk);
     debug_assert!(b.degree() <= chunk);

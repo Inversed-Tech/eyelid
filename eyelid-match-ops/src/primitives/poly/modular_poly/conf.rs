@@ -86,7 +86,7 @@ lazy_static! {
 pub struct FullRes;
 
 impl PolyConf for FullRes {
-    const MAX_POLY_DEGREE: usize = 16;
+    const MAX_POLY_DEGREE: usize = 1024;
 
     type Coeff = Fq79;
     type CoeffBN = Fq79bn;
