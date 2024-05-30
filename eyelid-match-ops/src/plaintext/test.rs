@@ -20,6 +20,7 @@ pub fn assert_iris_compare<C: IrisConf, const STORE_ELEM_LEN: usize>(
     eye_b: &IrisCode<STORE_ELEM_LEN>,
     mask_b: &IrisMask<STORE_ELEM_LEN>,
 ) {
+    //dbg!(description, type_name::<C>());
     assert_eq!(
         expected_result,
         is_iris_match::<C, STORE_ELEM_LEN>(eye_a, mask_a, eye_b, mask_b),
