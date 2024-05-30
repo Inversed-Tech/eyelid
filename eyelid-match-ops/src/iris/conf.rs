@@ -14,7 +14,7 @@ pub trait IrisConf {
     /// The number of rows in an iris code or iris mask.
     const COLUMN_LEN: usize;
 
-    /// The number of columns in an iris code or mask.
+    /// The number of columns in an iris code or mask, `k`.
     const COLUMNS: usize;
 
     /// The length of an iris code or mask.
@@ -23,11 +23,11 @@ pub trait IrisConf {
     /// The length of the underlying storage for an iris code or mask.
     const STORE_ELEM_LEN: usize = elts::<IrisStore>(Self::DATA_BIT_LEN);
 
-    /// The rotation limit when comparing irises.
+    /// The rotation limits when comparing irises, `v` and `u = -v`.
     /// Each column is compared to the [`ROTATION_LIMIT`](Self::ROTATION_LIMIT) columns to its left and right.
     const ROTATION_LIMIT: usize;
 
-    /// The number of rotations used when comparing irises.
+    /// The number of rotations used when comparing irises, `v - u + 1`.
     /// This includes the comparison with no rotation.
     const ROTATION_COMPARISONS: usize = Self::ROTATION_LIMIT * 2 + 1;
 

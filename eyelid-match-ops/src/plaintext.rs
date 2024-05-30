@@ -1,6 +1,8 @@
 //! Iris matching operations on raw bit vectors.
 
-use crate::iris::conf::{IrisCode, IrisConf, IrisMask};
+use crate::iris::conf::IrisConf;
+
+pub use crate::iris::conf::{IrisCode, IrisMask};
 
 #[cfg(any(test, feature = "benchmark"))]
 pub mod test;

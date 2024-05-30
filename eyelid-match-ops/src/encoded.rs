@@ -12,13 +12,9 @@ use crate::{
     FullRes,
 };
 use crate::{
-    IRIS_BIT_LENGTH,
-    IRIS_COLUMNS as NUM_COLS, // The number of columns of the code: `k`
-    IRIS_COLUMN_LENGTH as NUM_ROWS,
-    IRIS_MATCH_DENOMINATOR,
-    IRIS_MATCH_NUMERATOR,
-    IRIS_ROTATION_COMPARISONS as NUM_ROTATIONS, // The number of rotations: `v - u + 1`
-    IRIS_ROTATION_LIMIT,                        // The rotation limits: `v` and `u = -v`
+    IRIS_BIT_LENGTH, IRIS_COLUMNS as NUM_COLS, IRIS_COLUMN_LENGTH as NUM_ROWS,
+    IRIS_MATCH_DENOMINATOR, IRIS_MATCH_NUMERATOR, IRIS_ROTATION_COMPARISONS as NUM_ROTATIONS,
+    IRIS_ROTATION_LIMIT,
 };
 
 #[cfg(any(test, feature = "benchmark"))]
