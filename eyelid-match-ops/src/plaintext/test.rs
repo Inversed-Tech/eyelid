@@ -23,13 +23,23 @@ pub fn assert_iris_compare<C: IrisConf, const STORE_ELEM_LEN: usize>(
     assert_eq!(
         expected_result,
         is_iris_match::<C, STORE_ELEM_LEN>(eye_a, mask_a, eye_b, mask_b),
-        "{description}, test case order, {}",
+        "{description}, test case order, {}\n\
+        eye_a: {eye_a:?}\n\
+        mask_a: {mask_a:?}\n\
+        eye_b: {eye_b:?}\n\
+        mask_b: {mask_b:?}\n\
+        ",
         type_name::<C>(),
     );
     assert_eq!(
         expected_result,
         is_iris_match::<C, STORE_ELEM_LEN>(eye_b, mask_b, eye_a, mask_a),
-        "{description}, reverse order, {}",
+        "{description}, reverse order, {}\n\
+        eye_b: {eye_b:?}\n\
+        mask_b: {mask_b:?}\n\
+        eye_a: {eye_a:?}\n\
+        mask_a: {mask_a:?}\n\
+        ",
         type_name::<C>(),
     );
 }
