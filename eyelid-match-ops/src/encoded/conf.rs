@@ -3,7 +3,9 @@
 use ark_ff::{One, Zero};
 use num_bigint::BigUint;
 
-use crate::{encoded::MatchError, primitives::poly::PolyConf, FullRes, IrisBits, IrisConf};
+use crate::{
+    encoded::MatchError, iris::conf::IrisConf, primitives::poly::PolyConf, FullRes, IrisBits,
+};
 
 #[cfg(tiny_poly)]
 use crate::TinyTest;

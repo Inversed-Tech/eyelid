@@ -5,9 +5,9 @@ use itertools::Itertools;
 use num_bigint::BigUint;
 
 use crate::{
+    iris::conf::IrisConf,
     plaintext::{index_1d, IrisCode, IrisMask},
     primitives::poly::{Poly, PolyConf},
-    IrisConf,
 };
 
 pub use conf::EncodeConf;

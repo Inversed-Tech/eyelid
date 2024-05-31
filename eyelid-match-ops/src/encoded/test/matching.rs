@@ -2,8 +2,9 @@
 
 use crate::{
     encoded::{PolyCode, PolyQuery},
+    iris::conf::IrisConf,
     plaintext::test::matching::{different, matching},
-    FullRes, IrisBits, IrisConf, TestRes,
+    FullRes, IrisBits, TestRes,
 };
 
 /// Check matching test cases.

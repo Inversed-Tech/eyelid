@@ -36,7 +36,7 @@ pub trait PolyConf: Copy + Clone + Debug + Eq + PartialEq {
 }
 
 impl PolyConf for IrisBits {
-    const MAX_POLY_DEGREE: usize = crate::IRIS_BIT_LENGTH.next_power_of_two();
+    const MAX_POLY_DEGREE: usize = IrisBits::DATA_BIT_LEN.next_power_of_two();
 
     type Coeff = Fq79;
 
