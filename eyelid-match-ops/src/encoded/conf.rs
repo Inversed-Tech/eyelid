@@ -1,8 +1,9 @@
 //! Encoding scheme configurations.
 
 use ark_ff::PrimeField;
+use num_bigint::BigUint;
 
-use crate::{primitives::poly::PolyConf, FullRes, IrisBits, IrisConf};
+use crate::{encoded::MatchError, primitives::poly::PolyConf, FullRes, IrisBits, IrisConf};
 
 #[cfg(tiny_poly)]
 use crate::TinyTest;
@@ -30,6 +31,18 @@ pub trait EncodeConf {
 
     /// The number of columns plus padding for rotations: δ = k + v - u
     const NUM_COLS_AND_PADS: usize = Self::EyeConf::COLUMNS + 2 * Self::EyeConf::ROTATION_LIMIT;
+
+    /// Convert a prime field element to a signed integer, assuming the range from all equal to all different bits.
+    /// Out of range values return `Err(err)`.
+    fn coeff_to_int(c: Self::PlainCoeff, err: MatchError) -> Result<i64, MatchError> {
+        let res = if c <= Self::PlainCoeff::from(Self::EyeConf::DATA_BIT_LEN as u64) {
+            i64::try_from(BigUint::from(c)).map_err(err)?
+        } else {
+            -i64::try_from(BigUint::from(-c)).map_err(err)?
+        };
+
+        Ok(res)
+    }
 }
 
 // TODO: add a conf where EyeConf and PlainConf are different, and test it.
