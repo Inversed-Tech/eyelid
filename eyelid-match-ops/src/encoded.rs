@@ -12,25 +12,29 @@ use crate::{
     FullRes,
 };
 
+pub use conf::EncodeConf;
+
 pub mod conf;
 
 #[cfg(any(test, feature = "benchmark"))]
 pub mod test;
 
 /// An Iris code, encoded in polynomials. To be stored in the database.
-pub struct PolyCode {
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PolyCode<C: EncodeConf> {
     /// The polynomials, encoding one block of rows each. Storage variant.
-    polys: Vec<Poly<PlainConf>>,
+    polys: Vec<Poly<C::PlainConf>>,
     /// The mask polynomials.
-    masks: Vec<Poly<PlainConf>>,
+    masks: Vec<Poly<C::PlainConf>>,
 }
 
 /// An Iris code, encoded in polynomials. To be matched against PolyCode.
-pub struct PolyQuery {
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PolyQuery<C: EncodeConf> {
     /// The polynomials, encoding one block of rows each. Query variant.
-    polys: Vec<Poly<PlainConf>>,
+    polys: Vec<Poly<C::PlainConf>>,
     /// The mask polynomials.
-    masks: Vec<Poly<PlainConf>>,
+    masks: Vec<Poly<C::PlainConf>>,
 }
 
 impl PolyCode {
