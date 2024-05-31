@@ -11,31 +11,11 @@ use crate::{
     primitives::poly::{Poly, PolyConf},
     FullRes,
 };
-use crate::{
-    IRIS_BIT_LENGTH, IRIS_COLUMNS as NUM_COLS, IRIS_COLUMN_LENGTH as NUM_ROWS,
-    IRIS_MATCH_DENOMINATOR, IRIS_MATCH_NUMERATOR, IRIS_ROTATION_COMPARISONS as NUM_ROTATIONS,
-    IRIS_ROTATION_LIMIT,
-};
+
+pub mod conf;
 
 #[cfg(any(test, feature = "benchmark"))]
 pub mod test;
-
-/// The configuration of plaintext polynomials.
-type PlainConf = FullRes;
-
-/// The type of the coefficients of plaintext polynomials.
-type PlainCoeff = <PlainConf as PolyConf>::Coeff;
-
-// Divide iris codes into blocks that can each fit into a polynomial.
-/// The number of rows in each block: `s`
-const ROWS_PER_BLOCK: usize = 10;
-/// The number of blocks necessary to hold all rows of the code.
-const NUM_BLOCKS: usize = NUM_ROWS / ROWS_PER_BLOCK;
-// Only full blocks are supported at the moment.
-const_assert_eq!(NUM_BLOCKS * ROWS_PER_BLOCK, NUM_ROWS);
-
-/// The number of columns plus padding for rotations: δ = k + v - u
-const NUM_COLS_AND_PADS: usize = NUM_COLS + 2 * IRIS_ROTATION_LIMIT;
 
 /// An Iris code, encoded in polynomials. To be stored in the database.
 pub struct PolyCode {

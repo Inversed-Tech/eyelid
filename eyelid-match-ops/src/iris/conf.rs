@@ -1,4 +1,4 @@
-//! Iris configurations for encoding and encryption schemes.
+//! Base iris configurations, shared by all encoding and encryption schemes.
 
 use std::mem::size_of;
 
@@ -12,6 +12,8 @@ use crate::TinyTest;
 /// The dimensions and matching rules for iris codes.
 pub trait IrisConf {
     /// The number of rows in an iris code or iris mask.
+    //
+    // TODO: rename to `ROWS`
     const COLUMN_LEN: usize;
 
     /// The number of columns in an iris code or mask, `k`.
