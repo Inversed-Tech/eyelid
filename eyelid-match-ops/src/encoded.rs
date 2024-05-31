@@ -221,5 +221,3 @@ impl<C: EncodeConf> PolyQuery<C> {
         masks
     }
 }
-
-
