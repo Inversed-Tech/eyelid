@@ -92,16 +92,10 @@ impl PolyQuery {
     ///
     /// Reference: Private Iris Matching Protocol, page 40, C_2(b)
     pub fn from_plaintext(value: &IrisCode, mask: &IrisMask) -> Self {
-        let polys = (0..NUM_BLOCKS)
-            .map(|block_i| {
-                let first_row_i = block_i * ROWS_PER_BLOCK;
-                Self::from_plaintext_block(value, mask, first_row_i)
-            })
-            .collect_vec();
+        // The contructor code is currently the same.
+        let new = PolyCode::from_plaintext(value, mask);
 
-        let masks = polys.iter().map(poly_bits_to_masks).collect();
-
-        Self { polys, masks }
+        Self { polys: new.polys, masks: new.masks}
     }
 
     /// Encode one block of rows into one polynomial. Query variant, equation C_2.
