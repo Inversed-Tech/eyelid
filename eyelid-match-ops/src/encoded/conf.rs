@@ -34,11 +34,19 @@ pub trait EncodeConf {
 
     /// Convert a prime field element to a signed integer, assuming the range from all equal to all different bits.
     /// Out of range values return `Err(err)`.
-    fn coeff_to_int(c: Self::PlainCoeff, err: MatchError) -> Result<i64, MatchError> {
-        let res = if c <= Self::PlainCoeff::from(Self::EyeConf::DATA_BIT_LEN as u64) {
-            i64::try_from(BigUint::from(c)).map_err(err)?
+    fn coeff_to_int(
+        c: <Self::PlainConf as PolyConf>::Coeff,
+        err: MatchError,
+    ) -> Result<i64, MatchError>
+    where
+        BigUint: From<<Self::PlainConf as PolyConf>::Coeff>,
+    {
+        let res = if c
+            <= <Self::PlainConf as PolyConf>::Coeff::from(Self::EyeConf::DATA_BIT_LEN as u64)
+        {
+            i64::try_from(BigUint::from(c)).map_err(|_| err)?
         } else {
-            -i64::try_from(BigUint::from(-c)).map_err(err)?
+            -i64::try_from(BigUint::from(-c)).map_err(|_| err)?
         };
 
         Ok(res)

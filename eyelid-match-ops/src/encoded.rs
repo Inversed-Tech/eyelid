@@ -2,11 +2,12 @@
 
 use ark_ff::{One, Zero};
 use itertools::Itertools;
+use num_bigint::BigUint;
 
 use crate::{
     plaintext::{index_1d, IrisCode, IrisMask},
     primitives::poly::{Poly, PolyConf},
-    FullRes,
+    IrisConf,
 };
 
 pub use conf::EncodeConf;
@@ -48,7 +49,11 @@ impl<C: EncodeConf> PolyCode<C> {
     pub fn from_plaintext<const STORE_ELEM_LEN: usize>(
         value: &IrisCode<STORE_ELEM_LEN>,
         mask: &IrisMask<STORE_ELEM_LEN>,
-    ) -> Self {
+    ) -> Self
+    where
+        // These are actually the same type in the config, but Rust doesn't know that.
+        <C::PlainConf as PolyConf>::Coeff: From<C::PlainCoeff>,
+    {
         let polys = (0..C::NUM_BLOCKS)
             .map(|block_i| {
                 let first_row_i = block_i * C::ROWS_PER_BLOCK;
@@ -56,7 +61,7 @@ impl<C: EncodeConf> PolyCode<C> {
             })
             .collect_vec();
 
-        let masks = polys.iter().map(poly_bits_to_masks).collect();
+        let masks = polys.iter().map(poly_bits_to_masks::<C>).collect();
 
         Self { polys, masks }
     }
@@ -66,7 +71,10 @@ impl<C: EncodeConf> PolyCode<C> {
         value: &IrisCode<STORE_ELEM_LEN>,
         mask: &IrisMask<STORE_ELEM_LEN>,
         first_row_i: usize,
-    ) -> Poly<C::PlainConf> {
+    ) -> Poly<C::PlainConf>
+    where
+        <C::PlainConf as PolyConf>::Coeff: From<C::PlainCoeff>,
+    {
         let mut coeffs = Poly::non_canonical_zeroes(C::PlainConf::MAX_POLY_DEGREE);
 
         for m in 0..C::ROWS_PER_BLOCK {
@@ -75,16 +83,17 @@ impl<C: EncodeConf> PolyCode<C> {
             // Set the coefficients of C₁ = ∑ aⱼ * xⁱ
             // i ∈ [0, k - 1]
             // j = k - 1 - i
-            for i in 0..C::NUM_COLS {
-                let col_i = C::NUM_COLS - 1 - i;
-                let bit_i = index_1d(row_i, col_i);
+            for i in 0..C::EyeConf::COLUMNS {
+                let col_i = C::EyeConf::COLUMNS - 1 - i;
+                let bit_i = index_1d(C::EyeConf::COLUMN_LEN, row_i, col_i);
 
                 if mask[bit_i] {
                     coeffs[C::NUM_COLS_AND_PADS * m + i] = if value[bit_i] {
                         -C::PlainCoeff::one()
                     } else {
                         C::PlainCoeff::one()
-                    };
+                    }
+                    .into();
                 }
             }
         }
@@ -101,7 +110,10 @@ impl<C: EncodeConf> PolyQuery<C> {
     pub fn from_plaintext<const STORE_ELEM_LEN: usize>(
         value: &IrisCode<STORE_ELEM_LEN>,
         mask: &IrisMask<STORE_ELEM_LEN>,
-    ) -> Self {
+    ) -> Self
+    where
+        <C::PlainConf as PolyConf>::Coeff: From<C::PlainCoeff>,
+    {
         // This code is textually the same as PolyCode::from_plaintext, but the
         // from_plaintext_block() method is different.
         let polys = (0..C::NUM_BLOCKS)
@@ -111,7 +123,7 @@ impl<C: EncodeConf> PolyQuery<C> {
             })
             .collect_vec();
 
-        let masks = polys.iter().map(poly_bits_to_masks).collect();
+        let masks = polys.iter().map(poly_bits_to_masks::<C>).collect();
 
         Self { polys, masks }
     }
@@ -121,7 +133,10 @@ impl<C: EncodeConf> PolyQuery<C> {
         value: &IrisCode<STORE_ELEM_LEN>,
         mask: &IrisMask<STORE_ELEM_LEN>,
         first_row_i: usize,
-    ) -> Poly<C::PlainConf> {
+    ) -> Poly<C::PlainConf>
+    where
+        <C::PlainConf as PolyConf>::Coeff: From<C::PlainCoeff>,
+    {
         let mut coeffs = Poly::non_canonical_zeroes(C::PlainConf::MAX_POLY_DEGREE);
 
         for m in 0..C::ROWS_PER_BLOCK {
@@ -134,17 +149,18 @@ impl<C: EncodeConf> PolyQuery<C> {
             for i in 0..C::NUM_COLS_AND_PADS {
                 #[allow(clippy::cast_possible_wrap)]
                 let col_i = {
-                    let j = i as isize - (C::ROTATION_LIMIT as isize);
-                    j.rem_euclid(C::NUM_COLS as isize) as usize
+                    let j = i as isize - (C::EyeConf::ROTATION_LIMIT as isize);
+                    j.rem_euclid(C::EyeConf::COLUMNS as isize) as usize
                 };
-                let bit_i = index_1d(row_i, col_i);
+                let bit_i = index_1d(C::EyeConf::COLUMN_LEN, row_i, col_i);
 
                 if mask[bit_i] {
                     coeffs[C::NUM_COLS_AND_PADS * m + i] = if value[bit_i] {
                         -C::PlainCoeff::one()
                     } else {
                         C::PlainCoeff::one()
-                    };
+                    }
+                    .into();
                 }
             }
         }
@@ -154,7 +170,10 @@ impl<C: EncodeConf> PolyQuery<C> {
     }
 
     /// Returns true if `self` and `code` have enough identical bits to meet the threshold.
-    pub fn is_match(&self, code: &PolyCode<C>) -> Result<bool, MatchError> {
+    pub fn is_match(&self, code: &PolyCode<C>) -> Result<bool, MatchError>
+    where
+        BigUint: From<<C::PlainConf as PolyConf>::Coeff>,
+    {
         let match_counts = Self::accumulate_inner_products(&self.polys, &code.polys)?;
         let mask_counts = Self::accumulate_inner_products(&self.masks, &code.masks)?;
 
@@ -162,7 +181,9 @@ impl<C: EncodeConf> PolyQuery<C> {
             // Match if the Hamming distance is less than a percentage threshold:
             // (t - d) / 2t <= x%
             #[allow(clippy::cast_possible_wrap)]
-            if (t - d) * (C::MATCH_DENOMINATOR as i64) <= 2 * t * (C::MATCH_NUMERATOR as i64) {
+            if (t - d) * (C::EyeConf::MATCH_DENOMINATOR as i64)
+                <= 2 * t * (C::EyeConf::MATCH_NUMERATOR as i64)
+            {
                 return Ok(true);
             }
         }
@@ -173,10 +194,13 @@ impl<C: EncodeConf> PolyQuery<C> {
     /// Accumulate the inner products of the polynomials for each block of rows.
     /// The result for each rotation is `D = #equal_bits - #different_bits`.
     fn accumulate_inner_products(
-        a_polys: &[Poly<FullRes>],
-        b_polys: &[Poly<FullRes>],
-    ) -> Result<Vec<i64>, MatchError> {
-        let mut counts = vec![0; C::NUM_ROTATIONS];
+        a_polys: &[Poly<C::PlainConf>],
+        b_polys: &[Poly<C::PlainConf>],
+    ) -> Result<Vec<i64>, MatchError>
+    where
+        BigUint: From<<C::PlainConf as PolyConf>::Coeff>,
+    {
+        let mut counts = vec![0; C::EyeConf::ROTATION_COMPARISONS];
 
         for (a, b) in a_polys.iter().zip_eq(b_polys.iter()) {
             // Multiply the polynomials, which will yield inner products.
@@ -187,8 +211,8 @@ impl<C: EncodeConf> PolyQuery<C> {
             // Right-most rotation (inclusive): sδ - 1
             let block_counts = product
                 .iter()
-                .skip(C::ROWS_PER_BLOCK * C::NUM_COLS_AND_PADS - C::NUM_ROTATIONS)
-                .take(C::NUM_ROTATIONS)
+                .skip(C::ROWS_PER_BLOCK * C::NUM_COLS_AND_PADS - C::EyeConf::ROTATION_COMPARISONS)
+                .take(C::EyeConf::ROTATION_COMPARISONS)
                 .map(|c| C::coeff_to_int(*c, MatchError::PlaintextOutOfRange))
                 .collect::<Result<Vec<_>, _>>()?;
 
@@ -206,14 +230,18 @@ impl<C: EncodeConf> PolyQuery<C> {
 }
 
 /// Create a mask polynomial from a polynomial of encoded bits.
-fn poly_bits_to_masks<C: EncodeConf>(bits: &Poly<C::PlainConf>) -> Poly<C::PlainConf> {
+fn poly_bits_to_masks<C: EncodeConf>(bits: &Poly<C::PlainConf>) -> Poly<C::PlainConf>
+where
+    <C::PlainConf as PolyConf>::Coeff: From<C::PlainCoeff>,
+{
     let mut masks = Poly::non_canonical_zeroes(C::PlainConf::MAX_POLY_DEGREE);
     for i in 0..C::PlainConf::MAX_POLY_DEGREE {
         masks[i] = if bits[i].is_zero() {
             C::PlainCoeff::zero()
         } else {
             C::PlainCoeff::one()
-        };
+        }
+        .into();
     }
     masks.truncate_to_canonical_form();
     masks

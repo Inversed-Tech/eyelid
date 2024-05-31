@@ -8,8 +8,8 @@ pub use crate::iris::conf::{IrisCode, IrisMask};
 pub mod test;
 
 /// Returns the 1D index of a bit from 2D indices.
-pub fn index_1d<const IRIS_COLUMN_LEN: usize>(row_i: usize, col_i: usize) -> usize {
-    col_i * IRIS_COLUMN_LEN + row_i
+pub fn index_1d(column_len: usize, row_i: usize, col_i: usize) -> usize {
+    col_i * column_len + row_i
 }
 
 /// Rotates the iris code by the given amount along the second dimension.
