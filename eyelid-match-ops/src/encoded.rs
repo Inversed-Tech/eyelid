@@ -1,10 +1,7 @@
 //! Iris matching operations on polynomial-encoded bit vectors.
 
-use std::error::Error;
-
 use ark_ff::{One, Zero};
 use itertools::Itertools;
-use num_bigint::BigUint;
 
 use crate::{
     plaintext::{index_1d, IrisCode, IrisMask},
@@ -52,9 +49,9 @@ impl<C: EncodeConf> PolyCode<C> {
         value: &IrisCode<STORE_ELEM_LEN>,
         mask: &IrisMask<STORE_ELEM_LEN>,
     ) -> Self {
-        let polys = (0..NUM_BLOCKS)
+        let polys = (0..C::NUM_BLOCKS)
             .map(|block_i| {
-                let first_row_i = block_i * ROWS_PER_BLOCK;
+                let first_row_i = block_i * C::ROWS_PER_BLOCK;
                 Self::from_plaintext_block(value, mask, first_row_i)
             })
             .collect_vec();
@@ -70,23 +67,23 @@ impl<C: EncodeConf> PolyCode<C> {
         mask: &IrisMask<STORE_ELEM_LEN>,
         first_row_i: usize,
     ) -> Poly<C::PlainConf> {
-        let mut coeffs = Poly::non_canonical_zeroes(PlainConf::MAX_POLY_DEGREE);
+        let mut coeffs = Poly::non_canonical_zeroes(C::PlainConf::MAX_POLY_DEGREE);
 
-        for m in 0..ROWS_PER_BLOCK {
-            let row_i = first_row_i + ROWS_PER_BLOCK - 1 - m;
+        for m in 0..C::ROWS_PER_BLOCK {
+            let row_i = first_row_i + C::ROWS_PER_BLOCK - 1 - m;
 
             // Set the coefficients of C₁ = ∑ aⱼ * xⁱ
             // i ∈ [0, k - 1]
             // j = k - 1 - i
-            for i in 0..NUM_COLS {
-                let col_i = NUM_COLS - 1 - i;
+            for i in 0..C::NUM_COLS {
+                let col_i = C::NUM_COLS - 1 - i;
                 let bit_i = index_1d(row_i, col_i);
 
                 if mask[bit_i] {
-                    coeffs[NUM_COLS_AND_PADS * m + i] = if value[bit_i] {
-                        -PlainCoeff::one()
+                    coeffs[C::NUM_COLS_AND_PADS * m + i] = if value[bit_i] {
+                        -C::PlainCoeff::one()
                     } else {
-                        PlainCoeff::one()
+                        C::PlainCoeff::one()
                     };
                 }
             }
@@ -107,9 +104,9 @@ impl<C: EncodeConf> PolyQuery<C> {
     ) -> Self {
         // This code is textually the same as PolyCode::from_plaintext, but the
         // from_plaintext_block() method is different.
-        let polys = (0..NUM_BLOCKS)
+        let polys = (0..C::NUM_BLOCKS)
             .map(|block_i| {
-                let first_row_i = block_i * ROWS_PER_BLOCK;
+                let first_row_i = block_i * C::ROWS_PER_BLOCK;
                 Self::from_plaintext_block(value, mask, first_row_i)
             })
             .collect_vec();
@@ -125,28 +122,28 @@ impl<C: EncodeConf> PolyQuery<C> {
         mask: &IrisMask<STORE_ELEM_LEN>,
         first_row_i: usize,
     ) -> Poly<C::PlainConf> {
-        let mut coeffs = Poly::non_canonical_zeroes(PlainConf::MAX_POLY_DEGREE);
+        let mut coeffs = Poly::non_canonical_zeroes(C::PlainConf::MAX_POLY_DEGREE);
 
-        for m in 0..ROWS_PER_BLOCK {
+        for m in 0..C::ROWS_PER_BLOCK {
             let row_i = first_row_i + m;
 
             // Set the coefficients of C₂ = ∑ aⱼ * xⁱ
             // i = j - u
             // j ∈ [u, k - 1 + v]
             // aⱼ is indexed with j mod k.
-            for i in 0..NUM_COLS_AND_PADS {
+            for i in 0..C::NUM_COLS_AND_PADS {
                 #[allow(clippy::cast_possible_wrap)]
                 let col_i = {
-                    let j = i as isize - (IRIS_ROTATION_LIMIT as isize);
-                    j.rem_euclid(NUM_COLS as isize) as usize
+                    let j = i as isize - (C::ROTATION_LIMIT as isize);
+                    j.rem_euclid(C::NUM_COLS as isize) as usize
                 };
                 let bit_i = index_1d(row_i, col_i);
 
                 if mask[bit_i] {
-                    coeffs[NUM_COLS_AND_PADS * m + i] = if value[bit_i] {
-                        -PlainCoeff::one()
+                    coeffs[C::NUM_COLS_AND_PADS * m + i] = if value[bit_i] {
+                        -C::PlainCoeff::one()
                     } else {
-                        PlainCoeff::one()
+                        C::PlainCoeff::one()
                     };
                 }
             }
@@ -157,15 +154,15 @@ impl<C: EncodeConf> PolyQuery<C> {
     }
 
     /// Returns true if `self` and `code` have enough identical bits to meet the threshold.
-    pub fn is_match(&self, code: &PolyCode<C>) -> Result<bool, Box<dyn Error>> {
-        let match_counts = accumulate_inner_products(&self.polys, &code.polys)?;
-        let mask_counts = accumulate_inner_products(&self.masks, &code.masks)?;
+    pub fn is_match(&self, code: &PolyCode<C>) -> Result<bool, MatchError> {
+        let match_counts = Self::accumulate_inner_products(&self.polys, &code.polys)?;
+        let mask_counts = Self::accumulate_inner_products(&self.masks, &code.masks)?;
 
         for (d, t) in match_counts.into_iter().zip_eq(mask_counts.into_iter()) {
             // Match if the Hamming distance is less than a percentage threshold:
             // (t - d) / 2t <= x%
             #[allow(clippy::cast_possible_wrap)]
-            if (t - d) * (IRIS_MATCH_DENOMINATOR as i64) <= 2 * t * (IRIS_MATCH_NUMERATOR as i64) {
+            if (t - d) * (C::MATCH_DENOMINATOR as i64) <= 2 * t * (C::MATCH_NUMERATOR as i64) {
                 return Ok(true);
             }
         }
@@ -178,8 +175,8 @@ impl<C: EncodeConf> PolyQuery<C> {
     fn accumulate_inner_products(
         a_polys: &[Poly<FullRes>],
         b_polys: &[Poly<FullRes>],
-    ) -> Result<Vec<i64>, Box<dyn Error>> {
-        let mut counts = vec![0; NUM_ROTATIONS];
+    ) -> Result<Vec<i64>, MatchError> {
+        let mut counts = vec![0; C::NUM_ROTATIONS];
 
         for (a, b) in a_polys.iter().zip_eq(b_polys.iter()) {
             // Multiply the polynomials, which will yield inner products.
@@ -190,9 +187,9 @@ impl<C: EncodeConf> PolyQuery<C> {
             // Right-most rotation (inclusive): sδ - 1
             let block_counts = product
                 .iter()
-                .skip(ROWS_PER_BLOCK * NUM_COLS_AND_PADS - NUM_ROTATIONS)
-                .take(NUM_ROTATIONS)
-                .map(|c| coeff_to_int(*c))
+                .skip(C::ROWS_PER_BLOCK * C::NUM_COLS_AND_PADS - C::NUM_ROTATIONS)
+                .take(C::NUM_ROTATIONS)
+                .map(|c| C::coeff_to_int(*c, MatchError::PlaintextOutOfRange))
                 .collect::<Result<Vec<_>, _>>()?;
 
             // Accumulate the counts from all blocks, grouped by rotation.
@@ -206,18 +203,18 @@ impl<C: EncodeConf> PolyQuery<C> {
 
         Ok(counts)
     }
+}
 
-    /// Create a mask polynomial from a polynomial of encoded bits.
-    fn poly_bits_to_masks(bits: &Poly<PlainConf>) -> Poly<PlainConf> {
-        let mut masks = Poly::non_canonical_zeroes(PlainConf::MAX_POLY_DEGREE);
-        for i in 0..PlainConf::MAX_POLY_DEGREE {
-            masks[i] = if bits[i].is_zero() {
-                PlainCoeff::zero()
-            } else {
-                PlainCoeff::one()
-            };
-        }
-        masks.truncate_to_canonical_form();
-        masks
+/// Create a mask polynomial from a polynomial of encoded bits.
+fn poly_bits_to_masks<C: EncodeConf>(bits: &Poly<C::PlainConf>) -> Poly<C::PlainConf> {
+    let mut masks = Poly::non_canonical_zeroes(C::PlainConf::MAX_POLY_DEGREE);
+    for i in 0..C::PlainConf::MAX_POLY_DEGREE {
+        masks[i] = if bits[i].is_zero() {
+            C::PlainCoeff::zero()
+        } else {
+            C::PlainCoeff::one()
+        };
     }
+    masks.truncate_to_canonical_form();
+    masks
 }
