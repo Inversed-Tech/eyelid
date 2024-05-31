@@ -1,6 +1,6 @@
 //! Encoding scheme configurations.
 
-use ark_ff::PrimeField;
+use ark_ff::{One, Zero};
 use num_bigint::BigUint;
 
 use crate::{encoded::MatchError, primitives::poly::PolyConf, FullRes, IrisBits, IrisConf};
@@ -15,12 +15,6 @@ pub trait EncodeConf {
 
     /// The configuration of plaintext polynomials.
     type PlainConf: PolyConf;
-
-    /// The type of the coefficients of plaintext polynomials.
-    //
-    // TODO: use associated type defaults when they stabilise:
-    // <https://github.com/rust-lang/rust/issues/29661>
-    type PlainCoeff: PrimeField;
 
     // Divide iris codes into blocks that can each fit into a polynomial.
     /// The number of rows in each block: `s`
@@ -51,6 +45,16 @@ pub trait EncodeConf {
 
         Ok(res)
     }
+
+    /// Returns the `zero` value of a prime field element.
+    fn coeff_zero() -> <Self::PlainConf as PolyConf>::Coeff {
+        <Self::PlainConf as PolyConf>::Coeff::zero()
+    }
+
+    /// Returns the `one` value of a prime field element.
+    fn coeff_one() -> <Self::PlainConf as PolyConf>::Coeff {
+        <Self::PlainConf as PolyConf>::Coeff::one()
+    }
 }
 
 // TODO: add a conf where EyeConf and PlainConf are different, and test it.
@@ -58,7 +62,6 @@ pub trait EncodeConf {
 impl EncodeConf for IrisBits {
     type EyeConf = IrisBits;
     type PlainConf = IrisBits;
-    type PlainCoeff = <Self::PlainConf as PolyConf>::Coeff;
 
     const ROWS_PER_BLOCK: usize = 20;
 }
@@ -75,7 +78,6 @@ const_assert_eq!(
 impl EncodeConf for FullRes {
     type EyeConf = FullRes;
     type PlainConf = FullRes;
-    type PlainCoeff = <Self::PlainConf as PolyConf>::Coeff;
 
     const ROWS_PER_BLOCK: usize = 10;
 }
@@ -88,7 +90,6 @@ const_assert_eq!(
 impl EncodeConf for TinyTest {
     type EyeConf = TinyTest;
     type PlainConf = TinyTest;
-    type PlainCoeff = <Self::PlainConf as PolyConf>::Coeff;
 
     const ROWS_PER_BLOCK: usize = 2;
 }

@@ -1,6 +1,6 @@
 //! Iris matching operations on polynomial-encoded bit vectors.
 
-use ark_ff::{One, Zero};
+use ark_ff::Zero;
 use itertools::Itertools;
 use num_bigint::BigUint;
 
@@ -49,11 +49,7 @@ impl<C: EncodeConf> PolyCode<C> {
     pub fn from_plaintext<const STORE_ELEM_LEN: usize>(
         value: &IrisCode<STORE_ELEM_LEN>,
         mask: &IrisMask<STORE_ELEM_LEN>,
-    ) -> Self
-    where
-        // These are actually the same type in the config, but Rust doesn't know that.
-        <C::PlainConf as PolyConf>::Coeff: From<C::PlainCoeff>,
-    {
+    ) -> Self {
         let polys = (0..C::NUM_BLOCKS)
             .map(|block_i| {
                 let first_row_i = block_i * C::ROWS_PER_BLOCK;
@@ -71,10 +67,7 @@ impl<C: EncodeConf> PolyCode<C> {
         value: &IrisCode<STORE_ELEM_LEN>,
         mask: &IrisMask<STORE_ELEM_LEN>,
         first_row_i: usize,
-    ) -> Poly<C::PlainConf>
-    where
-        <C::PlainConf as PolyConf>::Coeff: From<C::PlainCoeff>,
-    {
+    ) -> Poly<C::PlainConf> {
         let mut coeffs = Poly::non_canonical_zeroes(C::PlainConf::MAX_POLY_DEGREE);
 
         for m in 0..C::ROWS_PER_BLOCK {
@@ -89,11 +82,10 @@ impl<C: EncodeConf> PolyCode<C> {
 
                 if mask[bit_i] {
                     coeffs[C::NUM_COLS_AND_PADS * m + i] = if value[bit_i] {
-                        -C::PlainCoeff::one()
+                        -C::coeff_one()
                     } else {
-                        C::PlainCoeff::one()
-                    }
-                    .into();
+                        C::coeff_one()
+                    };
                 }
             }
         }
@@ -110,10 +102,7 @@ impl<C: EncodeConf> PolyQuery<C> {
     pub fn from_plaintext<const STORE_ELEM_LEN: usize>(
         value: &IrisCode<STORE_ELEM_LEN>,
         mask: &IrisMask<STORE_ELEM_LEN>,
-    ) -> Self
-    where
-        <C::PlainConf as PolyConf>::Coeff: From<C::PlainCoeff>,
-    {
+    ) -> Self {
         // This code is textually the same as PolyCode::from_plaintext, but the
         // from_plaintext_block() method is different.
         let polys = (0..C::NUM_BLOCKS)
@@ -133,10 +122,7 @@ impl<C: EncodeConf> PolyQuery<C> {
         value: &IrisCode<STORE_ELEM_LEN>,
         mask: &IrisMask<STORE_ELEM_LEN>,
         first_row_i: usize,
-    ) -> Poly<C::PlainConf>
-    where
-        <C::PlainConf as PolyConf>::Coeff: From<C::PlainCoeff>,
-    {
+    ) -> Poly<C::PlainConf> {
         let mut coeffs = Poly::non_canonical_zeroes(C::PlainConf::MAX_POLY_DEGREE);
 
         for m in 0..C::ROWS_PER_BLOCK {
@@ -156,11 +142,10 @@ impl<C: EncodeConf> PolyQuery<C> {
 
                 if mask[bit_i] {
                     coeffs[C::NUM_COLS_AND_PADS * m + i] = if value[bit_i] {
-                        -C::PlainCoeff::one()
+                        -C::coeff_one()
                     } else {
-                        C::PlainCoeff::one()
-                    }
-                    .into();
+                        C::coeff_one()
+                    };
                 }
             }
         }
@@ -230,18 +215,14 @@ impl<C: EncodeConf> PolyQuery<C> {
 }
 
 /// Create a mask polynomial from a polynomial of encoded bits.
-fn poly_bits_to_masks<C: EncodeConf>(bits: &Poly<C::PlainConf>) -> Poly<C::PlainConf>
-where
-    <C::PlainConf as PolyConf>::Coeff: From<C::PlainCoeff>,
-{
+fn poly_bits_to_masks<C: EncodeConf>(bits: &Poly<C::PlainConf>) -> Poly<C::PlainConf> {
     let mut masks = Poly::non_canonical_zeroes(C::PlainConf::MAX_POLY_DEGREE);
     for i in 0..C::PlainConf::MAX_POLY_DEGREE {
         masks[i] = if bits[i].is_zero() {
-            C::PlainCoeff::zero()
+            C::coeff_zero()
         } else {
-            C::PlainCoeff::one()
-        }
-        .into();
+            C::coeff_one()
+        };
     }
     masks.truncate_to_canonical_form();
     masks
