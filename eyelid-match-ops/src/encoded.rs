@@ -95,7 +95,10 @@ impl PolyQuery {
         // The contructor code is currently the same.
         let new = PolyCode::from_plaintext(value, mask);
 
-        Self { polys: new.polys, masks: new.masks}
+        Self {
+            polys: new.polys,
+            masks: new.masks,
+        }
     }
 
     /// Encode one block of rows into one polynomial. Query variant, equation C_2.
