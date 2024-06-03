@@ -1,9 +1,6 @@
-use crate::primitives::poly::IrisBits;
-use crate::primitives::poly::modular_poly::conf::FullRes;
+use crate::primitives::poly::modular_poly::conf::{FullRes, IrisBits};
 use crate::primitives::yashe::Yashe;
 use crate::primitives::yashe::YasheConf; // Import the YasheConf trait
-
-
 
 fn homomorphic_addition_helper<C: YasheConf>()
 where
@@ -74,4 +71,6 @@ fn homomorphic_addition_test() {
 fn homomorphic_multiplication_test() {
     homomorphic_multiplication_helper_negative::<FullRes>();
     homomorphic_multiplication_helper_positive::<FullRes>();
+    homomorphic_multiplication_helper_negative::<IrisBits>();
+    homomorphic_multiplication_helper_positive::<IrisBits>();
 }
