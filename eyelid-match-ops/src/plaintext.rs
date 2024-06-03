@@ -1,69 +1,47 @@
 //! Iris matching operations on raw bit vectors.
 
-use bitvec::{mem::bits_of, prelude::*};
+use crate::iris::conf::IrisConf;
 
-use super::{
-    IRIS_BIT_LENGTH, IRIS_COLUMN_LENGTH, IRIS_MATCH_DENOMINATOR, IRIS_MATCH_NUMERATOR,
-    IRIS_ROTATION_COMPARISONS, IRIS_ROTATION_LIMIT,
-};
+pub use crate::iris::conf::{IrisCode, IrisMask};
 
 #[cfg(any(test, feature = "benchmark"))]
 pub mod test;
 
-/// An iris code: the iris data from an iris scan.
-/// A fixed-length bit array which is long enough to hold at least [`IRIS_BIT_LENGTH`] bits.
-///
-/// The encoding of an iris code is arbitrary, because we just check for matching bits.
-///
-/// The array is rounded up to the next full `usize`, so it might contain some unused bits at the
-/// end.
-///
-/// TODO: turn this into a wrapper struct, so the compiler checks IrisCode and IrisMask are used
-///       correctly.
-pub type IrisCode = BitArr![for IRIS_BIT_LENGTH];
-
-/// An iris mask: the occlusion data from an iris scan.
-/// See [`IrisCode`] for details.
-///
-/// The encoding of an iris mask is `1` for a comparable bit, and `0` for a masked bit.
-///
-/// TODO: turn this into a wrapper struct, so the compiler checks IrisCode and IrisMask are used
-///       correctly.
-pub type IrisMask = IrisCode;
-
 /// Returns the 1D index of a bit from 2D indices.
-pub fn index_1d(row_i: usize, col_i: usize) -> usize {
-    col_i * IRIS_COLUMN_LENGTH + row_i
+pub fn index_1d(column_len: usize, row_i: usize, col_i: usize) -> usize {
+    col_i * column_len + row_i
 }
 
 /// Rotates the iris code by the given amount along the second dimension.
+#[must_use = "rotations do nothing unless you assign them to a variable"]
 #[allow(clippy::cast_sign_loss)]
-pub fn rotate(mut code: IrisCode, amount: isize) -> IrisCode {
+pub fn rotate<C: IrisConf, const STORE_ELEM_LEN: usize>(
+    mut code: IrisCode<STORE_ELEM_LEN>,
+    amount: isize,
+) -> IrisCode<STORE_ELEM_LEN> {
     if amount < 0 {
-        code.rotate_left((-amount) as usize * IRIS_COLUMN_LENGTH);
+        code.rotate_left((-amount) as usize * C::COLUMN_LEN);
     } else {
-        code.rotate_right(amount as usize * IRIS_COLUMN_LENGTH);
+        code.rotate_right(amount as usize * C::COLUMN_LEN);
     }
     code
 }
 
 /// Returns true if `eye_new` and `eye_store` have enough identical bits to meet the threshold,
 /// after masking with `mask_new` and `mask_store`, and rotating from
-/// [`-IRIS_ROTATION_LIMIT..IRIS_ROTATION_LIMIT`](IRIS_ROTATION_LIMIT).
+/// [`-ROTATION_LIMIT..ROTATION_LIMIT`](IrisConf::ROTATION_LIMIT).
 ///
 /// # Performance
 ///
 /// This function takes references to avoid memory copies, which would otherwise be silent.
 /// ([`IrisCode`] and [`IrisMask`] are [`Copy`] types.)
-///
-/// # TODO
-///
-/// - split this up into functions and test/benchmark them.
-pub fn is_iris_match(
-    eye_new: &IrisCode,
-    mask_new: &IrisMask,
-    eye_store: &IrisCode,
-    mask_store: &IrisMask,
+#[must_use = "matching does nothing unless you check its result"]
+#[allow(clippy::cast_possible_wrap)]
+pub fn is_iris_match<C: IrisConf, const STORE_ELEM_LEN: usize>(
+    eye_new: &IrisCode<STORE_ELEM_LEN>,
+    mask_new: &IrisMask<STORE_ELEM_LEN>,
+    eye_store: &IrisCode<STORE_ELEM_LEN>,
+    mask_store: &IrisMask<STORE_ELEM_LEN>,
 ) -> bool {
     // Start comparing columns at rotation -IRIS_ROTATION_LIMIT.
     // TODO:
@@ -71,19 +49,20 @@ pub fn is_iris_match(
     // - If smaller rotations are more likely to exit early, start with them first.
     let mut eye_store = *eye_store;
     let mut mask_store = *mask_store;
-    eye_store.rotate_left(IRIS_ROTATION_LIMIT * IRIS_COLUMN_LENGTH);
-    mask_store.rotate_left(IRIS_ROTATION_LIMIT * IRIS_COLUMN_LENGTH);
 
-    for _rotation in 0..IRIS_ROTATION_COMPARISONS {
-        // Make sure iris codes and masks are the same size.
-        // Performance: static assertions are checked at compile time.
-        // TODO: I'm pretty sure the compiler already checks this as part of `&` or `^`,
-        //       but I need to make sure.
-        const_assert_eq!(bits_of::<IrisCode>(), bits_of::<IrisMask>());
+    // These constant are tiny compared to isize, so they will never wrap.
+    eye_store = rotate::<C, STORE_ELEM_LEN>(eye_store, -(C::ROTATION_LIMIT as isize));
+    mask_store = rotate::<C, STORE_ELEM_LEN>(mask_store, -(C::ROTATION_LIMIT as isize));
 
-        // Make sure there are no unused bits.
-        // TODO: check unused bits are ignored in the tests instead.
-        const_assert_eq!(bits_of::<IrisCode>(), IRIS_BIT_LENGTH);
+    for _rotation in 0..C::ROTATION_COMPARISONS {
+        /*dbg!(
+            "rotation: ",
+            -(C::ROTATION_LIMIT as isize) + _rotation as isize
+        );*/
+
+        // TODO:
+        // - Make sure iris codes and masks are the same size.
+        // - Check unused bits are ignored in the tests.
 
         // Masking is applied to both iris codes before matching.
         //
@@ -91,7 +70,8 @@ pub fn is_iris_match(
         // - on the heap (using BitBox)
         // - on the heap using scratch memory that is allocated once, then passed to this function
         let unmasked = *mask_new & mask_store;
-        let differences = (*eye_new ^ eye_store) & unmasked;
+        let raw_differences = *eye_new ^ eye_store;
+        let differences = raw_differences & unmasked;
 
         // A successful match has enough matching unmasked bits to reach the match threshold.
         //
@@ -99,13 +79,12 @@ pub fn is_iris_match(
         let unmasked = unmasked.count_ones();
         let differences = differences.count_ones();
 
-        // Make sure the threshold calculation can't overflow. Also avoids division by zero.
-        // `IRIS_BIT_LENGTH` is the highest possible value of `matching` and `unmasked`.
-        const_assert!(usize::MAX / IRIS_BIT_LENGTH > IRIS_MATCH_DENOMINATOR);
-        const_assert!(usize::MAX / IRIS_BIT_LENGTH > IRIS_MATCH_NUMERATOR);
+        // TODO:
+        // - Make sure the threshold calculation can't overflow.
+        // Currently this is only tested on the data used in debug builds.
 
         // And compare with the threshold.
-        if differences * IRIS_MATCH_DENOMINATOR <= unmasked * IRIS_MATCH_NUMERATOR {
+        if differences * C::MATCH_DENOMINATOR <= unmasked * C::MATCH_NUMERATOR {
             return true;
         }
 
@@ -113,8 +92,8 @@ pub fn is_iris_match(
         // TODO:
         // - Make this initial rotation part of the stored encoding.
         // - If smaller rotations are more likely to exit early, start with them first.
-        eye_store.rotate_right(IRIS_COLUMN_LENGTH);
-        mask_store.rotate_right(IRIS_COLUMN_LENGTH);
+        eye_store = rotate::<C, STORE_ELEM_LEN>(eye_store, 1);
+        mask_store = rotate::<C, STORE_ELEM_LEN>(mask_store, 1);
     }
 
     false

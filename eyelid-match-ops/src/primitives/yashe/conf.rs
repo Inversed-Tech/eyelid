@@ -41,23 +41,21 @@ where
 
     /// A convenience method to convert [`T`](Self::T) to the [`Coeff`](PolyConf::Coeff) type.
     fn t_as_coeff() -> Self::Coeff {
-        debug_assert!(Self::check_constraints());
+        debug_assert!(check_constraints::<Self>());
 
         Self::Coeff::from(Self::T)
     }
 
     /// A convenience method to convert [`T`](Self::T) to `u128`.
+    // The u64 to u128 cast is checked for type changes by `check_constraints()`.
+    #[allow(clippy::cast_lossless)]
     fn t_as_u128() -> u128 {
-        debug_assert!(Self::check_constraints());
-
-        u128::from(Self::T)
+        Self::T as u128
     }
 
     /// A convenience method to convert a [`Coeff`](PolyConf::Coeff) to `u128`.
     /// TODO: move this method to a trait implemented on `Coeff` instead.
     fn coeff_as_u128(coeff: Self::Coeff) -> u128 {
-        debug_assert!(Self::check_constraints());
-
         let coeff: BigUint = coeff.into();
 
         coeff
@@ -78,39 +76,77 @@ where
 
     /// A convenience method to convert [`Coeff::MODULUS_MINUS_ONE_DIV_TWO`](PrimeField::MODULUS_MINUS_ONE_DIV_TWO) to `u128`.
     fn modulus_minus_one_div_two_as_u128() -> u128 {
-        debug_assert!(Self::check_constraints());
-
         let modulus: BigUint = Self::Coeff::MODULUS_MINUS_ONE_DIV_TWO.into();
 
         modulus
             .to_u128()
             .expect("constant modulus is small enough for u128")
     }
+}
 
-    /// Checks various constraints on the generic values.
-    ///
-    /// TODO: work out how to const_assert!() these constraints for each config type.
+/// Checks various constraints on the generic values.
+//
+// The u64 to f64 cast keeps precision because the values are all small compared to the types.
+// There is an assertion that checks this remains valid, even if the types or values change.
+#[allow(clippy::cast_precision_loss)]
+// The u64 to u128 cast is checked for type changes in the const check.
+#[allow(clippy::cast_lossless)]
+fn check_constraints<C: YasheConf>() -> bool
+where
+    C::Coeff: From<u128> + From<u64> + From<i64>,
+{
+    let () = Assert::<C>::CHECK;
+
+    // The encrypted coefficient modulus must be larger than the plaintext modulus.
+    // `From::from()` isn't a const function, so we can't do a static assertion using it.
+    //
+    // TODO: work out how to const_assert!() this constraint.
+    debug_assert!((C::T as u128) < C::modulus_as_u128());
+
+    // Check that conversion from T to u128 is infallible.
+    // This will hopefully get optimised out, even in debug builds.
+    let _ = u128::from(C::T);
+
+    // This return value lets us skip calling the assertions entirely in release builds.
+    true
+}
+
+/// Call `Assert::<C>::CHECK` in one `YasheConf` method to check constant constraints on `YasheConf`.
+///
+/// Based on `static_assert_generic::static_assert!()`, but with the correct generic constraints:
+/// <https://docs.rs/static_assert_generic/0.1.0/static_assert_generic/macro.static_assert.html>
+struct Assert<D>
+where
+    D: YasheConf,
+    D::Coeff: From<u128> + From<u64> + From<i64>,
+{
+    /// A marker trait that binds the D generic to this struct.
+    _p: core::marker::PhantomData<D>,
+}
+
+impl<D> Assert<D>
+where
+    D: YasheConf,
+    D::Coeff: From<u128> + From<u64> + From<i64>,
+{
+    /// The implementation of the constant check.
     //
     // The u64 to f64 cast keeps precision because the values are all small compared to the types.
     // There is an assertion that checks this remains valid, even if the types or values change.
+    #[allow(unused)]
     #[allow(clippy::cast_precision_loss)]
-    fn check_constraints() -> bool {
-        // The encrypted coefficient modulus must be larger than the plaintext modulus.
-        debug_assert!(u128::from(Self::T) < Self::modulus_as_u128());
-
+    const CHECK: () = if (
         // The key standard deviation must fit within the plaintext modulus, with six sigma probability.
         // We use strictly less for floatong point assertions, because floating point equality sometimes
         // fails due to internal floating point inaccuracy, and this can vary by platform.
-        debug_assert!(Self::KEY_DELTA < (Self::T as f64) / 6.0);
+        D::KEY_DELTA > (D::T as f64) / 6.0 ||
         // Check the cast above remains valid.
-        debug_assert!(Self::T < (1 << f64::MANTISSA_DIGITS));
-
+        D::T >= (1 << f64::MANTISSA_DIGITS) ||
         // The error must be small enough to allow successful message retrieval, with three sigma probability.
-        debug_assert!(Self::ERROR_DELTA < Self::KEY_DELTA / 3.0);
-
-        // This return value lets us skip calling the assertions entirely in release builds.
-        true
-    }
+        D::ERROR_DELTA > D::KEY_DELTA / 3.0
+    ) {
+        panic!("YasheConf parameters are invalid")
+    };
 }
 
 /// Iris bit length polynomial parameters.
