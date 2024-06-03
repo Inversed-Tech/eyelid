@@ -1,5 +1,4 @@
 //! "BigNum" for Full-resolution parameters in 2^79.
-//!
 
 use ark_ff::{Fp192, MontBackend, MontConfig};
 
