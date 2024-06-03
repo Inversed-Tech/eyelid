@@ -97,8 +97,9 @@ impl<C: PolyConf> Poly<C> {
         Self::from_coefficients_vec(coeffs.to_vec())
     }
 
-    /// Returns the coefficients of `self` as a mutable slice.
-    /// `use ark_poly::DenseUVPolynomial` for the read-only `coeffs()` method.
+    /// Returns the coefficients of `self` as a mutable slice, skipping any leading zero
+    /// coefficients.
+    /// `use` the [`ark_poly::DenseUVPolynomial`] trait for the read-only `coeffs()` method.
     ///
     /// After using this low-level accessor, callers must ensure the polynomial is in a canonical
     /// form, by calling either:
@@ -107,6 +108,128 @@ impl<C: PolyConf> Poly<C> {
     ///   could have been set to zero.
     pub fn coeffs_mut(&mut self) -> &mut [C::Coeff] {
         self.coeffs.as_mut_slice()
+    }
+
+    /// Applies `f_zero_to_zero` to the non-zero coefficients of `self`, skipping all zero
+    /// coefficients. This excludes leading, trailing, and internal zeroes.
+    ///
+    /// The polynomial is automatically truncated to its canonical form after the coefficients
+    /// are modified.
+    ///
+    /// # Panics
+    ///
+    /// If `f_zero_to_zero` does not map zero inputs to zero outputs.
+    /// (But it is ok for non-zero inputs to be mapped to zero outputs.)
+    pub fn coeffs_modify_non_zero<F>(&mut self, mut f_zero_to_zero: F)
+    where
+        F: FnMut(&mut C::Coeff),
+    {
+        assert!({
+            let mut z = C::Coeff::zero();
+            f_zero_to_zero(&mut z);
+            z.is_zero()
+        });
+
+        for coeff in self.coeffs_mut() {
+            if !coeff.is_zero() {
+                f_zero_to_zero(coeff);
+            }
+        }
+
+        self.truncate_to_canonical_form();
+    }
+
+    /// Applies `f` to all the coefficients of `self`, including leading zeroes.
+    ///
+    /// This method allocates leading zero coefficients, so prefer `coeffs_modify_non_zero()`
+    /// where possible.
+    ///
+    /// The polynomial is automatically truncated to its canonical form after the coefficients
+    /// are modified.
+    ///
+    /// # Panics
+    ///
+    /// If `f` is not in the canonical reduced form.
+    pub fn coeffs_modify_include_zero<F>(&mut self, mut f: F)
+    where
+        F: FnMut(&mut C::Coeff),
+    {
+        assert!(self.coeffs.len() <= C::MAX_POLY_DEGREE);
+
+        // Allocate all at once, to avoid allocator churn.
+        self.resize_non_canonical_zeroes();
+
+        for i in 0..C::MAX_POLY_DEGREE {
+            f(&mut self[i]);
+        }
+
+        self.truncate_to_canonical_form();
+    }
+
+    /// Maps the non-zero coefficients of `self` to another coefficient type using
+    /// `f_zero_to_zero`, and returns the resulting polynomial. This copies trailing and internal
+    /// zeroes unmodified, and skips leading zeroes.
+    ///
+    /// The polynomial is automatically truncated or reduced to its canonical form after the
+    /// mapping.
+    ///
+    /// # Panics
+    ///
+    /// If `f_zero_to_zero` does not map zero inputs to zero outputs.
+    /// (But it is ok for non-zero inputs to be mapped to zero outputs.)
+    pub fn map_non_zero<U, F>(&self, mut f_zero_to_zero: F) -> Poly<U>
+    where
+        U: PolyConf,
+        F: FnMut(&C::Coeff) -> U::Coeff,
+    {
+        assert!({
+            let mut z = C::Coeff::zero();
+            f_zero_to_zero(&mut z);
+            z.is_zero()
+        });
+
+        let mut res = Poly::<U>::non_canonical_zeroes(self.coeffs.len());
+
+        for i in 0..self.coeffs.len() {
+            if !self[i].is_zero() {
+                res[i] = f_zero_to_zero(&self[i]);
+            }
+        }
+
+        // If the degree is smaller, then the polynomial might need modular reduction.
+        res.reduce_mod_poly();
+
+        res
+    }
+
+    /// Maps all coefficients of `self` to another coefficient type using `f`, including the
+    /// leading zeroes in the *source* polynomial, and returns the resulting polynomial.
+    ///
+    /// This method allocates leading zero coefficients, so prefer `map_non_zero()`
+    /// where possible.
+    ///
+    /// The polynomial is automatically truncated or reduced to its canonical form after the
+    /// mapping.
+    ///
+    /// # Panics
+    ///
+    /// If `f` is not in the canonical reduced form.
+    pub fn map_include_zero<U, F>(&mut self, mut f: F) -> Poly<U>
+    where
+        U: PolyConf,
+        F: FnMut(&C::Coeff) -> U::Coeff,
+    {
+        assert!(self.coeffs.len() <= C::MAX_POLY_DEGREE);
+
+        let mut res = Poly::<U>::non_canonical_zeroes(C::MAX_POLY_DEGREE);
+
+        for i in 0..C::MAX_POLY_DEGREE {
+            res[i] = f(&self[i]);
+        }
+
+        res.reduce_mod_poly();
+
+        res
     }
 
     // Shadow DensePolynomial methods, so the types are all `Poly`
@@ -242,6 +365,12 @@ impl<C: PolyConf> Poly<C> {
             },
             PhantomData,
         )
+    }
+
+    /// Extends this polynomial with zeroes, up to [`C::MAX_POLY_DEGREE`](PolyConf::MAX_POLY_DEGREE).
+    /// The extended polynomial is *not guaranteed* to be in the canonical form.
+    pub(crate) fn resize_non_canonical_zeroes(&mut self) {
+        self.coeffs.resize(C::MAX_POLY_DEGREE, C::Coeff::zero());
     }
 }
 
