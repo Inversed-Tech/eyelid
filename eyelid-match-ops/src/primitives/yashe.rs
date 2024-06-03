@@ -347,6 +347,7 @@ where
         res
     }
 
+    /// Plaintext addition is trivial
     pub fn plaintext_add(&self, m1: Message<C>, m2: Message<C>) -> Message<C> {
         let mut res = m1.m + m2.m;
         for coeff in res.coeffs_mut() {
@@ -358,17 +359,18 @@ where
         Message { m: res }
     }
 
+    /// Plaintext multiplication must center lift before reduction
     pub fn plaintext_mul(&self, m1: Message<C>, m2: Message<C>) -> Message<C> {
         let mut res = m1.m * m2.m;
         for coeff in res.coeffs_mut() {
-            let mut coeff_res: i128 = C::coeff_as_u128(*coeff) as i128;
+            let mut coeff_res: i128 = C::coeff_as_i128(*coeff);
             // center lift mod q
-            if coeff_res > (C::modulus_minus_one_div_two_as_u128() as i128) {
-                coeff_res -= C::modulus_as_u128() as i128;
+            if coeff_res > (C::modulus_minus_one_div_two_as_i128()) {
+                coeff_res -= C::modulus_as_i128();
             }
-            coeff_res %= C::t_as_u128() as i128;
+            coeff_res %= C::t_as_i128();
             if coeff_res < 0 {
-                coeff_res += C::t_as_u128() as i128;
+                coeff_res += C::t_as_i128();
             }
             *coeff = (coeff_res as u128).into();
         }
@@ -376,11 +378,14 @@ where
         Message { m: res }
     }
 
+    /// Ciphertext addition is trivial
     pub fn ciphertext_add(&self, c1: Ciphertext<C>, c2: Ciphertext<C>)-> Ciphertext<C> {
         let c = c1.c + c2.c;
         Ciphertext { c }
     }
 
+    /// Multiplication of ciphertext must happen as described in Page 13 of
+    /// https://eprint.iacr.org/2013/075.pdf 
     pub fn ciphertext_mul(&self, c1: Ciphertext<C>, c2: Ciphertext<C>)-> Ciphertext<C> {
         let mut res = Poly::<C>::zero();
         // lift to allow bignum coefficients (n * q * q would be enough, as in the C++ implementation)

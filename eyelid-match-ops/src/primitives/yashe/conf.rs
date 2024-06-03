@@ -51,6 +51,11 @@ where
         u128::from(Self::T)
     }
 
+    /// A convenience method to convert [`T`](Self::T) to `i128`.
+    fn t_as_i128() -> i128 {
+        i128::from(Self::T)
+    }
+
     /// A convenience method to convert a [`Coeff`](PolyConf::Coeff) to `u128`.
     /// TODO: move this method to a trait implemented on `Coeff` instead.
     fn coeff_as_u128(coeff: Self::Coeff) -> u128 {
@@ -59,6 +64,16 @@ where
         coeff
             .to_u128()
             .expect("coefficients are small enough for u128")
+    }
+
+    /// A convenience method to convert a [`Coeff`](PolyConf::Coeff) to `i128`.
+    /// TODO: move this method to a trait implemented on `Coeff` instead.
+    fn coeff_as_i128(coeff: Self::Coeff) -> i128 {
+        let coeff: BigUint = coeff.into();
+
+        coeff
+            .to_i128()
+            .expect("coefficients are small enough for i128")
     }
 
     /// A convenience method to convert [`Coeff::MODULUS`](PrimeField::MODULUS) to `u128`.
@@ -70,6 +85,15 @@ where
             .expect("constant modulus is small enough for u128")
     }
 
+    /// A convenience method to convert [`Coeff::MODULUS`](PrimeField::MODULUS) to `i128`.
+    fn modulus_as_i128() -> i128 {
+        let modulus: BigUint = Self::Coeff::MODULUS.into();
+
+        modulus
+            .to_i128()
+            .expect("constant modulus is small enough for i128")
+    }
+
     /// A convenience method to convert [`Coeff::MODULUS_MINUS_ONE_DIV_TWO`](PrimeField::MODULUS_MINUS_ONE_DIV_TWO) to `u128`.
     fn modulus_minus_one_div_two_as_u128() -> u128 {
         let modulus: BigUint = Self::Coeff::MODULUS_MINUS_ONE_DIV_TWO.into();
@@ -77,6 +101,15 @@ where
         modulus
             .to_u128()
             .expect("constant modulus is small enough for u128")
+    }
+    
+    /// A convenience method to convert [`Coeff::MODULUS_MINUS_ONE_DIV_TWO`](PrimeField::MODULUS_MINUS_ONE_DIV_TWO) to `i128`.
+    fn modulus_minus_one_div_two_as_i128() -> i128 {
+        let modulus: BigUint = Self::Coeff::MODULUS_MINUS_ONE_DIV_TWO.into();
+
+        modulus
+            .to_i128()
+            .expect("constant modulus is small enough for i128")
     }
 }
 
