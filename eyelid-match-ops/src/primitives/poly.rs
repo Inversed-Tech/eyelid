@@ -12,8 +12,6 @@ pub use modular_poly::{
 };
 
 // Only for tests.
-#[cfg(any(test, feature = "benchmark"))]
-pub use modular_poly::conf::{IrisBits, TestRes};
 
 // Use `mod_poly` outside this module, it is set to the fastest modulus operation.
 #[cfg(any(test, feature = "benchmark"))]

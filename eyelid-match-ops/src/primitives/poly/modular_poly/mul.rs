@@ -116,8 +116,16 @@ pub fn rec_karatsuba_mul<C: PolyConf>(a: &Poly<C>, b: &Poly<C>) -> Poly<C> {
 ///
 /// At each recursion level, polynomials start with maximum degree `chunk`, and are split to maximum degree `chunk/2`.
 fn rec_karatsuba_mul_inner<C: PolyConf>(a: &Poly<C>, b: &Poly<C>, chunk: usize) -> Poly<C> {
-    debug_assert!(a.degree() <= chunk);
-    debug_assert!(b.degree() <= chunk);
+    debug_assert!(
+        a.degree() <= chunk,
+        "a.degree() = {}, chunk = {chunk}",
+        a.degree()
+    );
+    debug_assert!(
+        b.degree() <= chunk,
+        "b.degree() = {}, chunk = {chunk}",
+        b.degree()
+    );
 
     // invariant: the number of coefficients is a power of 2, before and after this function runs
     debug_assert_eq!(chunk.count_ones(), 1);

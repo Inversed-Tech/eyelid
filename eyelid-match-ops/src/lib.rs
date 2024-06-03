@@ -9,42 +9,23 @@
 //! [`encoded`]: the same operations on polynomial-encoded bit vectors,
 //! [`encrypted`]: the same operations on fully homomorphic encrypted, polynomial-encoded bit
 //!                vectors.
+//!
+//! Configurations are in [`conf`] and [`iris`], and building blocks are in [`primitives`].
 
 #[macro_use]
 extern crate static_assertions;
 
+pub mod conf;
 pub mod encoded;
 pub mod encrypted;
+pub mod iris;
 pub mod plaintext;
 pub mod primitives;
 
-/// The number of rows in a raw iris code or iris mask, in bits.
-pub const IRIS_COLUMN_LENGTH: usize = 80;
+pub use conf::{FullRes, IrisBits};
 
-/// The number of columns in a raw iris code or iris mask, in bits.
-pub const IRIS_COLUMNS: usize = 160;
+#[cfg(any(test, feature = "benchmark"))]
+pub use conf::TestRes;
 
-/// The length of a raw iris code or iris mask, in bits.
-/// Most users have two of these codes, for their left and right eyes.
-pub const IRIS_BIT_LENGTH: usize = IRIS_COLUMN_LENGTH * IRIS_COLUMNS;
-
-/// The rotation limit when comparing irises.
-/// Each column is compared to the [`IRIS_ROTATION_LIMIT`] columns to its left and right.
-pub const IRIS_ROTATION_LIMIT: usize = 15;
-
-/// The number of rotations used when comparing irises.
-/// This includes the comparison with no rotations.
-pub const IRIS_ROTATION_COMPARISONS: usize = IRIS_ROTATION_LIMIT * 2 + 1;
-
-// Rotating more than the number of columns is redundant.
-const_assert!(IRIS_ROTATION_COMPARISONS <= IRIS_COLUMNS);
-
-/// The numerator of the bit match threshold for a successful iris match.
-pub const IRIS_MATCH_NUMERATOR: usize = 36;
-
-/// The denominator of the bit match threshold for a successful iris match.
-pub const IRIS_MATCH_DENOMINATOR: usize = 100;
-
-// The match fraction should be strictly between 0 and 1.
-const_assert!(IRIS_MATCH_NUMERATOR < IRIS_MATCH_DENOMINATOR);
-const_assert!(IRIS_MATCH_NUMERATOR > 0);
+#[cfg(tiny_poly)]
+pub use conf::TinyTest;

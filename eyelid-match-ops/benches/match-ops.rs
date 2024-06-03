@@ -19,14 +19,16 @@ use std::time::Duration;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode::*};
 
 use eyelid_match_ops::{
+    iris::conf::IrisConf,
     plaintext::{
         self,
         test::gen::{random_iris_code, random_iris_mask},
     },
     primitives::{
-        poly::{self, test::gen::rand_poly, IrisBits, Poly, PolyConf, TestRes},
+        poly::{self, test::gen::rand_poly, Poly, PolyConf},
         yashe::{self, Ciphertext, Message, Yashe},
     },
+    IrisBits, TestRes,
 };
 
 // Configure Criterion:
@@ -184,7 +186,9 @@ fn bench_plaintext_full_match(settings: &mut Criterion) {
         |benchmark, (eye_new, mask_new, eye_store, mask_store)| {
             benchmark.iter_with_large_drop(|| {
                 // To avoid timing dropping the return value, this line must not end in ';'
-                plaintext::is_iris_match(eye_new, mask_new, eye_store, mask_store)
+                plaintext::is_iris_match::<IrisBits, { IrisBits::STORE_ELEM_LEN }>(
+                    eye_new, mask_new, eye_store, mask_store,
+                )
             })
         },
     );

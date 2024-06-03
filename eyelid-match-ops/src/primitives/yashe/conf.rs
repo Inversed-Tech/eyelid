@@ -10,12 +10,10 @@ use ark_ff::PrimeField;
 use num_bigint::BigUint;
 use num_traits::ToPrimitive;
 
-use crate::primitives::poly::{modular_poly::conf::IrisBits, PolyConf};
-
-use crate::primitives::poly::modular_poly::conf::{FullRes, MiddleRes};
+use crate::{primitives::poly::PolyConf, FullRes, IrisBits, MiddleRes};
 
 #[cfg(tiny_poly)]
-use crate::primitives::poly::modular_poly::conf::TinyTest;
+use crate::TinyTest;
 
 /// Fixed YASHE encryption scheme parameters.
 /// The [`PolyConf`] supertrait is the configuration of the polynomials used in the scheme.
@@ -43,12 +41,16 @@ where
 
     /// A convenience method to convert [`T`](Self::T) to the [`Coeff`](PolyConf::Coeff) type.
     fn t_as_coeff() -> Self::Coeff {
+        debug_assert!(check_constraints::<Self>());
+
         Self::Coeff::from(Self::T)
     }
 
     /// A convenience method to convert [`T`](Self::T) to `u128`.
+    // The u64 to u128 cast is checked for type changes by `check_constraints()`.
+    #[allow(clippy::cast_lossless)]
     fn t_as_u128() -> u128 {
-        u128::from(Self::T)
+        Self::T as u128
     }
 
     /// A convenience method to convert [`T`](Self::T) to `i128`.
@@ -78,6 +80,8 @@ where
 
     /// A convenience method to convert [`Coeff::MODULUS`](PrimeField::MODULUS) to `u128`.
     fn modulus_as_u128() -> u128 {
+        // We can't check constraints here, because this method is called by the constraint checks.
+
         let modulus: BigUint = Self::Coeff::MODULUS.into();
 
         modulus
@@ -111,6 +115,71 @@ where
             .to_i128()
             .expect("constant modulus is small enough for i128")
     }
+}
+
+/// Checks various constraints on the generic values.
+//
+// The u64 to f64 cast keeps precision because the values are all small compared to the types.
+// There is an assertion that checks this remains valid, even if the types or values change.
+#[allow(clippy::cast_precision_loss)]
+// The u64 to u128 cast is checked for type changes in the const check.
+#[allow(clippy::cast_lossless)]
+fn check_constraints<C: YasheConf>() -> bool
+where
+    C::Coeff: From<u128> + From<u64> + From<i64>,
+{
+    let () = Assert::<C>::CHECK;
+
+    // The encrypted coefficient modulus must be larger than the plaintext modulus.
+    // `From::from()` isn't a const function, so we can't do a static assertion using it.
+    //
+    // TODO: work out how to const_assert!() this constraint.
+    debug_assert!((C::T as u128) < C::modulus_as_u128());
+
+    // Check that conversion from T to u128 is infallible.
+    // This will hopefully get optimised out, even in debug builds.
+    let _ = u128::from(C::T);
+
+    // This return value lets us skip calling the assertions entirely in release builds.
+    true
+}
+
+/// Call `Assert::<C>::CHECK` in one `YasheConf` method to check constant constraints on `YasheConf`.
+///
+/// Based on `static_assert_generic::static_assert!()`, but with the correct generic constraints:
+/// <https://docs.rs/static_assert_generic/0.1.0/static_assert_generic/macro.static_assert.html>
+struct Assert<D>
+where
+    D: YasheConf,
+    D::Coeff: From<u128> + From<u64> + From<i64>,
+{
+    /// A marker trait that binds the D generic to this struct.
+    _p: core::marker::PhantomData<D>,
+}
+
+impl<D> Assert<D>
+where
+    D: YasheConf,
+    D::Coeff: From<u128> + From<u64> + From<i64>,
+{
+    /// The implementation of the constant check.
+    //
+    // The u64 to f64 cast keeps precision because the values are all small compared to the types.
+    // There is an assertion that checks this remains valid, even if the types or values change.
+    #[allow(unused)]
+    #[allow(clippy::cast_precision_loss)]
+    const CHECK: () = if (
+        // The key standard deviation must fit within the plaintext modulus, with six sigma probability.
+        // We use strictly less for floatong point assertions, because floating point equality sometimes
+        // fails due to internal floating point inaccuracy, and this can vary by platform.
+        D::KEY_DELTA > (D::T as f64) / 6.0 ||
+        // Check the cast above remains valid.
+        D::T >= (1 << f64::MANTISSA_DIGITS) ||
+        // The error must be small enough to allow successful message retrieval, with three sigma probability.
+        D::ERROR_DELTA > D::KEY_DELTA / 3.0
+    ) {
+        panic!("YasheConf parameters are invalid")
+    };
 }
 
 /// Iris bit length polynomial parameters.
@@ -150,5 +219,5 @@ impl YasheConf for TinyTest {
 
     /// Limited to 1/3 of KEY_DELTA, so that the error is small enough for valid decryption.
     /// This makes each error term zero with 2.5 sigma probability, and the entire error zero with 95% probability.
-    const ERROR_DELTA: f64 = 0.2;
+    const ERROR_DELTA: f64 = 0.19;
 }

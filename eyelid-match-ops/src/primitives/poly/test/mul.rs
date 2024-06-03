@@ -3,9 +3,12 @@
 use ark_ff::{One, Zero};
 use ark_poly::Polynomial;
 
-use crate::primitives::poly::{
-    flat_karatsuba_mul, naive_cyclotomic_mul, new_unreduced_poly_modulus_slow, rec_karatsuba_mul,
-    test::gen::rand_poly, Poly, PolyConf, TestRes,
+use crate::{
+    primitives::poly::{
+        flat_karatsuba_mul, naive_cyclotomic_mul, new_unreduced_poly_modulus_slow,
+        rec_karatsuba_mul, test::gen::rand_poly, Poly, PolyConf,
+    },
+    TestRes,
 };
 
 /// Test cyclotomic multiplication of a random polynomial by `X^{[C::MAX_POLY_DEGREE] - 1}`.
