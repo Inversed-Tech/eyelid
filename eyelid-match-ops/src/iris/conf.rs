@@ -98,7 +98,7 @@ const_assert!(FullRes::MATCH_DENOMINATOR > 0);
 #[cfg(tiny_poly)]
 impl IrisConf for TinyTest {
     const COLUMN_LEN: usize = 1;
-    const COLUMNS: usize = 2;
+    const COLUMNS: usize = 6;
     const ROTATION_LIMIT: usize = 1;
 }
 
