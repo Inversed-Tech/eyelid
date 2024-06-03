@@ -380,7 +380,7 @@ where
     }
 
     /// Multiplication of ciphertext must happen as described in Page 13 of
-    /// https://eprint.iacr.org/2013/075.pdf
+    /// <https://eprint.iacr.org/2013/075.pdf>
     pub fn ciphertext_mul(&self, c1: Ciphertext<C>, c2: Ciphertext<C>) -> Ciphertext<C> {
         let mut res = Poly::<C>::zero();
         // lift to allow bignum coefficients (n * q * q would be enough, as in the C++ implementation)

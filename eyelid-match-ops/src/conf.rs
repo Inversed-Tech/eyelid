@@ -30,6 +30,12 @@ pub struct IrisBits;
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct FullRes;
 
+/// Middle resolution polynomial parameters.
+///
+/// These are the parameters for middle resolution, according to the Inversed Tech report.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct MiddleRes;
+
 /// Tiny test polynomials, used for finding edge cases in tests.
 ///
 /// The test parameters are specifically chosen to make failing tests easy to read and diagnose.

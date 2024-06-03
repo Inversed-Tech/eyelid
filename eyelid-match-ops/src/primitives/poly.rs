@@ -3,7 +3,7 @@
 //! - [`Poly`] is in [`modular_poly`] and its submodules,
 //! - `Fq*` coefficient types are in [`fq`] and submodules.
 
-pub use fq::Fq79;
+pub use fq::{Fq66, Fq66bn, Fq79, Fq79bn};
 pub use modular_poly::{
     conf::PolyConf,
     modulus::{mod_poly, new_unreduced_poly_modulus_slow},

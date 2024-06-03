@@ -1,6 +1,7 @@
-use crate::primitives::poly::modular_poly::conf::{FullRes, MiddleRes};
-use crate::primitives::yashe::Yashe;
-use crate::primitives::yashe::YasheConf; // Import the YasheConf trait
+use crate::{
+    primitives::yashe::{Yashe, YasheConf},
+    FullRes, MiddleRes,
+};
 
 fn homomorphic_addition_helper<C: YasheConf>()
 where
