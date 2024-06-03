@@ -70,7 +70,7 @@ const_assert!(FullRes::MAX_POLY_DEGREE.count_ones() == 1);
 
 #[cfg(tiny_poly)]
 impl PolyConf for TinyTest {
-    const MAX_POLY_DEGREE: usize = 8;
+    const MAX_POLY_DEGREE: usize = 16;
 
     type Coeff = FqTiny;
 
