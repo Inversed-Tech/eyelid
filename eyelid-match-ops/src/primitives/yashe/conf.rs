@@ -12,7 +12,7 @@ use num_traits::ToPrimitive;
 
 use crate::primitives::poly::{modular_poly::conf::IrisBits, PolyConf};
 
-use crate::primitives::poly::modular_poly::conf::FullRes;
+use crate::primitives::poly::modular_poly::conf::{FullRes, MiddleRes};
 
 #[cfg(tiny_poly)]
 use crate::primitives::poly::modular_poly::conf::TinyTest;
@@ -124,7 +124,16 @@ impl YasheConf for IrisBits {
 ///
 /// These are the parameters for full resolution, according to the Inversed Tech report.
 impl YasheConf for FullRes {
+    // VERIFY: max T should be 2^15, not 2^10
     const T: u64 = 1024;
+}
+
+/// Middle resolution polynomial parameters.
+///
+/// These are the parameters for middle resolution, according to the Inversed Tech report.
+impl YasheConf for MiddleRes {
+    // VERIFY: max T should be 2^12, not 2^8
+    const T: u64 = 256;
 }
 
 /// Tiny test polynomials, used for finding edge cases in tests.

@@ -6,7 +6,7 @@ use ark_ff::{PrimeField, Zero};
 use lazy_static::lazy_static;
 
 use crate::primitives::poly::Fq79;
-use crate::primitives::poly::fq::Fq79bn;
+use crate::primitives::poly::fq::{Fq66, Fq66bn, Fq79bn};
 
 #[cfg(tiny_poly)]
 use crate::primitives::poly::fq::FqTiny;
@@ -61,6 +61,7 @@ pub trait PolyConf: Copy + Clone + Debug + Eq + PartialEq {
 pub struct IrisBits;
 
 impl PolyConf for IrisBits {
+    // This degree requires a larger modulus, Fq79 doesn't work
     const MAX_POLY_DEGREE: usize = crate::IRIS_BIT_LENGTH.next_power_of_two();
 
     type Coeff = Fq79;
@@ -74,6 +75,11 @@ impl PolyConf for IrisBits {
 lazy_static! {
     /// The zero coefficient as a static constant value.
     static ref FQ79_ZERO: Fq79 = Fq79::zero();
+}
+
+lazy_static! {
+    /// The zero coefficient as a static constant value.
+    static ref FQ66_ZERO: Fq66 = Fq66::zero();
 }
 
 // TODO: try generic_singleton and see if it performs better:
@@ -95,6 +101,24 @@ impl PolyConf for FullRes {
         &FQ79_ZERO
     }
 }
+
+/// Middle resolution polynomial parameters.
+///
+/// These are the parameters for middle resolution, according to the Inversed Tech report.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct MiddleRes;
+
+impl PolyConf for MiddleRes {
+    const MAX_POLY_DEGREE: usize = 1024;
+
+    type Coeff = Fq66;
+    type CoeffBN = Fq66bn;
+
+    fn coeff_zero() -> &'static Self::Coeff {
+        &FQ66_ZERO
+    }
+}
+
 
 /// Tiny test polynomials, used for finding edge cases in tests.
 ///
