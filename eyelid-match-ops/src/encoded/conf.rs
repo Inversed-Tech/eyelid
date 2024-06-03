@@ -76,6 +76,11 @@ const_assert_eq!(
     IrisBits::NUM_BLOCKS * IrisBits::ROWS_PER_BLOCK,
     IrisBits::COLUMN_LEN
 );
+// Each block must be able to be encoded into the configured polynomial.
+const_assert!(
+    IrisBits::NUM_COLS_AND_PADS * IrisBits::ROWS_PER_BLOCK
+        <= <<IrisBits as EncodeConf>::PlainConf as PolyConf>::MAX_POLY_DEGREE
+);
 
 impl EncodeConf for FullRes {
     type EyeConf = FullRes;
@@ -86,6 +91,10 @@ impl EncodeConf for FullRes {
 const_assert_eq!(
     FullRes::NUM_BLOCKS * FullRes::ROWS_PER_BLOCK,
     FullRes::COLUMN_LEN
+);
+const_assert!(
+    FullRes::NUM_COLS_AND_PADS * FullRes::ROWS_PER_BLOCK
+        <= <<FullRes as EncodeConf>::PlainConf as PolyConf>::MAX_POLY_DEGREE
 );
 
 #[cfg(tiny_poly)]
@@ -104,5 +113,9 @@ mod tiny_test_asserts {
     const_assert_eq!(
         TinyTest::NUM_BLOCKS * TinyTest::ROWS_PER_BLOCK,
         TinyTest::COLUMN_LEN
+    );
+    const_assert!(
+        TinyTest::NUM_COLS_AND_PADS * TinyTest::ROWS_PER_BLOCK
+            <= <<TinyTest as EncodeConf>::PlainConf as PolyConf>::MAX_POLY_DEGREE
     );
 }
