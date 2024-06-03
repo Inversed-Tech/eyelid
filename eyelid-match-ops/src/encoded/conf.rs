@@ -71,6 +71,8 @@ impl EncodeConf for IrisBits {
 // TODO: work out how to automatically apply these assertions to every trait impl.
 // (Or every config type.)
 //
+// We can't have more rows per block than actual rows.
+const_assert!(IrisBits::ROWS_PER_BLOCK <= IrisBits::COLUMN_LEN);
 // Only full blocks are supported at the moment.
 const_assert_eq!(
     IrisBits::NUM_BLOCKS * IrisBits::ROWS_PER_BLOCK,
@@ -88,6 +90,7 @@ impl EncodeConf for FullRes {
 
     const ROWS_PER_BLOCK: usize = 10;
 }
+const_assert!(FullRes::ROWS_PER_BLOCK <= FullRes::COLUMN_LEN);
 const_assert_eq!(
     FullRes::NUM_BLOCKS * FullRes::ROWS_PER_BLOCK,
     FullRes::COLUMN_LEN
@@ -102,7 +105,7 @@ impl EncodeConf for TinyTest {
     type EyeConf = TinyTest;
     type PlainConf = TinyTest;
 
-    const ROWS_PER_BLOCK: usize = 2;
+    const ROWS_PER_BLOCK: usize = 1;
 }
 
 /// This module avoids repeating `#[cfg(tiny_poly)]` for each assertion.
@@ -110,6 +113,7 @@ impl EncodeConf for TinyTest {
 mod tiny_test_asserts {
     use super::*;
 
+    const_assert!(TinyTest::ROWS_PER_BLOCK <= TinyTest::COLUMN_LEN);
     const_assert_eq!(
         TinyTest::NUM_BLOCKS * TinyTest::ROWS_PER_BLOCK,
         TinyTest::COLUMN_LEN
