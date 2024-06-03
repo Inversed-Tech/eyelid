@@ -177,7 +177,10 @@ where
         // consider creating Poly methods which take a closure to update each coefficient
         // - for leading zero coefficients to MAX_POLY_DEGREE, and only non-zero coeffs_mut()
         // - for Coeff and u128 arithmetic
-        for coeff in res.coeffs_mut() {
+        //
+        // This mut is actually needed.
+        #[allow(unused_mut)]
+        for mut coeff in res.coeffs_mut() {
             // Convert coefficient to a primitive integer
             let mut coeff_res = C::coeff_as_u128(*coeff);
 
@@ -221,7 +224,8 @@ where
         // consider creating Poly methods which take a closure to update each coefficient
         // - for leading zero coefficients to MAX_POLY_DEGREE, and only non-zero coeffs_mut()
         // - for Coeff and u128 arithmetic
-        for coeff in res.coeffs_mut() {
+        #[allow(unused_mut)]
+        for mut coeff in res.coeffs_mut() {
             // Convert coefficient to a primitive integer
             let mut coeff_res = C::coeff_as_u128(*coeff);
             // Multiply by T
@@ -348,7 +352,9 @@ where
     /// Plaintext addition is trivial
     pub fn plaintext_add(&self, m1: Message<C>, m2: Message<C>) -> Message<C> {
         let mut res = m1.m + m2.m;
-        for coeff in res.coeffs_mut() {
+
+        #[allow(unused_mut)]
+        for mut coeff in res.coeffs_mut() {
             let mut coeff_res = C::coeff_as_u128(*coeff);
             coeff_res %= C::t_as_u128();
             *coeff = coeff_res.into();
@@ -360,13 +366,16 @@ where
     /// Plaintext multiplication must center lift before reduction
     pub fn plaintext_mul(&self, m1: Message<C>, m2: Message<C>) -> Message<C> {
         let mut res = m1.m * m2.m;
-        for coeff in res.coeffs_mut() {
+
+        #[allow(unused_mut, clippy::cast_sign_loss)]
+        for mut coeff in res.coeffs_mut() {
             let mut coeff_res: i128 = C::coeff_as_i128(*coeff);
             // center lift mod q
             if coeff_res > (C::modulus_minus_one_div_two_as_i128()) {
                 coeff_res -= C::modulus_as_i128();
             }
-            coeff_res = coeff_res.rem_euclid(C::t_as_u128() as i128);
+            coeff_res = coeff_res.rem_euclid(C::t_as_i128());
+            // The result of rem_euclid() is always positive.
             *coeff = (coeff_res as u128).into();
         }
         res.truncate_to_canonical_form();
@@ -384,8 +393,12 @@ where
     pub fn ciphertext_mul(&self, c1: Ciphertext<C>, c2: Ciphertext<C>) -> Ciphertext<C> {
         let mut res = Poly::<C>::zero();
         // lift to allow bignum coefficients (n * q * q would be enough, as in the C++ implementation)
-        let coeffs1 = c1.c.to_field_elements().unwrap();
-        let coeffs2 = c2.c.to_field_elements().unwrap();
+        let coeffs1 =
+            c1.c.to_field_elements()
+                .expect("There will always be coefficients because the polynomial is non-zero");
+        let coeffs2 =
+            c2.c.to_field_elements()
+                .expect("There will always be coefficients because the polynomial is non-zero");
 
         let mut lifted_pol1 = DensePolynomial::<Fq79bn>::zero();
         for i in 0..coeffs1.len() {
