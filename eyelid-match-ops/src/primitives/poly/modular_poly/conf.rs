@@ -5,8 +5,8 @@ use std::fmt::Debug;
 use ark_ff::{PrimeField, Zero};
 use lazy_static::lazy_static;
 
-use crate::primitives::poly::Fq79;
 use crate::primitives::poly::fq::{Fq66, Fq66bn, Fq79bn};
+use crate::primitives::poly::Fq79;
 
 #[cfg(tiny_poly)]
 use crate::primitives::poly::fq::FqTiny;
@@ -118,7 +118,6 @@ impl PolyConf for MiddleRes {
         &FQ66_ZERO
     }
 }
-
 
 /// Tiny test polynomials, used for finding edge cases in tests.
 ///

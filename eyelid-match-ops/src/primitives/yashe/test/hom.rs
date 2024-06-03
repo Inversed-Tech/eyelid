@@ -1,4 +1,4 @@
-use crate::primitives::poly::modular_poly::conf::{FullRes, IrisBits, MiddleRes};
+use crate::primitives::poly::modular_poly::conf::{FullRes, MiddleRes};
 use crate::primitives::yashe::Yashe;
 use crate::primitives::yashe::YasheConf; // Import the YasheConf trait
 

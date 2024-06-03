@@ -6,13 +6,13 @@ use num_traits::ToPrimitive;
 use std::marker::PhantomData;
 
 use ark_ff::{BigInteger, One, PrimeField, ToConstraintField, UniformRand, Zero};
+use ark_poly::univariate::DensePolynomial;
 use rand::{
     distributions::uniform::{SampleRange, SampleUniform},
     rngs::ThreadRng,
     Rng,
 };
 use rand_distr::{Distribution, Normal};
-use ark_poly::univariate::DensePolynomial;
 
 use crate::primitives::poly::Poly;
 
@@ -145,7 +145,7 @@ where
         // Create the ciphertext by sampling error polynomials and applying them to the public key.
         let s = self.sample_err(rng);
         let e = self.sample_err(rng);
-        
+
         let mut c = s * public_key.h + e;
 
         // Divide the polynomial coefficient modulus by T, using primitive integer arithmetic.
@@ -196,7 +196,6 @@ where
             *coeff = coeff_res.into();
         }
 
-
         // Raw coefficient access must be followed by a truncation check.
         res.truncate_to_canonical_form();
 
@@ -242,7 +241,6 @@ where
 
         Message { m: res }
     }
-
 
     /// Sample a polynomial with small random coefficients using a gaussian distribution.
     pub fn sample_err(&self, rng: &mut ThreadRng) -> Poly<C> {
@@ -376,14 +374,14 @@ where
     }
 
     /// Ciphertext addition is trivial
-    pub fn ciphertext_add(&self, c1: Ciphertext<C>, c2: Ciphertext<C>)-> Ciphertext<C> {
+    pub fn ciphertext_add(&self, c1: Ciphertext<C>, c2: Ciphertext<C>) -> Ciphertext<C> {
         let c = c1.c + c2.c;
         Ciphertext { c }
     }
 
     /// Multiplication of ciphertext must happen as described in Page 13 of
-    /// https://eprint.iacr.org/2013/075.pdf 
-    pub fn ciphertext_mul(&self, c1: Ciphertext<C>, c2: Ciphertext<C>)-> Ciphertext<C> {
+    /// https://eprint.iacr.org/2013/075.pdf
+    pub fn ciphertext_mul(&self, c1: Ciphertext<C>, c2: Ciphertext<C>) -> Ciphertext<C> {
         let mut res = Poly::<C>::zero();
         // lift to allow bignum coefficients (n * q * q would be enough, as in the C++ implementation)
         let coeffs1 = c1.c.to_field_elements().unwrap();
@@ -392,7 +390,9 @@ where
         let mut lifted_pol1 = DensePolynomial::<Fq79bn>::zero();
         for i in 0..coeffs1.len() {
             if i >= lifted_pol1.coeffs.len() {
-                lifted_pol1.coeffs.resize(i+1, C::coeff_as_u128(coeffs1[i]).into());
+                lifted_pol1
+                    .coeffs
+                    .resize(i + 1, C::coeff_as_u128(coeffs1[i]).into());
             } else {
                 lifted_pol1[i] = C::coeff_as_u128(coeffs1[i]).into();
             }
@@ -400,7 +400,9 @@ where
         let mut lifted_pol2 = DensePolynomial::<Fq79bn>::zero();
         for i in 0..coeffs2.len() {
             if i >= lifted_pol2.coeffs.len() {
-                lifted_pol2.coeffs.resize(i+1, C::coeff_as_u128(coeffs2[i]).into());
+                lifted_pol2
+                    .coeffs
+                    .resize(i + 1, C::coeff_as_u128(coeffs2[i]).into());
             } else {
                 lifted_pol2[i] = C::coeff_as_u128(coeffs2[i]).into();
             }
@@ -408,7 +410,7 @@ where
 
         // TODO: use more efficient version
         let mut c = lifted_pol1.naive_mul(&lifted_pol2);
-        
+
         // reduce by the cyclotomic polynomial
         let mut i = C::MAX_POLY_DEGREE;
         while i < c.coeffs.len() {
@@ -424,17 +426,25 @@ where
             i += 1;
         }
 
-        // mul by t/q 
+        // mul by t/q
         // round to the nearest int
         // reduce mod q
         // convert back to Fq79
 
         for i in 0..c.coeffs.len() {
-
-            let mut cbn: num_bigint::BigInt = num_bigint::BigInt::from_bytes_le(num_bigint::Sign::Plus, &c[i].into_bigint().to_bytes_le());
-            let cbnd2: num_bigint::BigInt = num_bigint::BigInt::from_bytes_le(num_bigint::Sign::Plus, &Fq79bn::MODULUS_MINUS_ONE_DIV_TWO.to_bytes_le());
+            let mut cbn: num_bigint::BigInt = num_bigint::BigInt::from_bytes_le(
+                num_bigint::Sign::Plus,
+                &c[i].into_bigint().to_bytes_le(),
+            );
+            let cbnd2: num_bigint::BigInt = num_bigint::BigInt::from_bytes_le(
+                num_bigint::Sign::Plus,
+                &Fq79bn::MODULUS_MINUS_ONE_DIV_TWO.to_bytes_le(),
+            );
             if cbn > cbnd2 {
-                let bnmod: num_bigint::BigInt = num_bigint::BigInt::from_bytes_le(num_bigint::Sign::Plus, &Fq79bn::MODULUS.to_bytes_le());
+                let bnmod: num_bigint::BigInt = num_bigint::BigInt::from_bytes_le(
+                    num_bigint::Sign::Plus,
+                    &Fq79bn::MODULUS.to_bytes_le(),
+                );
                 cbn -= bnmod;
             }
             cbn *= num_bigint::BigInt::from(C::t_as_u128());
@@ -445,7 +455,7 @@ where
             } else {
                 cbn -= modd2bn;
             }
-            cbn /= modbn.clone(); 
+            cbn /= modbn.clone();
             cbn %= modbn.clone();
             if cbn < num_bigint::BigInt::zero() {
                 cbn += modbn;
