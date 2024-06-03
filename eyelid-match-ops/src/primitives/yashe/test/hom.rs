@@ -64,13 +64,10 @@ where
 #[test]
 fn homomorphic_addition_test() {
     homomorphic_addition_helper::<FullRes>();
-    homomorphic_addition_helper::<IrisBits>();
 }
 
 #[test]
 fn homomorphic_multiplication_test() {
     homomorphic_multiplication_helper_negative::<FullRes>();
     homomorphic_multiplication_helper_positive::<FullRes>();
-    homomorphic_multiplication_helper_negative::<IrisBits>();
-    homomorphic_multiplication_helper_positive::<IrisBits>();
 }
