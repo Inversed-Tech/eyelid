@@ -368,10 +368,7 @@ where
             if coeff_res > (C::modulus_minus_one_div_two_as_i128()) {
                 coeff_res -= C::modulus_as_i128();
             }
-            coeff_res %= C::t_as_i128();
-            if coeff_res < 0 {
-                coeff_res += C::t_as_i128();
-            }
+            coeff_res = coeff_res.rem_euclid(C::t_as_u128() as i128);
             *coeff = (coeff_res as u128).into();
         }
         res.truncate_to_canonical_form();
