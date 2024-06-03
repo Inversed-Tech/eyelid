@@ -1,3 +1,4 @@
+use crate::primitives::poly::IrisBits;
 use crate::primitives::poly::modular_poly::conf::FullRes;
 use crate::primitives::yashe::Yashe;
 use crate::primitives::yashe::YasheConf; // Import the YasheConf trait
@@ -66,6 +67,7 @@ where
 #[test]
 fn homomorphic_addition_test() {
     homomorphic_addition_helper::<FullRes>();
+    homomorphic_addition_helper::<IrisBits>();
 }
 
 #[test]
