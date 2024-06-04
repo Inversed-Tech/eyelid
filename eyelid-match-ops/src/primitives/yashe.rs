@@ -3,7 +3,7 @@
 
 use std::marker::PhantomData;
 
-use ark_ff::{One, UniformRand, Zero};
+use ark_ff::{One, UniformRand};
 use num_bigint::Sign;
 use rand::{
     distributions::uniform::{SampleRange, SampleUniform},
@@ -18,7 +18,7 @@ pub use conf::YasheConf;
 
 pub mod conf;
 
-#[cfg(test)]
+#[cfg(any(test, feature = "benchmark"))]
 pub mod test;
 
 /// Yashe scheme
@@ -258,7 +258,7 @@ where
 
     /// Sample a polynomial with small random coefficients using a gaussian distribution.
     #[allow(clippy::cast_possible_truncation)]
-    fn sample_gaussian(&self, delta: f64, rng: &mut ThreadRng) -> Poly<C> {
+    pub fn sample_gaussian(&self, delta: f64, rng: &mut ThreadRng) -> Poly<C> {
         let mut res = Poly::non_canonical_zeroes(C::MAX_POLY_DEGREE);
 
         for i in 0..C::MAX_POLY_DEGREE {
@@ -296,41 +296,8 @@ where
         res
     }
 
-    /// Sample from message space
-    pub fn sample_message(&self, rng: &mut ThreadRng) -> Message<C> {
-        let m = self.sample_uniform_range(0..C::T, rng);
-        Message { m }
-    }
-
-    /// "Sample" one
-    pub fn sample_one(&self) -> Message<C> {
-        let mut m = Poly::<C>::zero();
-        m[0] = C::Coeff::one();
-        Message { m }
-    }
-
-    /// "Sample" constant
-    pub fn sample_constant(&self, c: u64) -> Message<C> {
-        let mut m = Poly::<C>::zero();
-        m[0] = C::Coeff::from(c);
-        Message { m }
-    }
-
-    /// "Sample" zero
-    pub fn sample_zero(&self) -> Message<C> {
-        let m = Poly::<C>::zero();
-        Message { m }
-    }
-
-    /// Sample from binary message space
-    pub fn sample_binary_message(&self, rng: &mut ThreadRng) -> Message<C> {
-        // TODO: this might be implemented more efficiently using `Rng::gen_bool()`
-        let m = self.sample_uniform_range(0..=1_u64, rng);
-        Message { m }
-    }
-
     /// Sample a polynomial with random coefficients in `range` using a uniform distribution.
-    fn sample_uniform_range<T, R>(&self, range: R, rng: &mut ThreadRng) -> Poly<C>
+    pub fn sample_uniform_range<T, R>(&self, range: R, rng: &mut ThreadRng) -> Poly<C>
     where
         T: SampleUniform,
         R: SampleRange<T> + Clone,
