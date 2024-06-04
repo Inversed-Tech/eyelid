@@ -249,7 +249,7 @@ impl<C: PolyConf> Poly<C> {
         let mut res = Vec::with_capacity(C::MAX_POLY_DEGREE);
 
         for i in 0..C::MAX_POLY_DEGREE {
-            res[i] = f(&self[i]);
+            res.push(f(&self[i]));
         }
 
         res
