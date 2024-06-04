@@ -12,7 +12,10 @@ use crate::{
 };
 
 #[cfg(tiny_poly)]
-use crate::{primitives::poly::fq::FqTiny, TinyTest};
+use crate::{
+    primitives::poly::fq::{FqTiny, FqTinybn},
+    TinyTest,
+};
 
 /// Fixed polynomial parameters.
 ///
@@ -94,7 +97,7 @@ impl PolyConf for FullRes {
         &FQ79_ZERO
     }
 }
-//const_assert!(FullRes::MAX_POLY_DEGREE >= FullRes::DATA_BIT_LEN);
+const_assert!(FullRes::MAX_POLY_DEGREE >= FullRes::DATA_BIT_LEN);
 const_assert!(FullRes::MAX_POLY_DEGREE.count_ones() == 1);
 
 impl PolyConf for FullResBN {
@@ -106,7 +109,7 @@ impl PolyConf for FullResBN {
         &FQ79_BN_ZERO
     }
 }
-//const_assert!(FullResBN::MAX_POLY_DEGREE >= FullRes::DATA_BIT_LEN);
+const_assert!(FullResBN::MAX_POLY_DEGREE >= FullRes::DATA_BIT_LEN);
 const_assert!(FullResBN::MAX_POLY_DEGREE.count_ones() == 1);
 
 impl PolyConf for MiddleRes {
@@ -149,10 +152,10 @@ impl PolyConf for TinyTestBN {
     const MAX_POLY_DEGREE: usize = TinyTest::MAX_POLY_DEGREE;
 
     // TODO: find a coefficient that works here
-    type Coeff = FqTiny;
+    type Coeff = FqTinybn;
 
     fn coeff_zero() -> &'static Self::Coeff {
-        &FQ_TINY_ZERO
+        &FQ_TINY_BN_ZERO
     }
 }
 
@@ -170,6 +173,7 @@ mod tiny_test_asserts {
 lazy_static! {
     /// The zero coefficient as a static constant value.
     static ref FQ_TINY_ZERO: FqTiny = FqTiny::zero();
+    static ref FQ_TINY_BN_ZERO: FqTinybn = FqTinybn::zero();
 }
 
 /// Iris bit length polynomial parameters for lifted coefficients.

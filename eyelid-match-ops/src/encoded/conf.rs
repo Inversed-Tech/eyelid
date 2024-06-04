@@ -95,10 +95,10 @@ const_assert_eq!(
     FullRes::NUM_BLOCKS * FullRes::ROWS_PER_BLOCK,
     FullRes::COLUMN_LEN
 );
-//const_assert!(
-//    FullRes::NUM_COLS_AND_PADS * FullRes::ROWS_PER_BLOCK
-//        <= <<FullRes as EncodeConf>::PlainConf as PolyConf>::MAX_POLY_DEGREE
-//);
+const_assert!(
+    FullRes::NUM_COLS_AND_PADS * FullRes::ROWS_PER_BLOCK
+        <= <<FullRes as EncodeConf>::PlainConf as PolyConf>::MAX_POLY_DEGREE
+);
 
 #[cfg(tiny_poly)]
 impl EncodeConf for TinyTest {

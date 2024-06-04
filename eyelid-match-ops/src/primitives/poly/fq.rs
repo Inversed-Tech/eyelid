@@ -16,6 +16,9 @@ use crate::primitives::poly::PolyConf;
 #[cfg(tiny_poly)]
 pub use fq_tiny::Fq4 as FqTiny;
 
+#[cfg(tiny_poly)]
+pub use fq_tiny_bn::Fq4 as FqTinybn;
+
 mod fq79;
 mod fq79bn;
 
@@ -24,3 +27,6 @@ mod fq66bn;
 
 #[cfg(tiny_poly)]
 mod fq_tiny;
+
+#[cfg(tiny_poly)]
+mod fq_tiny_bn;
