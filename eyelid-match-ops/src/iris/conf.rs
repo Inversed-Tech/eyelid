@@ -1,4 +1,6 @@
 //! Base iris configurations, shared by all encoding and encryption schemes.
+//!
+//! These parameters are from the Inversed Tech report "Polynomial Encodings for FHE Relative Hamming Comparison v2".
 
 use std::mem::size_of;
 
