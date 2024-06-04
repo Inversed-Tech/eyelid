@@ -2,6 +2,7 @@
 //! `<https://eprint.iacr.org/2013/075.pdf>`
 
 use crate::primitives::poly::fq::Fq79bn;
+use num_bigint::Sign;
 use num_traits::ToPrimitive;
 use std::marker::PhantomData;
 
@@ -391,92 +392,39 @@ where
     /// Multiplication of ciphertext must happen as described in Page 13 of
     /// <https://eprint.iacr.org/2013/075.pdf>
     pub fn ciphertext_mul(&self, c1: Ciphertext<C>, c2: Ciphertext<C>) -> Ciphertext<C> {
-        let mut res = Poly::<C>::zero();
-        // lift to allow bignum coefficients (n * q * q would be enough, as in the C++ implementation)
-        let coeffs1 =
-            c1.c.to_field_elements()
-                .expect("There will always be coefficients because the polynomial is non-zero");
-        let coeffs2 =
-            c2.c.to_field_elements()
-                .expect("There will always be coefficients because the polynomial is non-zero");
+        let mut c: Poly<C::CoeffBN> = c1.c.map_non_zero(|coeff| C::coeff_as_bn(*coeff));
+        let c2 = c2.c.map_non_zero(|coeff| C::coeff_as_bn(*coeff));
 
-        let mut lifted_pol1 = DensePolynomial::<Fq79bn>::zero();
-        for i in 0..coeffs1.len() {
-            if i >= lifted_pol1.coeffs.len() {
-                lifted_pol1
-                    .coeffs
-                    .resize(i + 1, C::coeff_as_u128(coeffs1[i]).into());
-            } else {
-                lifted_pol1[i] = C::coeff_as_u128(coeffs1[i]).into();
-            }
-        }
-        let mut lifted_pol2 = DensePolynomial::<Fq79bn>::zero();
-        for i in 0..coeffs2.len() {
-            if i >= lifted_pol2.coeffs.len() {
-                lifted_pol2
-                    .coeffs
-                    .resize(i + 1, C::coeff_as_u128(coeffs2[i]).into());
-            } else {
-                lifted_pol2[i] = C::coeff_as_u128(coeffs2[i]).into();
-            }
-        }
+        c *= c2;
 
-        // TODO: use more efficient version
-        let mut c = lifted_pol1.naive_mul(&lifted_pol2);
+        let c = c.extract_include_zero(|coeff_bn| C::bn_as_big_int(*coeff_bn));
+        let cbnd2 = C::modulus_minus_one_div_two_as_big_int();
+        let bnmod = C::modulus_as_big_int();
+        let t = C::t_as_big_int();
 
-        // reduce by the cyclotomic polynomial
-        let mut i = C::MAX_POLY_DEGREE;
-        while i < c.coeffs.len() {
-            let q = i / C::MAX_POLY_DEGREE;
-            let r = i % C::MAX_POLY_DEGREE;
+        let mut res = Poly::<C>::non_canonical_zeroes(c.len());
 
-            if q % 2 == 1 {
-                c.coeffs[r] = c.coeffs[r] - c.coeffs[i];
-            } else {
-                c.coeffs[r] = c.coeffs[r] + c.coeffs[i];
-            }
-            c.coeffs[i] = Fq79bn::zero();
-            i += 1;
-        }
+        for i in 0..c.len() {
+            let cbn = c[i];
 
-        // mul by t/q
-        // round to the nearest int
-        // reduce mod q
-        // convert back to Fq79
-
-        for i in 0..c.coeffs.len() {
-            let mut cbn: num_bigint::BigInt = num_bigint::BigInt::from_bytes_le(
-                num_bigint::Sign::Plus,
-                &c[i].into_bigint().to_bytes_le(),
-            );
-            let cbnd2: num_bigint::BigInt = num_bigint::BigInt::from_bytes_le(
-                num_bigint::Sign::Plus,
-                &Fq79bn::MODULUS_MINUS_ONE_DIV_TWO.to_bytes_le(),
-            );
+            // Centre lift
             if cbn > cbnd2 {
-                let bnmod: num_bigint::BigInt = num_bigint::BigInt::from_bytes_le(
-                    num_bigint::Sign::Plus,
-                    &Fq79bn::MODULUS.to_bytes_le(),
-                );
                 cbn -= bnmod;
             }
-            cbn *= num_bigint::BigInt::from(C::t_as_u128());
-            let modbn = num_bigint::BigInt::from(C::modulus_as_u128());
-            let modd2bn = num_bigint::BigInt::from(C::modulus_minus_one_div_two_as_u128());
-            if cbn > num_bigint::BigInt::zero() {
-                cbn += modd2bn;
+            // * T
+            cbn *= t;
+            // Round to nearest integer after division
+            // + (Q - 1) / 2
+            if cbn.sign() == Sign::Plus {
+                cbn += cbnd2;
             } else {
-                cbn -= modd2bn;
+                cbn -= cbnd2;
             }
-            cbn /= modbn.clone();
-            cbn %= modbn.clone();
-            if cbn < num_bigint::BigInt::zero() {
-                cbn += modbn;
-            }
-            let coeff_res: u128 = cbn
-                .to_u128()
-                .expect("coefficients are small enough for u128");
-            res[i] = C::Coeff::from(coeff_res);
+            // / Q
+            cbn /= bnmod.clone();
+            // reduce mod q
+            // convert back to Coeff
+            res[i] = C::big_int_as_coeff(cbn);
         }
 
         res.truncate_to_canonical_form();

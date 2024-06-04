@@ -232,6 +232,29 @@ impl<C: PolyConf> Poly<C> {
         res
     }
 
+    /// Maps all coefficients of `self` to an arbitrary type using `f`, including the
+    /// leading zeroes, and returns the resulting polynomial.
+    ///
+    /// This method allocates leading zero coefficients.
+    ///
+    /// # Panics
+    ///
+    /// If `f` is not in the canonical reduced form.
+    pub fn extract_include_zero<U, F>(&mut self, mut f: F) -> Vec<U>
+    where
+        F: FnMut(&C::Coeff) -> U,
+    {
+        assert!(self.coeffs.len() <= C::MAX_POLY_DEGREE);
+
+        let mut res = Vec::with_capacity(C::MAX_POLY_DEGREE);
+
+        for i in 0..C::MAX_POLY_DEGREE {
+            res[i] = f(&self[i]);
+        }
+
+        res
+    }
+
     // Shadow DensePolynomial methods, so the types are all `Poly`
 
     /// Perform a naive `O(n^2)` multiplication of `self` by `other`.

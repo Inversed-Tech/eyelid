@@ -4,7 +4,7 @@ use std::mem::size_of;
 
 use bitvec::{mem::elts, prelude::BitArray};
 
-use crate::{FullRes, IrisBits};
+use crate::{FullRes, IrisBits, MiddleRes};
 
 #[cfg(tiny_poly)]
 use crate::TinyTest;
@@ -94,6 +94,18 @@ const_assert!(FullRes::STORE_ELEM_LEN * size_of::<IrisStore>() * 8 >= FullRes::D
 const_assert!(FullRes::ROTATION_COMPARISONS <= FullRes::COLUMNS);
 const_assert!(FullRes::MATCH_NUMERATOR <= FullRes::MATCH_DENOMINATOR);
 const_assert!(FullRes::MATCH_DENOMINATOR > 0);
+
+// TODO: pick up these numbers from the report
+impl IrisConf for MiddleRes {
+    const COLUMN_LEN: usize = 5;
+    const COLUMNS: usize = 80;
+    const ROTATION_LIMIT: usize = IrisBits::ROTATION_LIMIT;
+}
+const_assert!(MiddleRes::DATA_BIT_LEN >= MiddleRes::COLUMN_LEN * MiddleRes::COLUMNS);
+const_assert!(MiddleRes::STORE_ELEM_LEN * size_of::<IrisStore>() * 8 >= MiddleRes::DATA_BIT_LEN);
+const_assert!(MiddleRes::ROTATION_COMPARISONS <= MiddleRes::COLUMNS);
+const_assert!(MiddleRes::MATCH_NUMERATOR <= MiddleRes::MATCH_DENOMINATOR);
+const_assert!(MiddleRes::MATCH_DENOMINATOR > 0);
 
 #[cfg(tiny_poly)]
 impl IrisConf for TinyTest {
