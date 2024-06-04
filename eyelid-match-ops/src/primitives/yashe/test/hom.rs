@@ -1,3 +1,5 @@
+//! Unit tests for homomorphic operations
+
 use crate::{
     primitives::yashe::{Yashe, YasheConf},
     FullRes, MiddleRes,
