@@ -1,13 +1,10 @@
 //! Implementation of YASHE cryptosystem
 //! `<https://eprint.iacr.org/2013/075.pdf>`
 
-use crate::primitives::poly::fq::Fq79bn;
-use num_bigint::Sign;
-use num_traits::ToPrimitive;
 use std::marker::PhantomData;
 
-use ark_ff::{BigInteger, One, PrimeField, ToConstraintField, UniformRand, Zero};
-use ark_poly::univariate::DensePolynomial;
+use ark_ff::{One, UniformRand, Zero};
+use num_bigint::Sign;
 use rand::{
     distributions::uniform::{SampleRange, SampleUniform},
     rngs::ThreadRng,
@@ -354,6 +351,7 @@ where
     pub fn plaintext_add(&self, m1: Message<C>, m2: Message<C>) -> Message<C> {
         let mut res = m1.m + m2.m;
 
+        // It does actually need to be mutable to compile.
         #[allow(unused_mut)]
         for mut coeff in res.coeffs_mut() {
             let mut coeff_res = C::coeff_as_u128(*coeff);
@@ -368,16 +366,16 @@ where
     pub fn plaintext_mul(&self, m1: Message<C>, m2: Message<C>) -> Message<C> {
         let mut res = m1.m * m2.m;
 
-        #[allow(unused_mut, clippy::cast_sign_loss)]
+        #[allow(unused_mut)]
         for mut coeff in res.coeffs_mut() {
-            let mut coeff_res: i128 = C::coeff_as_i128(*coeff);
+            let mut coeff_res = C::coeff_as_i128(*coeff);
             // center lift mod q
-            if coeff_res > (C::modulus_minus_one_div_two_as_i128()) {
+            if coeff_res > C::modulus_minus_one_div_two_as_i128() {
                 coeff_res -= C::modulus_as_i128();
             }
             coeff_res = coeff_res.rem_euclid(C::t_as_i128());
-            // The result of rem_euclid() is always positive.
-            *coeff = (coeff_res as u128).into();
+
+            *coeff = C::i128_as_coeff(coeff_res);
         }
         res.truncate_to_canonical_form();
         Message { m: res }
@@ -391,40 +389,44 @@ where
 
     /// Multiplication of ciphertext must happen as described in Page 13 of
     /// <https://eprint.iacr.org/2013/075.pdf>
-    pub fn ciphertext_mul(&self, c1: Ciphertext<C>, c2: Ciphertext<C>) -> Ciphertext<C> {
-        let mut c: Poly<C::CoeffBN> = c1.c.map_non_zero(|coeff| C::coeff_as_bn(*coeff));
-        let c2 = c2.c.map_non_zero(|coeff| C::coeff_as_bn(*coeff));
+    pub fn ciphertext_mul(&self, c1: Ciphertext<C>, c2: Ciphertext<C>) -> Ciphertext<C>
+//where
+    //<<C as YasheConf>::PolyBN as PolyConf>::Coeff: Poly<<C as YasheConf>::PolyBN>,
+    {
+        let c = C::poly_as_bn(&c1.c);
+        let c2 = C::poly_as_bn(&c2.c);
 
-        c *= c2;
+        let m = c * c2;
 
-        let c = c.extract_include_zero(|coeff_bn| C::bn_as_big_int(*coeff_bn));
-        let cbnd2 = C::modulus_minus_one_div_two_as_big_int();
-        let bnmod = C::modulus_as_big_int();
+        let m = m.extract_include_zero(|coeff_bn| C::bn_as_big_int(*coeff_bn));
+        let half_modulus = C::modulus_minus_one_div_two_as_big_int();
+        let modulus = C::modulus_as_big_int();
         let t = C::t_as_big_int();
 
-        let mut res = Poly::<C>::non_canonical_zeroes(c.len());
+        let mut res = Poly::<C>::non_canonical_zeroes(m.len());
 
-        for i in 0..c.len() {
-            let cbn = c[i];
+        // TODO: use Poly::coeffs_modify_non_zero() here and benchmark
+        for i in 0..m.len() {
+            let mut coeff = m[i].clone();
 
             // Centre lift
-            if cbn > cbnd2 {
-                cbn -= bnmod;
+            if coeff > half_modulus {
+                coeff -= &modulus;
             }
             // * T
-            cbn *= t;
+            coeff *= &t;
             // Round to nearest integer after division
             // + (Q - 1) / 2
-            if cbn.sign() == Sign::Plus {
-                cbn += cbnd2;
+            if coeff.sign() == Sign::Plus {
+                coeff += &half_modulus;
             } else {
-                cbn -= cbnd2;
+                coeff -= &half_modulus;
             }
             // / Q
-            cbn /= bnmod.clone();
+            coeff /= &modulus;
             // reduce mod q
             // convert back to Coeff
-            res[i] = C::big_int_as_coeff(cbn);
+            res[i] = C::big_int_as_coeff(coeff);
         }
 
         res.truncate_to_canonical_form();

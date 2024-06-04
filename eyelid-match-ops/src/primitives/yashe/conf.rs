@@ -10,10 +10,16 @@ use ark_ff::PrimeField;
 use num_bigint::{BigInt, BigUint, Sign};
 use num_traits::ToPrimitive;
 
-use crate::{primitives::poly::PolyConf, FullRes, IrisBits, MiddleRes};
+use crate::{
+    primitives::poly::{
+        modular_poly::conf::{FullResBN, IrisBitsBN, MiddleResBN},
+        Poly, PolyConf,
+    },
+    FullRes, IrisBits, MiddleRes,
+};
 
 #[cfg(tiny_poly)]
-use crate::TinyTest;
+use crate::{primitives::poly::modular_poly::conf::TinyTestBN, TinyTest};
 
 /// Fixed YASHE encryption scheme parameters.
 /// The [`PolyConf`] supertrait is the configuration of the polynomials used in the scheme.
@@ -90,12 +96,22 @@ where
             .expect("coefficients are small enough for i128")
     }
 
-    /// A convenience method to convert a [`Coeff`](PolyConf::Coeff) to [`CoeffBN`](PolyConf::CoeffBN).
+    /// A convenience method to convert an `i128` to [`Coeff`](PolyConf::Coeff).
     /// TODO: take a reference?
-    fn coeff_as_bn(coeff: Self::Coeff) -> Self::CoeffBN {
+    #[allow(clippy::cast_sign_loss)]
+    fn i128_as_coeff(coeff: i128) -> Self::Coeff {
+        let coeff = coeff.rem_euclid(Self::modulus_as_i128());
+
+        // We know that coeff is now positive.
+        Self::Coeff::from(coeff as u128)
+    }
+
+    /// A convenience method to convert a [`Coeff`](PolyConf::Coeff) to `Self::PolyBN::Coeff`.
+    /// TODO: take a reference?
+    fn coeff_as_bn(coeff: Self::Coeff) -> <Self::PolyBN as PolyConf>::Coeff {
         let coeff: BigUint = coeff.into();
 
-        Self::CoeffBN::from(coeff)
+        coeff.into()
     }
 
     /// A convenience method to convert a [`BigInt`] to [`Coeff`](PolyConf::Coeff).
@@ -108,20 +124,17 @@ where
         }
 
         // We know that coeff is now positive.
-        Self::Coeff::from(*coeff.magnitude())
+        Self::Coeff::from(coeff.magnitude().clone())
     }
 
-    /// A convenience method to convert a [`CoeffBN`](PolyConf::CoeffBN) to [`Coeff`](PolyConf::Coeff).
-    /// TODO: take a reference?
-    fn bn_as_coeff(coeff: Self::CoeffBN) -> Self::Coeff {
-        let coeff: BigUint = coeff.into();
-
-        Self::Coeff::from(coeff)
+    /// A convenience method to convert a `Poly<Self>` to `Poly<Self::PolyBN>`.
+    fn poly_as_bn(poly: &Poly<Self>) -> Poly<Self::PolyBN> {
+        poly.map_non_zero(|coeff| Self::coeff_as_bn(*coeff))
     }
 
-    /// A convenience method to convert a [`CoeffBN`](PolyConf::CoeffBN) to [`BigInt`].
+    /// A convenience method to convert a `Self::PolyBN::Coeff` to [`BigInt`].
     /// TODO: take a reference?
-    fn bn_as_big_int(coeff: Self::CoeffBN) -> BigInt {
+    fn bn_as_big_int(coeff: <Self::PolyBN as PolyConf>::Coeff) -> BigInt {
         let coeff: BigUint = coeff.into();
 
         BigInt::from(coeff)
@@ -249,6 +262,8 @@ where
 ///
 /// This uses the full number of iris bits, which gives an upper bound on benchmarks.
 impl YasheConf for IrisBits {
+    type PolyBN = IrisBitsBN;
+
     const T: u64 = 2048;
 }
 
@@ -256,6 +271,8 @@ impl YasheConf for IrisBits {
 ///
 /// These are the parameters for full resolution, according to the Inversed Tech report.
 impl YasheConf for FullRes {
+    type PolyBN = FullResBN;
+
     // VERIFY: max T should be 2^15, not 2^10
     const T: u64 = 1024;
 }
@@ -264,6 +281,8 @@ impl YasheConf for FullRes {
 ///
 /// These are the parameters for middle resolution, according to the Inversed Tech report.
 impl YasheConf for MiddleRes {
+    type PolyBN = MiddleResBN;
+
     // VERIFY: max T should be 2^12, not 2^8
     const T: u64 = 256;
 }
@@ -274,6 +293,9 @@ impl YasheConf for MiddleRes {
 /// TODO: these parameters don't work for encryption and decryption, find some that do.
 #[cfg(tiny_poly)]
 impl YasheConf for TinyTest {
+    // TODO: find a coefficient that works here
+    type PolyBN = TinyTestBN;
+
     /// Limited to the modulus of the underlying `Coeff` type.
     const T: u64 = 4;
 

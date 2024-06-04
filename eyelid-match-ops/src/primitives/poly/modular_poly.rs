@@ -214,7 +214,7 @@ impl<C: PolyConf> Poly<C> {
     /// # Panics
     ///
     /// If `f` is not in the canonical reduced form.
-    pub fn map_include_zero<U, F>(&mut self, mut f: F) -> Poly<U>
+    pub fn map_include_zero<U, F>(&self, mut f: F) -> Poly<U>
     where
         U: PolyConf,
         F: FnMut(&C::Coeff) -> U::Coeff,
@@ -240,7 +240,7 @@ impl<C: PolyConf> Poly<C> {
     /// # Panics
     ///
     /// If `f` is not in the canonical reduced form.
-    pub fn extract_include_zero<U, F>(&mut self, mut f: F) -> Vec<U>
+    pub fn extract_include_zero<U, F>(&self, mut f: F) -> Vec<U>
     where
         F: FnMut(&C::Coeff) -> U,
     {
