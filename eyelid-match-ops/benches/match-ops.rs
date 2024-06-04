@@ -541,7 +541,7 @@ pub fn bench_yashe_cipher_mul(settings: &mut Criterion) {
     let m2 = ctx.encrypt(m2, &public_key, &mut rng);
 
     settings.bench_with_input(
-        BenchmarkId::new("YASHE enc", SMALL_RANDOM_NAME),
+        BenchmarkId::new("YASHE cipher mul", SMALL_RANDOM_NAME),
         &ctx,
         |benchmark, ctx| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
