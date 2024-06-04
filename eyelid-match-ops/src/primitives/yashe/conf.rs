@@ -74,7 +74,7 @@ where
         BigInt::from(Self::T)
     }
 
-    /// A convenience method to convert the base 2 logarithm of [`MAX_POLY_DEGREE`] to BigUInt
+    /// A convenience method to convert the base 2 logarithm of `MAX_POLY_DEGREE` to BigUInt
     fn log_max_poly_degree_as_big_uint() -> BigUint {
         let log_max_poly_degree = usize::ilog2(Self::MAX_POLY_DEGREE);
 
