@@ -85,9 +85,6 @@ lazy_static! {
     static ref FQ66_BN_ZERO: Fq66bn = Fq66bn::zero();
 }
 
-// TODO: try generic_singleton and see if it performs better:
-// <https://docs.rs/generic_singleton/0.5.0/generic_singleton/macro.get_or_init_thread_local.html>
-
 impl PolyConf for FullRes {
     const MAX_POLY_DEGREE: usize = 2048;
 
