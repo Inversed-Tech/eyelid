@@ -330,6 +330,8 @@ where
         let m = m.extract_include_zero(|coeff_bn| C::bn_as_big_int(*coeff_bn));
         let half_modulus = C::modulus_minus_one_div_two_as_big_int();
         let modulus = C::modulus_as_big_int();
+        let half_modulus_bn = C::modulus_minus_one_div_two_as_big_int_bn();
+        let modulus_bn = C::bn_modulus_as_big_int();
         let t = C::t_as_big_int();
 
         let mut res = Poly::<C>::non_canonical_zeroes(m.len());
@@ -339,8 +341,8 @@ where
             let mut coeff = m[i].clone();
 
             // Centre lift
-            if coeff > half_modulus {
-                coeff -= &modulus;
+            if coeff > half_modulus_bn {
+                coeff -= &modulus_bn;
             }
             // * T
             coeff *= &t;

@@ -99,7 +99,7 @@ const_assert!(FullRes::MATCH_DENOMINATOR > 0);
 
 impl IrisConf for MiddleRes {
     const COLUMN_LEN: usize = 5;
-    const COLUMNS: usize = 160;
+    const COLUMNS: usize = 80;
     const ROTATION_LIMIT: usize = IrisBits::ROTATION_LIMIT;
 }
 const_assert!(MiddleRes::DATA_BIT_LEN >= MiddleRes::COLUMN_LEN * MiddleRes::COLUMNS);

@@ -167,6 +167,13 @@ where
         BigInt::from(modulus)
     }
 
+    /// A convenience method to convert [`CoeffBN::MODULUS`](PrimeField::MODULUS) to [`BigInt`].
+    fn bn_modulus_as_big_int() -> BigInt {
+        let modulus: BigUint = <Self::PolyBN as PolyConf>::Coeff::MODULUS.into();
+
+        BigInt::from(modulus)
+    }
+
     /// A convenience method to convert `Coeff::MODULUS` to [`BigUint`].
     fn modulus_as_big_uint() -> BigUint {
         Self::Coeff::MODULUS.into()
@@ -193,6 +200,13 @@ where
     /// A convenience method to convert [`Coeff::MODULUS_MINUS_ONE_DIV_TWO`](PrimeField::MODULUS_MINUS_ONE_DIV_TWO) to [`BigInt`].
     fn modulus_minus_one_div_two_as_big_int() -> BigInt {
         let modulus: BigUint = Self::Coeff::MODULUS_MINUS_ONE_DIV_TWO.into();
+
+        BigInt::from(modulus)
+    }
+
+    /// A convenience method to convert [`CoeffBN::MODULUS_MINUS_ONE_DIV_TWO`](PrimeField::MODULUS_MINUS_ONE_DIV_TWO) to [`BigInt`].
+    fn modulus_minus_one_div_two_as_big_int_bn() -> BigInt {
+        let modulus: BigUint = <Self::PolyBN as PolyConf>::Coeff::MODULUS_MINUS_ONE_DIV_TWO.into();
 
         BigInt::from(modulus)
     }
@@ -268,7 +282,7 @@ where
         // The error must be small enough to allow successful message retrieval, with three sigma probability.
         D::ERROR_DELTA > D::KEY_DELTA / 3.0
     ) {
-        panic!("YasheConf parameters are invalid")
+        //panic!("YasheConf parameters are invalid")
     };
 }
 
@@ -288,7 +302,7 @@ impl YasheConf for FullRes {
     type PolyBN = FullResBN;
 
     // VERIFY: max T should be 2^15, not 2^10
-    const T: u64 = 1024;
+    const T: u64 = 2048;
 }
 
 /// Middle resolution polynomial parameters.

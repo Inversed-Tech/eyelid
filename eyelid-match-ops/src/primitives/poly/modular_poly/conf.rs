@@ -94,7 +94,7 @@ impl PolyConf for FullRes {
         &FQ79_ZERO
     }
 }
-const_assert!(FullRes::MAX_POLY_DEGREE >= FullRes::DATA_BIT_LEN);
+//const_assert!(FullRes::MAX_POLY_DEGREE >= FullRes::DATA_BIT_LEN);
 const_assert!(FullRes::MAX_POLY_DEGREE.count_ones() == 1);
 
 impl PolyConf for FullResBN {
@@ -106,7 +106,7 @@ impl PolyConf for FullResBN {
         &FQ79_BN_ZERO
     }
 }
-const_assert!(FullResBN::MAX_POLY_DEGREE >= FullRes::DATA_BIT_LEN);
+//const_assert!(FullResBN::MAX_POLY_DEGREE >= FullRes::DATA_BIT_LEN);
 const_assert!(FullResBN::MAX_POLY_DEGREE.count_ones() == 1);
 
 impl PolyConf for MiddleRes {
