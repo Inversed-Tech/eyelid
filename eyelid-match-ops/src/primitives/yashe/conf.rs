@@ -74,6 +74,13 @@ where
         BigInt::from(Self::T)
     }
 
+    /// A convenience method to convert the base 2 logarithm of [`C::MAX_POLY_DEGREE`] to BigUInt
+    fn log_max_poly_degree_as_big_uint() -> BigUint {
+        let log_max_poly_degree = usize::ilog2(Self::MAX_POLY_DEGREE);
+
+        BigUint::from(log_max_poly_degree)
+    }
+
     /// A convenience method to convert a [`Coeff`](PolyConf::Coeff) to `u128`.
     /// TODO: move this method to a trait implemented on `Coeff` instead.
     /// TODO: take a reference?
@@ -237,8 +244,11 @@ where
     debug_assert!((C::T as u128) < C::modulus_as_u128());
 
     // The lifted modulus `PolyBN::Coeff::MODULUS` must be large enough to hold
-    // `Self::Coeff::MODULUS^2 * T`, to implement `Yashe::ciphertext_mul()`.
-    debug_assert!(C::bn_modulus_as_big_uint() >= C::modulus_as_big_uint().pow(2) * C::T);
+    // `Self::Coeff::MODULUS^2 * log(MAX_POLY_DEGREE)`, to implement `Yashe::ciphertext_mul()`.
+    debug_assert!(
+        C::bn_modulus_as_big_uint()
+            >= C::modulus_as_big_uint().pow(2) * C::log_max_poly_degree_as_big_uint()
+    );
 
     // Check that conversion from T to u128 is infallible.
     // This will hopefully get optimised out, even in debug builds.
