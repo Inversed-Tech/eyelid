@@ -315,7 +315,7 @@ where
     /// Ciphertext addition is trivial
     pub fn ciphertext_add(&self, c1: Ciphertext<C>, c2: Ciphertext<C>) -> Ciphertext<C> {
         let c = c1.c + c2.c;
-        
+
         Ciphertext { c }
     }
 

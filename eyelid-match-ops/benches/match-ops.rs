@@ -534,7 +534,7 @@ pub fn bench_yashe_cipher_mul(settings: &mut Criterion) {
     let ctx: Yashe<TestRes> = Yashe::new();
 
     let (_private_key, public_key) = ctx.keygen(&mut rng);
-    let m1 = ctx.sample_message(&mut rng);    
+    let m1 = ctx.sample_message(&mut rng);
     let m2 = ctx.sample_message(&mut rng);
 
     let m1 = ctx.encrypt(m1, &public_key, &mut rng);
