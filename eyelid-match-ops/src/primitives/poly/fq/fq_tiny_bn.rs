@@ -2,6 +2,9 @@
 
 use ark_ff::{Fp64, MontBackend, MontConfig};
 
+/// The configuration of the test-only modular field, used for polynomial coefficients (bn).
+///
+/// Deliberately set to extremely small values, so that random polynomials are likely to have zeroes, ones, and minus ones.
 // random_prime(2**13)
 // 5399
 // ff = GF(5399)
