@@ -133,13 +133,6 @@ impl PolyConf for MiddleResBN {
 const_assert!(MiddleResBN::MAX_POLY_DEGREE >= MiddleRes::DATA_BIT_LEN);
 const_assert!(MiddleResBN::MAX_POLY_DEGREE.count_ones() == 1);
 
-/// Tiny test polynomials, used for finding edge cases in tests.
-///
-/// The test parameters are specifically chosen to make failing tests easy to read and diagnose.
-#[cfg(tiny_poly)]
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub struct TinyTest;
-
 #[cfg(tiny_poly)]
 impl PolyConf for TinyTest {
     const MAX_POLY_DEGREE: usize = 16;
