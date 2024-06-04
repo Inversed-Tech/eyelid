@@ -167,6 +167,11 @@ where
         BigInt::from(modulus)
     }
 
+    /// A convenience method to convert `Coeff::MODULUS` to [`BigUint`].
+    fn modulus_as_big_uint() -> BigUint {
+        Self::Coeff::MODULUS.into()
+    }
+
     /// A convenience method to convert [`Coeff::MODULUS_MINUS_ONE_DIV_TWO`](PrimeField::MODULUS_MINUS_ONE_DIV_TWO) to `u128`.
     fn modulus_minus_one_div_two_as_u128() -> u128 {
         let modulus: BigUint = Self::Coeff::MODULUS_MINUS_ONE_DIV_TWO.into();
@@ -191,6 +196,11 @@ where
 
         BigInt::from(modulus)
     }
+
+    /// A convenience method to convert `PolyBN::Coeff::MODULUS` to [`BigUint`].
+    fn bn_modulus_as_big_uint() -> BigUint {
+        <Self::PolyBN as PolyConf>::Coeff::MODULUS.into()
+    }
 }
 
 /// Checks various constraints on the generic values.
@@ -211,6 +221,10 @@ where
     //
     // TODO: work out how to const_assert!() this constraint.
     debug_assert!((C::T as u128) < C::modulus_as_u128());
+
+    // The lifted modulus `PolyBN::Coeff::MODULUS` must be large enough to hold
+    // `Self::Coeff::MODULUS^2 * T`, to implement `Yashe::ciphertext_mul()`.
+    debug_assert!(C::bn_modulus_as_big_uint() >= C::modulus_as_big_uint().pow(2) * C::T);
 
     // Check that conversion from T to u128 is infallible.
     // This will hopefully get optimised out, even in debug builds.
