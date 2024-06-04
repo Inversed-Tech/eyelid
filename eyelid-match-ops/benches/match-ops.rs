@@ -466,7 +466,7 @@ pub fn bench_enc(settings: &mut Criterion) {
         |benchmark, ctx| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
             benchmark.iter_with_large_drop(|| -> Ciphertext<TestRes> {
-                ctx.encrypt(m.clone(), public_key.clone(), &mut rng)
+                ctx.encrypt(m.clone(), &public_key, &mut rng)
             })
         },
     );
@@ -480,7 +480,7 @@ pub fn bench_dec(settings: &mut Criterion) {
 
     let (private_key, public_key) = ctx.keygen(&mut rng);
     let m = ctx.sample_message(&mut rng);
-    let c = ctx.encrypt(m, public_key, &mut rng);
+    let c = ctx.encrypt(m, &public_key, &mut rng);
 
     settings.bench_with_input(
         BenchmarkId::new("YASHE dec", SMALL_RANDOM_NAME),
@@ -488,7 +488,7 @@ pub fn bench_dec(settings: &mut Criterion) {
         |benchmark, ctx| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
             benchmark.iter_with_large_drop(|| -> Message<TestRes> {
-                ctx.decrypt(c.clone(), private_key.clone())
+                ctx.decrypt(c.clone(), &private_key)
             })
         },
     );

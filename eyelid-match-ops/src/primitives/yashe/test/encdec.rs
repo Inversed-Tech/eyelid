@@ -14,8 +14,8 @@ where
 
     let (private_key, public_key) = ctx.keygen(&mut rng);
     let m = ctx.sample_message(&mut rng);
-    let c = ctx.encrypt(m.clone(), public_key, &mut rng);
-    let m_dec = ctx.decrypt(c.clone(), private_key);
+    let c = ctx.encrypt(m.clone(), &public_key, &mut rng);
+    let m_dec = ctx.decrypt(c.clone(), &private_key);
 
     assert_eq!(m, m_dec);
 }
