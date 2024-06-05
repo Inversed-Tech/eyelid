@@ -97,6 +97,14 @@ criterion_group! {
     targets = bench_dec
 }
 
+criterion_group! {
+    name = bench_yashe_mul;
+    // This can be any expression that returns a `Criterion` object.
+    config = Criterion::default().sample_size(10);
+    // List Yashe multiplication implementations here.
+    targets = bench_yashe_msg_mul, bench_yashe_cipher_mul
+}
+
 // Iris-length polynomial benchmarks.
 // These benchmarks provide an upper bound for the performance of iris operations.
 // They also help us decide if we need smaller or larger polynomial sizes.
@@ -147,6 +155,7 @@ criterion_main!(
     bench_key_generation,
     bench_encryption,
     bench_decryption,
+    bench_yashe_mul,
     bench_cyclotomic_multiplication_iris,
 );
 
@@ -158,6 +167,9 @@ criterion_main!(
     bench_polynomial_modulus,
     bench_inverse,
     bench_key_generation,
+    bench_encryption,
+    bench_decryption,
+    bench_yashe_mul,
     bench_cyclotomic_multiplication_iris,
     bench_inverse_iris,
     bench_key_generation_iris
@@ -466,7 +478,7 @@ pub fn bench_enc(settings: &mut Criterion) {
         |benchmark, ctx| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
             benchmark.iter_with_large_drop(|| -> Ciphertext<TestRes> {
-                ctx.encrypt(m.clone(), public_key.clone(), &mut rng)
+                ctx.encrypt(m.clone(), &public_key, &mut rng)
             })
         },
     );
@@ -480,7 +492,7 @@ pub fn bench_dec(settings: &mut Criterion) {
 
     let (private_key, public_key) = ctx.keygen(&mut rng);
     let m = ctx.sample_message(&mut rng);
-    let c = ctx.encrypt(m, public_key, &mut rng);
+    let c = ctx.encrypt(m, &public_key, &mut rng);
 
     settings.bench_with_input(
         BenchmarkId::new("YASHE dec", SMALL_RANDOM_NAME),
@@ -488,7 +500,53 @@ pub fn bench_dec(settings: &mut Criterion) {
         |benchmark, ctx| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
             benchmark.iter_with_large_drop(|| -> Message<TestRes> {
-                ctx.decrypt(c.clone(), private_key.clone())
+                ctx.decrypt(c.clone(), &private_key)
+            })
+        },
+    );
+}
+
+/// Run [`Yashe::plaintext_mul()`] as a Criterion benchmark with random data.
+pub fn bench_yashe_msg_mul(settings: &mut Criterion) {
+    // Setup parameters
+    let mut rng = rand::thread_rng();
+    let ctx: Yashe<TestRes> = Yashe::new();
+
+    let m1 = ctx.sample_message(&mut rng);
+    let m2 = ctx.sample_message(&mut rng);
+
+    settings.bench_with_input(
+        BenchmarkId::new("YASHE msg mul", SMALL_RANDOM_NAME),
+        &ctx,
+        |benchmark, ctx| {
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Message<TestRes> {
+                ctx.plaintext_mul(m1.clone(), m2.clone())
+            })
+        },
+    );
+}
+
+/// Run [`Yashe::ciphertext_mul()`] as a Criterion benchmark with random data.
+pub fn bench_yashe_cipher_mul(settings: &mut Criterion) {
+    // Setup parameters
+    let mut rng = rand::thread_rng();
+    let ctx: Yashe<TestRes> = Yashe::new();
+
+    let (_private_key, public_key) = ctx.keygen(&mut rng);
+    let m1 = ctx.sample_message(&mut rng);
+    let m2 = ctx.sample_message(&mut rng);
+
+    let m1 = ctx.encrypt(m1, &public_key, &mut rng);
+    let m2 = ctx.encrypt(m2, &public_key, &mut rng);
+
+    settings.bench_with_input(
+        BenchmarkId::new("YASHE cipher mul", SMALL_RANDOM_NAME),
+        &ctx,
+        |benchmark, ctx| {
+            // To avoid timing dropping the return value, we require it to be returned from the closure.
+            benchmark.iter_with_large_drop(|| -> Ciphertext<TestRes> {
+                ctx.ciphertext_mul(m1.clone(), m2.clone())
             })
         },
     );

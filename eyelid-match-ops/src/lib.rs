@@ -22,7 +22,7 @@ pub mod iris;
 pub mod plaintext;
 pub mod primitives;
 
-pub use conf::{FullRes, IrisBits};
+pub use conf::{FullRes, IrisBits, MiddleRes};
 
 #[cfg(any(test, feature = "benchmark"))]
 pub use conf::TestRes;

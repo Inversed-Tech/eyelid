@@ -214,7 +214,7 @@ impl<C: PolyConf> Poly<C> {
     /// # Panics
     ///
     /// If `f` is not in the canonical reduced form.
-    pub fn map_include_zero<U, F>(&mut self, mut f: F) -> Poly<U>
+    pub fn map_include_zero<U, F>(&self, mut f: F) -> Poly<U>
     where
         U: PolyConf,
         F: FnMut(&C::Coeff) -> U::Coeff,
@@ -228,6 +228,29 @@ impl<C: PolyConf> Poly<C> {
         }
 
         res.reduce_mod_poly();
+
+        res
+    }
+
+    /// Maps all coefficients of `self` to an arbitrary type using `f`, including the
+    /// leading zeroes, and returns the resulting polynomial.
+    ///
+    /// This method allocates leading zero coefficients.
+    ///
+    /// # Panics
+    ///
+    /// If `f` is not in the canonical reduced form.
+    pub fn extract_include_zero<U, F>(&self, mut f: F) -> Vec<U>
+    where
+        F: FnMut(&C::Coeff) -> U,
+    {
+        assert!(self.coeffs.len() <= C::MAX_POLY_DEGREE);
+
+        let mut res = Vec::with_capacity(C::MAX_POLY_DEGREE);
+
+        for i in 0..C::MAX_POLY_DEGREE {
+            res.push(f(&self[i]));
+        }
 
         res
     }

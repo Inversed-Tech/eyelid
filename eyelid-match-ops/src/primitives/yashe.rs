@@ -4,6 +4,7 @@
 use std::marker::PhantomData;
 
 use ark_ff::{One, UniformRand};
+use num_bigint::Sign;
 use rand::{
     distributions::uniform::{SampleRange, SampleUniform},
     rngs::ThreadRng,
@@ -17,7 +18,7 @@ pub use conf::YasheConf;
 
 pub mod conf;
 
-#[cfg(test)]
+#[cfg(any(test, feature = "benchmark"))]
 pub mod test;
 
 /// Yashe scheme
@@ -134,15 +135,14 @@ where
     pub fn encrypt(
         &self,
         mut m: Message<C>,
-        public_key: PublicKey<C>,
+        public_key: &PublicKey<C>,
         rng: &mut ThreadRng,
     ) -> Ciphertext<C> {
-        // TODO: document the equations that are being implemented by each block.
-
         // Create the ciphertext by sampling error polynomials and applying them to the public key.
         let s = self.sample_err(rng);
         let e = self.sample_err(rng);
-        let mut c = s * public_key.h + e;
+
+        let mut c = s * &public_key.h + e;
 
         // Divide the polynomial coefficient modulus by T, using primitive integer arithmetic.
         let qdt = C::modulus_as_u128() / C::t_as_u128();
@@ -156,27 +156,33 @@ where
     }
 
     /// Decrypt a ciphertext
-    pub fn decrypt(&self, c: Ciphertext<C>, private_key: PrivateKey<C>) -> Message<C> {
-        // TODO: document the equations that are being implemented by each block.
+    pub fn decrypt(&self, c: Ciphertext<C>, private_key: &PrivateKey<C>) -> Message<C> {
+        self.decrypt_helper(c, &private_key.priv_key)
+    }
 
-        // Multiply the ciphertext by the private key polynomial.
-        let mut res = c.c * private_key.priv_key;
+    /// Decrypt a multiplication
+    pub fn decrypt_mul(&self, c: Ciphertext<C>, private_key: &PrivateKey<C>) -> Message<C> {
+        // Multiply the ciphertext by the private key polynomial squared.
+        let modified_private_key = &private_key.priv_key * &private_key.priv_key;
 
-        // TODO: is this the equation that is being implemented here?
-        // In primitive integer arithmetic, calculate:
-        // (res[i] * T + (Q - 1)/2) / Q % T
+        self.decrypt_helper(c, &modified_private_key)
+    }
+
+    /// Decrypt a ciphertext or multiplication, given the `modified_private_key`:
+    /// - ciphertexts use the private key itself,
+    /// - multiplications use the private key squared.
+    fn decrypt_helper(&self, c: Ciphertext<C>, modified_private_key: &Poly<C>) -> Message<C> {
+        // Multiply the ciphertext by the relevant private key polynomial.
+        let mut res = c.c * modified_private_key;
 
         // Since this equation always results in zero for a zero coefficient, we don't need to
         // calculate leading zero terms.
         //
-        // TODO:
-        // consider creating Poly methods which take a closure to update each coefficient
-        // - for leading zero coefficients to MAX_POLY_DEGREE, and only non-zero coeffs_mut()
-        // - for Coeff and u128 arithmetic
-        for coeff in res.coeffs_mut() {
+        // TODO: use Poly::coeffs_modify_non_zero() here and benchmark
+        #[allow(unused_mut)]
+        for mut coeff in res.coeffs_mut() {
             // Convert coefficient to a primitive integer
             let mut coeff_res = C::coeff_as_u128(*coeff);
-
             // Multiply by T
             coeff_res *= C::t_as_u128();
             // Add (Q - 1)/2 to implement rounding rather than truncation
@@ -185,7 +191,6 @@ where
             coeff_res /= C::modulus_as_u128();
             // Modulo T
             coeff_res %= C::t_as_u128();
-
             // And update the coefficient
             *coeff = coeff_res.into();
         }
@@ -210,9 +215,9 @@ where
 
     /// Sample a polynomial with small random coefficients using a gaussian distribution.
     #[allow(clippy::cast_possible_truncation)]
-    fn sample_gaussian(&self, delta: f64, rng: &mut ThreadRng) -> Poly<C> {
+    pub fn sample_gaussian(&self, delta: f64, rng: &mut ThreadRng) -> Poly<C> {
+        // TODO: use Poly::coeffs_modify_include_zero() here and benchmark
         let mut res = Poly::non_canonical_zeroes(C::MAX_POLY_DEGREE);
-
         for i in 0..C::MAX_POLY_DEGREE {
             // TODO SECURITY: check that the generated integers are secure:
             // <https://github.com/Inversed-Tech/eyelid/issues/70>
@@ -237,6 +242,7 @@ where
 
     /// Sample a polynomial with unlimited size random coefficients using a uniform distribution.
     pub fn sample_uniform_coeff(&self, mut rng: &mut ThreadRng) -> Poly<C> {
+        // TODO: use Poly::coeffs_modify_include_zero() here and benchmark
         let mut res = Poly::non_canonical_zeroes(C::MAX_POLY_DEGREE);
         for i in 0..C::MAX_POLY_DEGREE {
             let coeff_rand = C::Coeff::rand(&mut rng);
@@ -248,26 +254,14 @@ where
         res
     }
 
-    /// Sample from message space
-    pub fn sample_message(&self, rng: &mut ThreadRng) -> Message<C> {
-        let m = self.sample_uniform_range(0..C::T, rng);
-        Message { m }
-    }
-
-    /// Sample from binary message space
-    pub fn sample_binary_message(&self, rng: &mut ThreadRng) -> Message<C> {
-        // TODO: this might be implemented more efficiently using `Rng::gen_bool()`
-        let m = self.sample_uniform_range(0..=1_u64, rng);
-        Message { m }
-    }
-
     /// Sample a polynomial with random coefficients in `range` using a uniform distribution.
-    fn sample_uniform_range<T, R>(&self, range: R, rng: &mut ThreadRng) -> Poly<C>
+    pub fn sample_uniform_range<T, R>(&self, range: R, rng: &mut ThreadRng) -> Poly<C>
     where
         T: SampleUniform,
         R: SampleRange<T> + Clone,
         C::Coeff: From<T>,
     {
+        // TODO: use Poly::coeffs_modify_include_zero() here and benchmark
         let mut res = Poly::non_canonical_zeroes(C::MAX_POLY_DEGREE);
         for i in 0..C::MAX_POLY_DEGREE {
             let coeff_rand = rng.gen_range(range.clone());
@@ -277,5 +271,97 @@ where
         // Raw coefficient access must be followed by a truncation check.
         res.truncate_to_canonical_form();
         res
+    }
+
+    /// Plaintext addition is trivial
+    pub fn plaintext_add(&self, m1: Message<C>, m2: Message<C>) -> Message<C> {
+        let mut res = m1.m + m2.m;
+
+        // TODO: use Poly::coeffs_modify_non_zero() here and benchmark
+        //
+        // It does actually need to be mutable to compile.
+        #[allow(unused_mut)]
+        for mut coeff in res.coeffs_mut() {
+            let mut coeff_res = C::coeff_as_u128(*coeff);
+            coeff_res %= C::t_as_u128();
+            *coeff = coeff_res.into();
+        }
+        res.truncate_to_canonical_form();
+
+        Message { m: res }
+    }
+
+    /// Plaintext multiplication must center lift before reduction
+    pub fn plaintext_mul(&self, m1: Message<C>, m2: Message<C>) -> Message<C> {
+        let mut res = m1.m * m2.m;
+
+        // TODO: use Poly::coeffs_modify_non_zero() here and benchmark
+        #[allow(unused_mut)]
+        for mut coeff in res.coeffs_mut() {
+            let mut coeff_res = C::coeff_as_i128(*coeff);
+            // center lift mod q
+            if coeff_res > C::modulus_minus_one_div_two_as_i128() {
+                coeff_res -= C::modulus_as_i128();
+            }
+            coeff_res = coeff_res.rem_euclid(C::t_as_i128());
+
+            *coeff = C::i128_as_coeff(coeff_res);
+        }
+        res.truncate_to_canonical_form();
+
+        Message { m: res }
+    }
+
+    /// Ciphertext addition is trivial
+    pub fn ciphertext_add(&self, c1: Ciphertext<C>, c2: Ciphertext<C>) -> Ciphertext<C> {
+        let c = c1.c + c2.c;
+
+        Ciphertext { c }
+    }
+
+    /// Multiplication of ciphertext must happen as described in Page 13 of
+    /// <https://eprint.iacr.org/2013/075.pdf>
+    pub fn ciphertext_mul(&self, c1: Ciphertext<C>, c2: Ciphertext<C>) -> Ciphertext<C> {
+        let c = C::poly_as_bn(&c1.c);
+        let c2 = C::poly_as_bn(&c2.c);
+
+        let m = c * c2;
+
+        let m = m.extract_include_zero(|coeff_bn| C::bn_as_big_int(*coeff_bn));
+        let half_modulus = C::modulus_minus_one_div_two_as_big_int();
+        let modulus = C::modulus_as_big_int();
+        let half_modulus_bn = C::modulus_minus_one_div_two_as_big_int_bn();
+        let modulus_bn = C::bn_modulus_as_big_int();
+        let t = C::t_as_big_int();
+
+        let mut res = Poly::<C>::non_canonical_zeroes(m.len());
+
+        // TODO: use Poly::coeffs_modify_non_zero() here and benchmark
+        for i in 0..m.len() {
+            let mut coeff = m[i].clone();
+
+            // Centre lift
+            if coeff > half_modulus_bn {
+                coeff -= &modulus_bn;
+            }
+            // * T
+            coeff *= &t;
+            // Round to nearest integer after division
+            // + (Q - 1) / 2
+            if coeff.sign() == Sign::Plus {
+                coeff += &half_modulus;
+            } else {
+                coeff -= &half_modulus;
+            }
+            // / Q
+            coeff /= &modulus;
+            // reduce mod q
+            // convert back to Coeff
+            res[i] = C::big_int_as_coeff(coeff);
+        }
+
+        res.truncate_to_canonical_form();
+
+        Ciphertext { c: res }
     }
 }
