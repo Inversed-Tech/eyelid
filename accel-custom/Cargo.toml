@@ -1,0 +1,25 @@
+[package]
+name = "accel-custom"
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+readme.workspace = true
+publish.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[dependencies]
+eyelid-match-ops = { path = "../eyelid-match-ops" }
+ark-ff = { workspace = true }
+num-bigint = { workspace = true }
+rand = { workspace = true }
+
+cust = "0.3.2"
+
+[dev-dependencies]
+criterion = { workspace = true, features = ["html_reports"] }
+
+[[bench]]
+name = "poly_ops_custom"
+harness = false

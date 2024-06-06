@@ -3,7 +3,7 @@
 //! Outside this module, use [`PolyConf::Coeff`] instead of [`Fq79`] or `FqTiny`.
 //! This automatically enables CI tests on both fields.
 
-pub use fq79::Fq79;
+pub use fq79::{Fq79, Fq79Config};
 pub use fq79bn::Fq79bn;
 
 pub use fq66::Fq66;

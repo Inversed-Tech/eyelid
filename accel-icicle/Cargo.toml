@@ -1,0 +1,39 @@
+[package]
+name = "accel-icicle"
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+readme.workspace = true
+publish.workspace = true
+repository.workspace = true
+version.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rand = { workspace = true }
+
+icicle-core = { git = "https://github.com/Inversed-Tech/icicle.git", rev = "3a91461" }
+icicle-cuda-runtime = { git = "https://github.com/Inversed-Tech/icicle.git", rev = "3a91461" }
+icicle-inv-fhe79 = { git = "https://github.com/Inversed-Tech/icicle.git", rev = "3a91461" }
+
+#icicle-core = { path = "../../icicle/wrappers/rust/icicle-core" }
+#icicle-cuda-runtime = { path = "../../icicle/wrappers/rust/icicle-cuda-runtime" }
+#icicle-inv-fhe79 = { path = "../../icicle/wrappers/rust/icicle-fields/icicle-inv-fhe79" }
+
+[dev-dependencies]
+criterion = { workspace = true, features = ["html_reports"] }
+
+[features]
+default = ["arkworks"]
+arkworks = ["icicle-core/arkworks", "icicle-inv-fhe79/arkworks"]
+
+[lints.rust]
+unsafe_code = "allow"
+missing_docs = "allow"
+#workspace = true
+
+[[bench]]
+name = "poly-ops-icicle"
+harness = false

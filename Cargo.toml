@@ -3,6 +3,8 @@ members = [
     "eyelid-matcher",
     "eyelid-match-ops",
     "eyelid-test",
+    "accel-custom",
+    "accel-icicle",
 ]
 resolver = "2"
 
@@ -25,6 +27,7 @@ eyelid-test = { version = "0.1.0", path = "eyelid-test" }
 
 # Production
 ark-ff = "0.4.2"
+#ark-ff = {version = "0.4.2", features = ["asm"]}
 ark-poly = "0.4.2"
 ark-std = "0.4.0"
 num-bigint = "0.4.5"
@@ -71,4 +74,5 @@ strip = "debuginfo"
 codegen-units = 1
 
 [workspace.lints.rust]
-unsafe_code = "forbid"
+unsafe_code = "allow"
+missing_docs = "allow"
