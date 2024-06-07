@@ -197,11 +197,6 @@ pub fn bench_naive_cyclotomic_mul(settings: &mut Criterion) {
 
 /// Run [`poly::naive_cyclotomic_mul()`] as a Criterion benchmark with random data on middle resolution.
 pub fn bench_naive_cyclotomic_mul_mid(settings: &mut Criterion) {
-    // Tweak configuration for a long-running test
-    let mut settings = settings.benchmark_group(SLOW_BENCH_NAME);
-    // We can override the configuration on a per-group level
-    settings.sampling_mode(Flat);
-
     // Setup: generate random cyclotomic polynomials
     let p1: Poly<MiddleRes> = rand_poly(MiddleRes::MAX_POLY_DEGREE);
     let p2: Poly<MiddleRes> = rand_poly(MiddleRes::MAX_POLY_DEGREE);
@@ -235,11 +230,6 @@ pub fn bench_rec_karatsuba_mul(settings: &mut Criterion) {
 
 /// Run [`poly::rec_karatsuba_mul()`] as a Criterion benchmark with random data on middle resolution.
 pub fn bench_rec_karatsuba_mul_mid(settings: &mut Criterion) {
-    // Tweak configuration for a long-running test
-    let mut settings = settings.benchmark_group(SLOW_BENCH_NAME);
-    // We can override the configuration on a per-group level
-    settings.sampling_mode(Flat);
-
     // Setup: generate random cyclotomic polynomials
     let p1: Poly<MiddleRes> = rand_poly(MiddleRes::MAX_POLY_DEGREE);
     let p2: Poly<MiddleRes> = rand_poly(MiddleRes::MAX_POLY_DEGREE);
@@ -273,17 +263,12 @@ pub fn bench_flat_karatsuba_mul(settings: &mut Criterion) {
 
 /// Run [`poly::flat_karatsuba_mul()`] as a Criterion benchmark with random data on middle resolution.
 pub fn bench_flat_karatsuba_mul_mid(settings: &mut Criterion) {
-    // Tweak configuration for a long-running test
-    let mut settings = settings.benchmark_group(SLOW_BENCH_NAME);
-    // We can override the configuration on a per-group level
-    settings.sampling_mode(Flat);
-
     // Setup: generate random cyclotomic polynomials
     let p1: Poly<MiddleRes> = rand_poly(MiddleRes::MAX_POLY_DEGREE);
     let p2: Poly<MiddleRes> = rand_poly(MiddleRes::MAX_POLY_DEGREE);
 
     settings.bench_with_input(
-        BenchmarkId::new("Flat karatsuba mul full poly", RANDOM_BITS_NAME),
+        BenchmarkId::new("Flat karatsuba mul mid poly", RANDOM_BITS_NAME),
         &(p1, p2),
         |benchmark, (p1, p2)| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
@@ -389,11 +374,6 @@ pub fn bench_inv(settings: &mut Criterion) {
 
 /// Run [`poly::inverse()`] as a Criterion benchmark with gaussian random data on middle resolution.
 pub fn bench_inv_mid(settings: &mut Criterion) {
-    // Tweak configuration for a long-running test
-    let mut settings = settings.benchmark_group(SLOW_BENCH_NAME);
-    // We can override the configuration on a per-group level
-    settings.sampling_mode(Flat);
-
     // Setup: generate random cyclotomic polynomials
 
     let mut rng = rand::thread_rng();
@@ -403,7 +383,7 @@ pub fn bench_inv_mid(settings: &mut Criterion) {
     let p = ctx.sample_key(&mut rng);
 
     settings.bench_with_input(
-        BenchmarkId::new("Inverse full poly", SMALL_RANDOM_NAME),
+        BenchmarkId::new("Inverse mid poly", SMALL_RANDOM_NAME),
         &(p),
         |benchmark, p| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
@@ -525,16 +505,11 @@ pub fn bench_yashe_cipher_mul(settings: &mut Criterion) {
 
 /// Run [`Yashe::keygen()`] as a Criterion benchmark with random data on middle resolution.
 pub fn bench_keygen_mid(settings: &mut Criterion) {
-    // Tweak configuration for a long-running test
-    let mut settings = settings.benchmark_group(SLOW_BENCH_NAME);
-    // We can override the configuration on a per-group level
-    settings.sampling_mode(Flat);
-
     // Setup parameters
     let ctx: Yashe<MiddleRes> = Yashe::new();
 
     settings.bench_with_input(
-        BenchmarkId::new("YASHE full keygen", SMALL_RANDOM_NAME),
+        BenchmarkId::new("YASHE mid keygen", SMALL_RANDOM_NAME),
         &ctx,
         |benchmark, ctx| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
