@@ -14,7 +14,7 @@ use crate::TinyTest;
 pub trait EncodeConf {
     /// The configuration of iris code data.
     ///
-    /// TODO: rename to EyeBits?
+    /// TODO: rename to EyeData and DataConf?
     type EyeConf: IrisConf;
 
     /// The configuration of plaintext polynomials.
@@ -71,7 +71,6 @@ impl EncodeConf for FullBits {
     type EyeConf = FullBits;
     type PlainConf = FullRes;
 
-    // TODO: using 16 fails with an encryption positive multiplication test error
     const ROWS_PER_BLOCK: usize = 8;
 }
 // As in the report

@@ -6,7 +6,6 @@
 ///
 /// This uses the full number of iris bits, which gives an upper bound on benchmarks.
 ///
-/// TODO: Rename to FullBits
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct FullBits;
 
