@@ -8,7 +8,7 @@
 ///
 /// TODO: Rename to FullBits
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub struct IrisBits;
+pub struct FullBits;
 
 /// Raw middle resolution iris code dimensions.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -26,7 +26,7 @@ pub struct TinyTest;
 //
 // We use the full resolution by default, but TinyTest when cfg(tiny_poly) is set.
 #[cfg(not(tiny_poly))]
-pub type TestBits = IrisBits;
+pub type TestBits = FullBits;
 
 /// The polynomial config used in tests.
 ///

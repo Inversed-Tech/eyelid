@@ -4,7 +4,7 @@ use ark_ff::{One, Zero};
 use num_bigint::BigUint;
 
 use crate::{
-    encoded::MatchError, iris::conf::IrisConf, primitives::poly::PolyConf, IrisBits, MiddleBits,
+    encoded::MatchError, iris::conf::IrisConf, primitives::poly::PolyConf, FullBits, MiddleBits,
 };
 
 #[cfg(tiny_poly)]
@@ -67,8 +67,8 @@ pub trait EncodeConf {
     }
 }
 
-impl EncodeConf for IrisBits {
-    type EyeConf = IrisBits;
+impl EncodeConf for FullBits {
+    type EyeConf = FullBits;
     type PlainConf = FullRes;
 
     const ROWS_PER_BLOCK: usize = 16;
@@ -77,16 +77,16 @@ impl EncodeConf for IrisBits {
 // (Or every config type.)
 //
 // We can't have more rows per block than actual rows.
-const_assert!(IrisBits::ROWS_PER_BLOCK <= IrisBits::COLUMN_LEN);
+const_assert!(FullBits::ROWS_PER_BLOCK <= FullBits::COLUMN_LEN);
 // Only full blocks are supported at the moment.
 const_assert_eq!(
-    IrisBits::NUM_BLOCKS * IrisBits::ROWS_PER_BLOCK,
-    IrisBits::COLUMN_LEN
+    FullBits::NUM_BLOCKS * FullBits::ROWS_PER_BLOCK,
+    FullBits::COLUMN_LEN
 );
 // Each block must be able to be encoded into the configured polynomial.
 const_assert!(
-    IrisBits::NUM_COLS_AND_PADS * IrisBits::ROWS_PER_BLOCK
-        <= <<IrisBits as EncodeConf>::PlainConf as PolyConf>::MAX_POLY_DEGREE
+    FullBits::NUM_COLS_AND_PADS * FullBits::ROWS_PER_BLOCK
+        <= <<FullBits as EncodeConf>::PlainConf as PolyConf>::MAX_POLY_DEGREE
 );
 
 impl EncodeConf for MiddleBits {

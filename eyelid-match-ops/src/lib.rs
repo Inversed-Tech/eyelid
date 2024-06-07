@@ -22,7 +22,7 @@ pub mod iris;
 pub mod plaintext;
 pub mod primitives;
 
-pub use conf::{IrisBits, MiddleBits};
+pub use conf::{FullBits, MiddleBits};
 pub use encoded::{EncodeConf, FullRes, MiddleRes};
 pub use iris::conf::IrisConf;
 pub use primitives::{poly::PolyConf, yashe::YasheConf};

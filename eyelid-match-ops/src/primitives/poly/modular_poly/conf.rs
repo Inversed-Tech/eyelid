@@ -8,7 +8,7 @@ use lazy_static::lazy_static;
 use crate::{
     encoded::{EncodeConf, FullRes, MiddleRes},
     primitives::poly::{Fq66, Fq66bn, Fq79, Fq79bn},
-    IrisBits, MiddleBits,
+    FullBits, MiddleBits,
 };
 
 #[cfg(tiny_poly)]
@@ -43,7 +43,7 @@ pub trait PolyConf: Copy + Clone + Debug + Eq + PartialEq {
 }
 
 impl PolyConf for FullRes {
-    const MAX_POLY_DEGREE: usize = IrisBits::BLOCK_AND_PADS_BIT_LEN.next_power_of_two();
+    const MAX_POLY_DEGREE: usize = FullBits::BLOCK_AND_PADS_BIT_LEN.next_power_of_two();
 
     type Coeff = Fq79;
 
@@ -52,7 +52,7 @@ impl PolyConf for FullRes {
     }
 }
 // The polynomial must have enough coefficients to store the underlying iris data.
-const_assert!(FullRes::MAX_POLY_DEGREE >= IrisBits::BLOCK_AND_PADS_BIT_LEN);
+const_assert!(FullRes::MAX_POLY_DEGREE >= FullBits::BLOCK_AND_PADS_BIT_LEN);
 // The degree must be a power of two.
 const_assert!(FullRes::MAX_POLY_DEGREE.count_ones() == 1);
 
@@ -67,7 +67,7 @@ impl PolyConf for FullResBN {
     }
 }
 // The polynomial must have enough coefficients to store the underlying iris data.
-const_assert!(FullResBN::MAX_POLY_DEGREE >= IrisBits::BLOCK_AND_PADS_BIT_LEN);
+const_assert!(FullResBN::MAX_POLY_DEGREE >= FullBits::BLOCK_AND_PADS_BIT_LEN);
 // The degree must be a power of two.
 const_assert!(FullResBN::MAX_POLY_DEGREE.count_ones() == 1);
 

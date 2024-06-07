@@ -6,7 +6,7 @@ use std::mem::size_of;
 
 use bitvec::{mem::elts, prelude::BitArray};
 
-use crate::{IrisBits, MiddleBits};
+use crate::{FullBits, MiddleBits};
 
 #[cfg(tiny_poly)]
 use crate::TinyTest;
@@ -69,7 +69,7 @@ pub type IrisCode<const STORE_ELEM_LEN: usize> = BitArray<[IrisStore; STORE_ELEM
 ///       correctly.
 pub type IrisMask<const STORE_ELEM_LEN: usize> = BitArray<[IrisStore; STORE_ELEM_LEN]>;
 
-impl IrisConf for IrisBits {
+impl IrisConf for FullBits {
     const COLUMNS: usize = 200;
     const COLUMN_LEN: usize = 16 * 2 * 2;
     const ROTATION_LIMIT: usize = 15;
@@ -78,18 +78,18 @@ impl IrisConf for IrisBits {
 // (Or every config type.)
 //
 // There must be enough bits to store the underlying data.
-const_assert!(IrisBits::DATA_BIT_LEN >= IrisBits::COLUMN_LEN * IrisBits::COLUMNS);
-const_assert!(IrisBits::STORE_ELEM_LEN * size_of::<IrisStore>() * 8 >= IrisBits::DATA_BIT_LEN);
+const_assert!(FullBits::DATA_BIT_LEN >= FullBits::COLUMN_LEN * FullBits::COLUMNS);
+const_assert!(FullBits::STORE_ELEM_LEN * size_of::<IrisStore>() * 8 >= FullBits::DATA_BIT_LEN);
 // Rotating more than the number of columns is redundant.
-const_assert!(IrisBits::ROTATION_COMPARISONS <= IrisBits::COLUMNS);
+const_assert!(FullBits::ROTATION_COMPARISONS <= FullBits::COLUMNS);
 // The match fraction should be between 0 and 1.
-const_assert!(IrisBits::MATCH_NUMERATOR <= IrisBits::MATCH_DENOMINATOR);
-const_assert!(IrisBits::MATCH_DENOMINATOR > 0);
+const_assert!(FullBits::MATCH_NUMERATOR <= FullBits::MATCH_DENOMINATOR);
+const_assert!(FullBits::MATCH_DENOMINATOR > 0);
 
 impl IrisConf for MiddleBits {
     const COLUMNS: usize = 100;
     const COLUMN_LEN: usize = 8 * 2 * 2;
-    const ROTATION_LIMIT: usize = IrisBits::ROTATION_LIMIT;
+    const ROTATION_LIMIT: usize = FullBits::ROTATION_LIMIT;
 }
 const_assert!(MiddleBits::DATA_BIT_LEN >= MiddleBits::COLUMN_LEN * MiddleBits::COLUMNS);
 const_assert!(MiddleBits::STORE_ELEM_LEN * size_of::<IrisStore>() * 8 >= MiddleBits::DATA_BIT_LEN);

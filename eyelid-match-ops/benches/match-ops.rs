@@ -156,7 +156,7 @@ pub const SMALL_RANDOM_NAME: &str = "small rand";
 
 /// Run [`plaintext::is_iris_match()`] as a Criterion benchmark with random data.
 fn bench_plaintext_full_match(settings: &mut Criterion) {
-    use eyelid_match_ops::IrisBits;
+    use eyelid_match_ops::FullBits;
 
     // Setup: generate different random iris codes and masks
     let eye_new = random_iris_code();
@@ -170,7 +170,7 @@ fn bench_plaintext_full_match(settings: &mut Criterion) {
         |benchmark, (eye_new, mask_new, eye_store, mask_store)| {
             benchmark.iter_with_large_drop(|| {
                 // To avoid timing dropping the return value, this line must not end in ';'
-                plaintext::is_iris_match::<IrisBits, { IrisBits::STORE_ELEM_LEN }>(
+                plaintext::is_iris_match::<FullBits, { FullBits::STORE_ELEM_LEN }>(
                     eye_new, mask_new, eye_store, mask_store,
                 )
             })
