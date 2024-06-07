@@ -71,8 +71,15 @@ impl EncodeConf for FullBits {
     type EyeConf = FullBits;
     type PlainConf = FullRes;
 
-    const ROWS_PER_BLOCK: usize = 16;
+    // TODO: using 16 fails with an encryption positive multiplication test error
+    const ROWS_PER_BLOCK: usize = 8;
 }
+// As in the report
+const_assert_eq!(
+    <<FullBits as EncodeConf>::PlainConf as PolyConf>::MAX_POLY_DEGREE,
+    2048
+);
+
 // TODO: work out how to automatically apply these assertions to every trait impl.
 // (Or every config type.)
 //
@@ -93,8 +100,14 @@ impl EncodeConf for MiddleBits {
     type EyeConf = MiddleBits;
     type PlainConf = MiddleRes;
 
-    const ROWS_PER_BLOCK: usize = 8;
+    const ROWS_PER_BLOCK: usize = 4;
 }
+// As in the report
+const_assert_eq!(
+    <<MiddleBits as EncodeConf>::PlainConf as PolyConf>::MAX_POLY_DEGREE,
+    1024
+);
+
 const_assert!(MiddleBits::ROWS_PER_BLOCK <= MiddleBits::COLUMN_LEN);
 const_assert_eq!(
     MiddleBits::NUM_BLOCKS * MiddleBits::ROWS_PER_BLOCK,

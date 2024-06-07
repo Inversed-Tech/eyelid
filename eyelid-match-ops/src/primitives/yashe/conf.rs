@@ -302,8 +302,9 @@ where
 impl YasheConf for FullRes {
     type PolyBN = FullResBN;
 
-    // VERIFY: max T should be 2^15, not 2^11
-    const T: u64 = 2048;
+    // VERIFY: max T should be 2^15, not 2^12
+    // Larger values cause failures in the positive_multiplication_test().
+    const T: u64 = 4096;
 }
 
 /// Middle resolution polynomial parameters.
@@ -313,6 +314,7 @@ impl YasheConf for MiddleRes {
     type PolyBN = MiddleResBN;
 
     // VERIFY: max T should be 2^12, not 2^8
+    // Larger values cause failures in the positive_multiplication_test().
     const T: u64 = 256;
 }
 
