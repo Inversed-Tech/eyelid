@@ -89,7 +89,7 @@ lazy_static! {
 }
 
 impl PolyConf for FullRes {
-    const MAX_POLY_DEGREE: usize = 2048;
+    const MAX_POLY_DEGREE: usize = FullRes::DATA_BIT_LEN.next_power_of_two();
 
     type Coeff = Fq79;
 
@@ -113,7 +113,7 @@ const_assert!(FullResBN::MAX_POLY_DEGREE >= FullRes::DATA_BIT_LEN);
 const_assert!(FullResBN::MAX_POLY_DEGREE.count_ones() == 1);
 
 impl PolyConf for MiddleRes {
-    const MAX_POLY_DEGREE: usize = 1024;
+    const MAX_POLY_DEGREE: usize = MiddleRes::DATA_BIT_LEN.next_power_of_two();
 
     type Coeff = Fq66;
 
@@ -138,7 +138,7 @@ const_assert!(MiddleResBN::MAX_POLY_DEGREE.count_ones() == 1);
 
 #[cfg(tiny_poly)]
 impl PolyConf for TinyTest {
-    const MAX_POLY_DEGREE: usize = 16;
+    const MAX_POLY_DEGREE: usize = TinyTest::DATA_BIT_LEN.next_power_of_two();
 
     type Coeff = FqTiny;
 
