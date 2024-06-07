@@ -87,9 +87,13 @@ fn homomorphic_addition_test() {
 }
 
 #[test]
-fn homomorphic_multiplication_test() {
-    homomorphic_multiplication_helper_positive::<MiddleRes>();
+fn homomorphic_negative_multiplication_test() {
     homomorphic_multiplication_helper_negative::<MiddleRes>();
-    homomorphic_multiplication_helper_positive::<FullRes>();
     homomorphic_multiplication_helper_negative::<FullRes>();
+}
+
+#[test]
+fn homomorphic_positive_multiplication_test() {
+    homomorphic_multiplication_helper_positive::<MiddleRes>();
+    homomorphic_multiplication_helper_positive::<FullRes>();
 }
