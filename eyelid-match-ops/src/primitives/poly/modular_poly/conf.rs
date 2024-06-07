@@ -6,6 +6,7 @@ use ark_ff::{PrimeField, Zero};
 use lazy_static::lazy_static;
 
 use crate::{
+    encoded::EncodeConf,
     iris::conf::IrisConf,
     primitives::poly::{Fq66, Fq66bn, Fq79, Fq79bn},
     FullRes, IrisBits, MiddleRes,
@@ -43,8 +44,7 @@ pub trait PolyConf: Copy + Clone + Debug + Eq + PartialEq {
 }
 
 impl PolyConf for IrisBits {
-    // This degree requires a larger modulus, Fq79 doesn't work
-    const MAX_POLY_DEGREE: usize = IrisBits::DATA_BIT_LEN.next_power_of_two();
+    const MAX_POLY_DEGREE: usize = IrisBits::BLOCK_AND_PADS_BIT_LEN.next_power_of_two();
 
     type Coeff = Fq79;
 
@@ -89,7 +89,7 @@ lazy_static! {
 }
 
 impl PolyConf for FullRes {
-    const MAX_POLY_DEGREE: usize = FullRes::DATA_BIT_LEN.next_power_of_two();
+    const MAX_POLY_DEGREE: usize = FullRes::BLOCK_AND_PADS_BIT_LEN.next_power_of_two();
 
     type Coeff = Fq79;
 
@@ -113,7 +113,7 @@ const_assert!(FullResBN::MAX_POLY_DEGREE >= FullRes::DATA_BIT_LEN);
 const_assert!(FullResBN::MAX_POLY_DEGREE.count_ones() == 1);
 
 impl PolyConf for MiddleRes {
-    const MAX_POLY_DEGREE: usize = MiddleRes::DATA_BIT_LEN.next_power_of_two();
+    const MAX_POLY_DEGREE: usize = MiddleRes::BLOCK_AND_PADS_BIT_LEN.next_power_of_two();
 
     type Coeff = Fq66;
 
@@ -138,7 +138,7 @@ const_assert!(MiddleResBN::MAX_POLY_DEGREE.count_ones() == 1);
 
 #[cfg(tiny_poly)]
 impl PolyConf for TinyTest {
-    const MAX_POLY_DEGREE: usize = TinyTest::DATA_BIT_LEN.next_power_of_two();
+    const MAX_POLY_DEGREE: usize = TinyTest::BLOCK_AND_PADS_BIT_LEN.next_power_of_two();
 
     type Coeff = FqTiny;
 
