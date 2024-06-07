@@ -4,7 +4,7 @@ use std::any::type_name;
 
 use crate::{
     primitives::yashe::{Yashe, YasheConf},
-    MiddleRes, TestRes,
+    FullRes, MiddleRes,
 };
 
 fn homomorphic_addition_helper<C: YasheConf>()
@@ -80,14 +80,16 @@ where
 
 #[test]
 fn homomorphic_addition_test() {
-    homomorphic_addition_helper::<TestRes>();
+    // Testing multiple configs is important for code coverage, and to check for hard-coded assumptions.
+    // TODO: get TinyTest working in this module
     homomorphic_addition_helper::<MiddleRes>();
+    homomorphic_addition_helper::<FullRes>();
 }
 
 #[test]
 fn homomorphic_multiplication_test() {
-    homomorphic_multiplication_helper_positive::<TestRes>();
-    homomorphic_multiplication_helper_negative::<TestRes>();
     homomorphic_multiplication_helper_positive::<MiddleRes>();
     homomorphic_multiplication_helper_negative::<MiddleRes>();
+    homomorphic_multiplication_helper_positive::<FullRes>();
+    homomorphic_multiplication_helper_negative::<FullRes>();
 }

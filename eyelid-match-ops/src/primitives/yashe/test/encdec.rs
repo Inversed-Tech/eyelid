@@ -4,7 +4,7 @@ use std::any::type_name;
 
 use crate::{
     primitives::yashe::{Yashe, YasheConf},
-    MiddleRes, TestRes,
+    FullRes, MiddleRes,
 };
 
 fn encrypt_decrypt_helper<C: YasheConf>()
@@ -25,6 +25,7 @@ where
 #[test]
 fn encrypt_decrypt_test() {
     // Testing multiple configs is important for code coverage, and to check for hard-coded assumptions.
-    encrypt_decrypt_helper::<TestRes>();
+    // TODO: get TinyTest working here
     encrypt_decrypt_helper::<MiddleRes>();
+    encrypt_decrypt_helper::<FullRes>();
 }
