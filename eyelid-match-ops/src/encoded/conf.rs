@@ -105,7 +105,7 @@ impl EncodeConf for TinyTest {
     type EyeConf = TinyTest;
     type PlainConf = TinyTest;
 
-    const ROWS_PER_BLOCK: usize = 2;
+    const ROWS_PER_BLOCK: usize = 1;
 }
 
 /// This module avoids repeating `#[cfg(tiny_poly)]` for each assertion.
