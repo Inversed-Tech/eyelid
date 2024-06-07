@@ -109,34 +109,33 @@ pub fn different<C: IrisConf, const STORE_ELEM_LEN: usize>() -> Vec<(
     IrisCode<STORE_ELEM_LEN>,
     IrisMask<STORE_ELEM_LEN>,
 )> {
-    let same_rand = random_iris_code();
-
     #[allow(unused_mut)]
-    let mut res = vec![
-        (
-            "set/unset, visible".to_string(),
-            set_iris_code(),
-            visible_iris_mask(),
-            unset_iris_code(),
-            visible_iris_mask(),
-        ),
-        (
-            "inverted rand, visible".to_string(),
-            same_rand,
-            visible_iris_mask(),
-            !same_rand,
-            visible_iris_mask(),
-        ),
-    ];
+    let mut res = vec![(
+        "set/unset, visible".to_string(),
+        set_iris_code(),
+        visible_iris_mask(),
+        unset_iris_code(),
+        visible_iris_mask(),
+    )];
 
     // In small polynomials these tests can fail by chance.
     #[cfg(not(tiny_poly))]
     {
         use crate::plaintext::test::gen::rotate_too_much;
 
+        let same_rand = random_iris_code();
         let iris2 = random_iris_code();
         let iris3 = rotate_too_much::<C, STORE_ELEM_LEN>(&iris2);
 
+        // A small random polynomial can be its own (rotated) inverse by chance
+        res.push((
+            "inverted rand, visible".to_string(),
+            same_rand,
+            visible_iris_mask(),
+            !same_rand,
+            visible_iris_mask(),
+        ));
+        // Two small random polynomials can match (under rotation) by chance
         res.push((
             "different".to_string(),
             same_rand,
@@ -144,7 +143,7 @@ pub fn different<C: IrisConf, const STORE_ELEM_LEN: usize>() -> Vec<(
             iris2,
             visible_iris_mask(),
         ));
-        #[cfg(not(tiny_poly))]
+        // An over-rotated polynomial can be its own inverse by chance
         res.push((
             "too much rotated".to_string(),
             iris2,
