@@ -1,5 +1,7 @@
 //! Unit tests for Encryption and Decryption
 
+use std::any::type_name;
+
 use crate::{
     primitives::yashe::{Yashe, YasheConf},
     MiddleRes, TestRes,
@@ -17,7 +19,7 @@ where
     let c = ctx.encrypt(m.clone(), &public_key, &mut rng);
     let m_dec = ctx.decrypt(c.clone(), &private_key);
 
-    assert_eq!(m, m_dec);
+    assert_eq!(m, m_dec, "{}", type_name::<C>());
 }
 
 #[test]

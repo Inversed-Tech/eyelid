@@ -1,5 +1,7 @@
 //! Unit tests for Key Generation
 
+use std::any::type_name;
+
 use ark_ff::One;
 use ark_poly::Polynomial;
 
@@ -24,15 +26,23 @@ where
 
     assert_eq!(
         private_key.f[0] * C::t_as_coeff() + C::Coeff::one(),
-        private_key.priv_key[0]
+        private_key.priv_key[0],
+        "{}",
+        type_name::<C>()
     );
 
     assert_eq!(
         private_key.priv_key * priv_key_inv.expect("Private key must be invertible"),
-        Poly::one()
+        Poly::one(),
+        "{}",
+        type_name::<C>()
     );
 
-    assert!(public_key.h.degree() < C::MAX_POLY_DEGREE);
+    assert!(
+        public_key.h.degree() < C::MAX_POLY_DEGREE,
+        "{}",
+        type_name::<C>()
+    );
 }
 
 #[test]

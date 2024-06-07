@@ -1,5 +1,7 @@
 //! Tests for polynomial multiplication.
 
+use std::any::type_name;
+
 use ark_ff::{One, Zero};
 use ark_poly::Polynomial;
 
@@ -32,27 +34,36 @@ where
 
     #[allow(clippy::int_plus_one)]
     {
-        assert!(p1.degree() <= C::MAX_POLY_DEGREE - 1);
+        assert!(
+            p1.degree() <= C::MAX_POLY_DEGREE - 1,
+            "{}",
+            type_name::<C>()
+        );
     }
 
     // Xˆ{N-1}, multiplying by it will rotate by N-1 and negate (except the first).
     let xnm1 = Poly::xn(C::MAX_POLY_DEGREE - 1);
 
-    assert_eq!(xnm1.degree(), C::MAX_POLY_DEGREE - 1);
+    assert_eq!(
+        xnm1.degree(),
+        C::MAX_POLY_DEGREE - 1,
+        "{}",
+        type_name::<C>()
+    );
 
     let res = mul_fn(&p1, &xnm1);
-    assert!(res.degree() <= C::MAX_POLY_DEGREE);
+    assert!(res.degree() <= C::MAX_POLY_DEGREE, "{}", type_name::<C>());
 
     for i in 0..C::MAX_POLY_DEGREE - 1 {
         // Negative numbers are automatically converted to canonical
         // representation in the interval [0, MODULUS)
-        assert_eq!(res[i], -p1[i + 1]);
+        assert_eq!(res[i], -p1[i + 1], "{}", type_name::<C>());
     }
-    assert_eq!(res[C::MAX_POLY_DEGREE - 1], p1[0]);
+    assert_eq!(res[C::MAX_POLY_DEGREE - 1], p1[0], "{}", type_name::<C>());
 
     // Zero leading coefficients aren't stored.
     // `degree()` panics if the leading coefficient is zero anyway.
-    assert!(res.degree() < C::MAX_POLY_DEGREE);
+    assert!(res.degree() < C::MAX_POLY_DEGREE, "{}", type_name::<C>());
 }
 
 /// Test cyclotomic multiplication that results in `X^[C::MAX_POLY_DEGREE]`.
@@ -85,11 +96,18 @@ where
         .divide_with_q_and_r(&new_unreduced_poly_modulus_slow::<C>())
         .expect("is divisible by X^C::MAX_POLY_DEGREE");
 
-    assert_eq!(q, Poly::from_coefficients_vec(vec![C::Coeff::one()]));
+    assert_eq!(
+        q,
+        Poly::from_coefficients_vec(vec![C::Coeff::one()]),
+        "{}",
+        type_name::<C>()
+    );
     assert_eq!(
         x_max,
         // TODO: should `MODULUS - 1` be a constant?
         Poly::from_coefficients_vec(vec![C::Coeff::zero() - C::Coeff::one()]),
+        "{}",
+        type_name::<C>()
     );
 
     for i in 0..=C::MAX_POLY_DEGREE {
@@ -119,13 +137,24 @@ where
             assert_eq!(p1.degree(), 0);
             assert_eq!(p2.degree(), 0);
         } else {
-            assert_eq!(p1.degree() + p2.degree(), C::MAX_POLY_DEGREE);
+            assert_eq!(
+                p1.degree() + p2.degree(),
+                C::MAX_POLY_DEGREE,
+                "{}",
+                type_name::<C>()
+            );
         }
 
         let res = mul_fn(&p1, &p2);
 
         // Make sure it's X^N
-        assert_eq!(res, x_max, "x^{i} * x^{}", C::MAX_POLY_DEGREE - i);
+        assert_eq!(
+            res,
+            x_max,
+            "{}: x^{i} * x^{}",
+            type_name::<C>(),
+            C::MAX_POLY_DEGREE - i
+        );
     }
 }
 
