@@ -94,7 +94,7 @@ where
     // Manually calculate the reduced representation of X^N as the constant `MODULUS - 1`.
     let (q, x_max) = x_max
         .divide_with_q_and_r(&new_unreduced_poly_modulus_slow::<C>())
-        .expect("is divisible by X^C::MAX_POLY_DEGREE");
+        .unwrap_or_else(|| panic!("is divisible by X^{}::MAX_POLY_DEGREE", type_name::<C>()));
 
     assert_eq!(
         q,
@@ -133,15 +133,31 @@ where
         let p1 = Poly::xn(i);
         let p2 = Poly::xn(C::MAX_POLY_DEGREE - i);
 
-        if i == 0 || i == TestRes::MAX_POLY_DEGREE {
-            assert_eq!(p1.degree(), 0);
-            assert_eq!(p2.degree(), 0);
+        if i == 0 || i == C::MAX_POLY_DEGREE {
+            assert_eq!(
+                p1.degree(),
+                0,
+                "{}: p1: X^{i} degree {}: degree is inconsistent",
+                type_name::<C>(),
+                p1.degree(),
+            );
+            assert_eq!(
+                p2.degree(),
+                0,
+                "{}: p2: x^{} degree {}: degree is inconsistent",
+                type_name::<C>(),
+                C::MAX_POLY_DEGREE - i,
+                p2.degree(),
+            );
         } else {
             assert_eq!(
                 p1.degree() + p2.degree(),
                 C::MAX_POLY_DEGREE,
-                "{}",
-                type_name::<C>()
+                "{}: p1: X^{i} degree {} * p2: x^{} degree {}: degrees are inconsistent",
+                type_name::<C>(),
+                p1.degree(),
+                C::MAX_POLY_DEGREE - i,
+                p2.degree(),
             );
         }
 
