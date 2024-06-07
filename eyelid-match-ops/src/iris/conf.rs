@@ -11,7 +11,7 @@ use crate::{FullRes, IrisBits, MiddleRes};
 #[cfg(tiny_poly)]
 use crate::TinyTest;
 
-/// The dimensions and matching rules for iris codes.
+/// The dimensions and matching rules for the entire iris code.
 pub trait IrisConf {
     /// The number of rows in an iris code or iris mask.
     //

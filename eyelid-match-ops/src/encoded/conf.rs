@@ -5,12 +5,13 @@ use num_bigint::BigUint;
 
 use crate::{
     encoded::MatchError, iris::conf::IrisConf, primitives::poly::PolyConf, FullRes, IrisBits,
+    MiddleRes,
 };
 
 #[cfg(tiny_poly)]
 use crate::TinyTest;
 
-/// An encoding for an iris code.
+/// The dimensions of an encoding for an iris code, used for efficient matching.
 pub trait EncodeConf {
     /// The configuration of iris code data.
     type EyeConf: IrisConf;
@@ -18,15 +19,21 @@ pub trait EncodeConf {
     /// The configuration of plaintext polynomials.
     type PlainConf: PolyConf;
 
-    // Divide iris codes into blocks that can each fit into a polynomial.
+    /// Divide iris codes into blocks that can each fit into a polynomial.
     /// The number of rows in each block: `s`
     const ROWS_PER_BLOCK: usize = 10;
+
+    /// The number of iris bits in each block.
+    const BLOCK_BIT_LEN: usize = Self::EyeConf::COLUMN_LEN * Self::ROWS_PER_BLOCK;
 
     /// The number of blocks necessary to hold all rows of the code.
     const NUM_BLOCKS: usize = Self::EyeConf::COLUMN_LEN / Self::ROWS_PER_BLOCK;
 
     /// The number of columns plus padding for rotations: δ = k + v - u
     const NUM_COLS_AND_PADS: usize = Self::EyeConf::COLUMNS + 2 * Self::EyeConf::ROTATION_LIMIT;
+
+    /// The number of iris bits in each block.
+    const BLOCK_AND_PADS_BIT_LEN: usize = Self::NUM_COLS_AND_PADS * Self::ROWS_PER_BLOCK;
 
     /// Convert a prime field element to a signed integer, assuming the range from all equal to all different bits.
     /// Out of range values return `Err(err)`.
@@ -65,7 +72,7 @@ impl EncodeConf for IrisBits {
     type EyeConf = IrisBits;
     type PlainConf = IrisBits;
 
-    const ROWS_PER_BLOCK: usize = 20;
+    const ROWS_PER_BLOCK: usize = IrisBits::COLUMN_LEN;
 }
 
 // TODO: work out how to automatically apply these assertions to every trait impl.
@@ -98,6 +105,22 @@ const_assert_eq!(
 const_assert!(
     FullRes::NUM_COLS_AND_PADS * FullRes::ROWS_PER_BLOCK
         <= <<FullRes as EncodeConf>::PlainConf as PolyConf>::MAX_POLY_DEGREE
+);
+
+impl EncodeConf for MiddleRes {
+    type EyeConf = MiddleRes;
+    type PlainConf = MiddleRes;
+
+    const ROWS_PER_BLOCK: usize = 5;
+}
+const_assert!(MiddleRes::ROWS_PER_BLOCK <= MiddleRes::COLUMN_LEN);
+const_assert_eq!(
+    MiddleRes::NUM_BLOCKS * MiddleRes::ROWS_PER_BLOCK,
+    MiddleRes::COLUMN_LEN
+);
+const_assert!(
+    MiddleRes::NUM_COLS_AND_PADS * MiddleRes::ROWS_PER_BLOCK
+        <= <<MiddleRes as EncodeConf>::PlainConf as PolyConf>::MAX_POLY_DEGREE
 );
 
 #[cfg(tiny_poly)]
