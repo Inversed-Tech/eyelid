@@ -16,7 +16,7 @@
 
 use std::time::Duration;
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode::*};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 
 use eyelid_match_ops::{
     plaintext::{
