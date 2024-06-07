@@ -2,7 +2,7 @@
 
 use crate::{
     primitives::yashe::{Yashe, YasheConf},
-    FullRes, IrisBits,
+    MiddleRes, TestRes,
 };
 
 fn encrypt_decrypt_helper<C: YasheConf>()
@@ -22,11 +22,7 @@ where
 
 #[test]
 fn encrypt_decrypt_test() {
-    // The TinyTest config doesn't work for encryption, so we test full resolution,
-    // and a large polynomial with the same number of terms as the number of iris bits.
     // Testing multiple configs is important for code coverage, and to check for hard-coded assumptions.
-    //
-    // TODO: find a config that does work and use it for TestRes/TinyPoly.
-    encrypt_decrypt_helper::<FullRes>();
-    encrypt_decrypt_helper::<IrisBits>();
+    encrypt_decrypt_helper::<TestRes>();
+    encrypt_decrypt_helper::<MiddleRes>();
 }

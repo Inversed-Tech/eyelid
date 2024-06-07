@@ -6,9 +6,9 @@ use ark_ff::{PrimeField, Zero};
 use lazy_static::lazy_static;
 
 use crate::{
-    encoded::EncodeConf,
+    encoded::{EncodeConf, FullRes, MiddleRes},
     primitives::poly::{Fq66, Fq66bn, Fq79, Fq79bn},
-    FullRes, IrisBits, MiddleRes,
+    IrisBits, MiddleBits,
 };
 
 #[cfg(tiny_poly)]
@@ -42,7 +42,7 @@ pub trait PolyConf: Copy + Clone + Debug + Eq + PartialEq {
     fn coeff_zero() -> &'static Self::Coeff;
 }
 
-impl PolyConf for IrisBits {
+impl PolyConf for FullRes {
     const MAX_POLY_DEGREE: usize = IrisBits::BLOCK_AND_PADS_BIT_LEN.next_power_of_two();
 
     type Coeff = Fq79;
@@ -52,54 +52,12 @@ impl PolyConf for IrisBits {
     }
 }
 // The polynomial must have enough coefficients to store the underlying iris data.
-const_assert!(IrisBits::MAX_POLY_DEGREE >= IrisBits::BLOCK_AND_PADS_BIT_LEN);
+const_assert!(FullRes::MAX_POLY_DEGREE >= IrisBits::BLOCK_AND_PADS_BIT_LEN);
 // The degree must be a power of two.
-const_assert!(IrisBits::MAX_POLY_DEGREE.count_ones() == 1);
-
-impl PolyConf for IrisBitsBN {
-    // This degree requires a larger modulus, Fq79 doesn't work
-    const MAX_POLY_DEGREE: usize = IrisBits::MAX_POLY_DEGREE;
-
-    type Coeff = Fq79bn;
-
-    fn coeff_zero() -> &'static Self::Coeff {
-        &FQ79_BN_ZERO
-    }
-}
-// The polynomial must have enough coefficients to store the underlying iris data.
-const_assert!(IrisBitsBN::MAX_POLY_DEGREE >= IrisBits::BLOCK_AND_PADS_BIT_LEN);
-// The degree must be a power of two.
-const_assert!(IrisBitsBN::MAX_POLY_DEGREE.count_ones() == 1);
-
-// TODO: try generic_singleton and see if it performs better:
-// <https://docs.rs/generic_singleton/0.5.0/generic_singleton/macro.get_or_init_thread_local.html>
-lazy_static! {
-    /// The zero coefficient as a static constant value.
-    static ref FQ79_ZERO: Fq79 = Fq79::zero();
-
-    /// The zero coefficient as a static constant value.
-    static ref FQ79_BN_ZERO: Fq79bn = Fq79bn::zero();
-
-    /// The zero coefficient as a static constant value.
-    static ref FQ66_ZERO: Fq66 = Fq66::zero();
-
-    /// The zero coefficient as a static constant value.
-    static ref FQ66_BN_ZERO: Fq66bn = Fq66bn::zero();
-}
-
-impl PolyConf for FullRes {
-    const MAX_POLY_DEGREE: usize = FullRes::BLOCK_AND_PADS_BIT_LEN.next_power_of_two();
-
-    type Coeff = Fq79;
-
-    fn coeff_zero() -> &'static Self::Coeff {
-        &FQ79_ZERO
-    }
-}
-const_assert!(FullRes::MAX_POLY_DEGREE >= FullRes::BLOCK_AND_PADS_BIT_LEN);
 const_assert!(FullRes::MAX_POLY_DEGREE.count_ones() == 1);
 
 impl PolyConf for FullResBN {
+    // This degree requires a larger modulus, Fq79 doesn't work
     const MAX_POLY_DEGREE: usize = FullRes::MAX_POLY_DEGREE;
 
     type Coeff = Fq79bn;
@@ -108,11 +66,13 @@ impl PolyConf for FullResBN {
         &FQ79_BN_ZERO
     }
 }
-const_assert!(FullResBN::MAX_POLY_DEGREE >= FullRes::BLOCK_AND_PADS_BIT_LEN);
+// The polynomial must have enough coefficients to store the underlying iris data.
+const_assert!(FullResBN::MAX_POLY_DEGREE >= IrisBits::BLOCK_AND_PADS_BIT_LEN);
+// The degree must be a power of two.
 const_assert!(FullResBN::MAX_POLY_DEGREE.count_ones() == 1);
 
 impl PolyConf for MiddleRes {
-    const MAX_POLY_DEGREE: usize = MiddleRes::BLOCK_AND_PADS_BIT_LEN.next_power_of_two();
+    const MAX_POLY_DEGREE: usize = MiddleBits::BLOCK_AND_PADS_BIT_LEN.next_power_of_two();
 
     type Coeff = Fq66;
 
@@ -120,7 +80,7 @@ impl PolyConf for MiddleRes {
         &FQ66_ZERO
     }
 }
-const_assert!(MiddleRes::MAX_POLY_DEGREE >= MiddleRes::BLOCK_AND_PADS_BIT_LEN);
+const_assert!(MiddleRes::MAX_POLY_DEGREE >= MiddleBits::BLOCK_AND_PADS_BIT_LEN);
 const_assert!(MiddleRes::MAX_POLY_DEGREE.count_ones() == 1);
 
 impl PolyConf for MiddleResBN {
@@ -132,7 +92,7 @@ impl PolyConf for MiddleResBN {
         &FQ66_BN_ZERO
     }
 }
-const_assert!(MiddleResBN::MAX_POLY_DEGREE >= MiddleRes::BLOCK_AND_PADS_BIT_LEN);
+const_assert!(MiddleResBN::MAX_POLY_DEGREE >= MiddleBits::BLOCK_AND_PADS_BIT_LEN);
 const_assert!(MiddleResBN::MAX_POLY_DEGREE.count_ones() == 1);
 
 #[cfg(tiny_poly)]
@@ -175,12 +135,6 @@ lazy_static! {
     static ref FQ_TINY_BN_ZERO: FqTinybn = FqTinybn::zero();
 }
 
-/// Iris bit length polynomial parameters for lifted coefficients.
-///
-/// This uses the full number of iris bits, which gives an upper bound on benchmarks.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub struct IrisBitsBN;
-
 /// Full resolution polynomial parameters for lifted coefficients.
 ///
 /// These are the parameters for full resolution, according to the Inversed Tech report.
@@ -199,3 +153,19 @@ pub struct MiddleResBN;
 #[cfg(tiny_poly)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct TinyTestBN;
+
+// TODO: try generic_singleton and see if it performs better:
+// <https://docs.rs/generic_singleton/0.5.0/generic_singleton/macro.get_or_init_thread_local.html>
+lazy_static! {
+    /// The zero coefficient as a static constant value.
+    static ref FQ79_ZERO: Fq79 = Fq79::zero();
+
+    /// The zero coefficient as a static constant value.
+    static ref FQ79_BN_ZERO: Fq79bn = Fq79bn::zero();
+
+    /// The zero coefficient as a static constant value.
+    static ref FQ66_ZERO: Fq66 = Fq66::zero();
+
+    /// The zero coefficient as a static constant value.
+    static ref FQ66_BN_ZERO: Fq66bn = Fq66bn::zero();
+}

@@ -4,8 +4,7 @@ use ark_ff::{One, Zero};
 use num_bigint::BigUint;
 
 use crate::{
-    encoded::MatchError, iris::conf::IrisConf, primitives::poly::PolyConf, FullRes, IrisBits,
-    MiddleRes,
+    encoded::MatchError, iris::conf::IrisConf, primitives::poly::PolyConf, IrisBits, MiddleBits,
 };
 
 #[cfg(tiny_poly)]
@@ -14,6 +13,8 @@ use crate::TinyTest;
 /// The dimensions of an encoding for an iris code, used for efficient matching.
 pub trait EncodeConf {
     /// The configuration of iris code data.
+    ///
+    /// TODO: rename to EyeBits?
     type EyeConf: IrisConf;
 
     /// The configuration of plaintext polynomials.
@@ -66,15 +67,12 @@ pub trait EncodeConf {
     }
 }
 
-// TODO: add a conf where EyeConf and PlainConf are different, and test it.
-
 impl EncodeConf for IrisBits {
     type EyeConf = IrisBits;
-    type PlainConf = IrisBits;
+    type PlainConf = FullRes;
 
-    const ROWS_PER_BLOCK: usize = IrisBits::COLUMN_LEN;
+    const ROWS_PER_BLOCK: usize = 16;
 }
-
 // TODO: work out how to automatically apply these assertions to every trait impl.
 // (Or every config type.)
 //
@@ -91,36 +89,20 @@ const_assert!(
         <= <<IrisBits as EncodeConf>::PlainConf as PolyConf>::MAX_POLY_DEGREE
 );
 
-impl EncodeConf for FullRes {
-    type EyeConf = FullRes;
-    type PlainConf = FullRes;
-
-    const ROWS_PER_BLOCK: usize = 16;
-}
-const_assert!(FullRes::ROWS_PER_BLOCK <= FullRes::COLUMN_LEN);
-const_assert_eq!(
-    FullRes::NUM_BLOCKS * FullRes::ROWS_PER_BLOCK,
-    FullRes::COLUMN_LEN
-);
-const_assert!(
-    FullRes::NUM_COLS_AND_PADS * FullRes::ROWS_PER_BLOCK
-        <= <<FullRes as EncodeConf>::PlainConf as PolyConf>::MAX_POLY_DEGREE
-);
-
-impl EncodeConf for MiddleRes {
-    type EyeConf = MiddleRes;
+impl EncodeConf for MiddleBits {
+    type EyeConf = MiddleBits;
     type PlainConf = MiddleRes;
 
     const ROWS_PER_BLOCK: usize = 8;
 }
-const_assert!(MiddleRes::ROWS_PER_BLOCK <= MiddleRes::COLUMN_LEN);
+const_assert!(MiddleBits::ROWS_PER_BLOCK <= MiddleBits::COLUMN_LEN);
 const_assert_eq!(
-    MiddleRes::NUM_BLOCKS * MiddleRes::ROWS_PER_BLOCK,
-    MiddleRes::COLUMN_LEN
+    MiddleBits::NUM_BLOCKS * MiddleBits::ROWS_PER_BLOCK,
+    MiddleBits::COLUMN_LEN
 );
 const_assert!(
-    MiddleRes::NUM_COLS_AND_PADS * MiddleRes::ROWS_PER_BLOCK
-        <= <<MiddleRes as EncodeConf>::PlainConf as PolyConf>::MAX_POLY_DEGREE
+    MiddleBits::NUM_COLS_AND_PADS * MiddleBits::ROWS_PER_BLOCK
+        <= <<MiddleBits as EncodeConf>::PlainConf as PolyConf>::MAX_POLY_DEGREE
 );
 
 #[cfg(tiny_poly)]
@@ -146,3 +128,31 @@ mod tiny_test_asserts {
             <= <<TinyTest as EncodeConf>::PlainConf as PolyConf>::MAX_POLY_DEGREE
     );
 }
+
+/// Full resolution polynomial parameters.
+///
+/// These are the parameters for full resolution, according to the Inversed Tech report.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct FullRes;
+
+/// Middle resolution polynomial parameters.
+///
+/// These are the parameters for middle resolution, according to the Inversed Tech report.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct MiddleRes;
+
+/// The polynomial config used in tests.
+//
+// We use the full resolution by default, but TinyTest when cfg(tiny_poly) is set.
+#[cfg(not(tiny_poly))]
+pub type TestRes = FullRes;
+
+/// The polynomial config used in tests.
+///
+/// Temporarily switch to this tiny field to make test errors easier to debug:
+/// ```no_run
+/// RUSTFLAGS="--cfg tiny_poly" cargo test
+/// RUSTFLAGS="--cfg tiny_poly" cargo bench --features benchmark
+/// ```
+#[cfg(tiny_poly)]
+pub type TestRes = TinyTest;

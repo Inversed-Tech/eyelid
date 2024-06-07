@@ -8,7 +8,7 @@ use crate::{
         flat_karatsuba_mul, naive_cyclotomic_mul, new_unreduced_poly_modulus_slow,
         rec_karatsuba_mul, test::gen::rand_poly, Poly, PolyConf,
     },
-    TestRes,
+    MiddleRes, TestRes,
 };
 
 /// Test cyclotomic multiplication of a random polynomial by `X^{[C::MAX_POLY_DEGREE] - 1}`.
@@ -17,6 +17,10 @@ fn test_cyclotomic_mul_rand_xnm1() {
     check_cyclotomic_mul_rand_xnm1::<TestRes, _>(naive_cyclotomic_mul);
     check_cyclotomic_mul_rand_xnm1::<TestRes, _>(rec_karatsuba_mul);
     check_cyclotomic_mul_rand_xnm1::<TestRes, _>(flat_karatsuba_mul);
+
+    check_cyclotomic_mul_rand_xnm1::<MiddleRes, _>(naive_cyclotomic_mul);
+    check_cyclotomic_mul_rand_xnm1::<MiddleRes, _>(rec_karatsuba_mul);
+    check_cyclotomic_mul_rand_xnm1::<MiddleRes, _>(flat_karatsuba_mul);
 }
 
 /// Check `mul_fn` correctly implements cyclotomic multiplication of a random polynomial by `X^{[C::MAX_POLY_DEGREE] - 1}`.
@@ -57,6 +61,10 @@ fn test_cyclotomic_mul_max_degree() {
     check_cyclotomic_mul_max_degree::<TestRes, _>(naive_cyclotomic_mul);
     check_cyclotomic_mul_max_degree::<TestRes, _>(rec_karatsuba_mul);
     check_cyclotomic_mul_max_degree::<TestRes, _>(flat_karatsuba_mul);
+
+    check_cyclotomic_mul_max_degree::<MiddleRes, _>(naive_cyclotomic_mul);
+    check_cyclotomic_mul_max_degree::<MiddleRes, _>(rec_karatsuba_mul);
+    check_cyclotomic_mul_max_degree::<MiddleRes, _>(flat_karatsuba_mul);
 }
 
 /// Check `mul_fn` correctly implements cyclotomic multiplication that results in `X^[C::MAX_POLY_DEGREE]`.
@@ -124,6 +132,7 @@ where
 /// Test recursive karatsuba, flat karatsuba, and naive cyclotomic multiplication of two random polynomials all produce the same result.
 #[test]
 fn test_karatsuba_mul_rand_consistent() {
+    // TestRes
     let p1: Poly<TestRes> = rand_poly(TestRes::MAX_POLY_DEGREE - 1);
     let p2: Poly<TestRes> = rand_poly(TestRes::MAX_POLY_DEGREE - 1);
 
@@ -141,6 +150,28 @@ fn test_karatsuba_mul_rand_consistent() {
 
     let flat_res = flat_karatsuba_mul(&p1, &p2);
     assert!(flat_res.degree() <= TestRes::MAX_POLY_DEGREE);
+
+    assert_eq!(expected, rec_res);
+    assert_eq!(expected, flat_res);
+
+    // MiddleRes
+    let p1: Poly<MiddleRes> = rand_poly(TestRes::MAX_POLY_DEGREE - 1);
+    let p2: Poly<MiddleRes> = rand_poly(TestRes::MAX_POLY_DEGREE - 1);
+
+    #[allow(clippy::int_plus_one)]
+    {
+        assert!(p1.degree() <= MiddleRes::MAX_POLY_DEGREE - 1);
+        assert!(p2.degree() <= MiddleRes::MAX_POLY_DEGREE - 1);
+    }
+
+    let expected = naive_cyclotomic_mul(&p1, &p2);
+    assert!(expected.degree() <= MiddleRes::MAX_POLY_DEGREE);
+
+    let rec_res = rec_karatsuba_mul(&p1, &p2);
+    assert!(rec_res.degree() <= MiddleRes::MAX_POLY_DEGREE);
+
+    let flat_res = flat_karatsuba_mul(&p1, &p2);
+    assert!(flat_res.degree() <= MiddleRes::MAX_POLY_DEGREE);
 
     assert_eq!(expected, rec_res);
     assert_eq!(expected, flat_res);

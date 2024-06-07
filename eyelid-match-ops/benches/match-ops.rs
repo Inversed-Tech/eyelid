@@ -19,7 +19,6 @@ use std::time::Duration;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode::*};
 
 use eyelid_match_ops::{
-    iris::conf::IrisConf,
     plaintext::{
         self,
         test::gen::{random_iris_code, random_iris_mask},
@@ -28,7 +27,7 @@ use eyelid_match_ops::{
         poly::{self, test::gen::rand_poly, Poly, PolyConf},
         yashe::{self, Ciphertext, Message, Yashe},
     },
-    IrisBits, TestRes,
+    IrisConf, MiddleRes, TestRes,
 };
 
 // Configure Criterion:
@@ -105,47 +104,32 @@ criterion_group! {
     targets = bench_yashe_msg_mul, bench_yashe_cipher_mul
 }
 
-// Iris-length polynomial benchmarks.
-// These benchmarks provide an upper bound for the performance of iris operations.
-// They also help us decide if we need smaller or larger polynomial sizes.
-#[cfg(not(slow_benchmarks))]
+// Middle resolution polynomial benchmarks.
 criterion_group! {
-    name = bench_cyclotomic_multiplication_iris;
+    name = bench_cyclotomic_multiplication_mid;
     // This can be any expression that returns a `Criterion` object.
     config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(50));
     // List iris-length polynomial multiplication implementations here.
-    targets = bench_rec_karatsuba_mul_iris, bench_flat_karatsuba_mul_iris
+    targets = bench_naive_cyclotomic_mul_mid, bench_rec_karatsuba_mul_mid, bench_flat_karatsuba_mul_mid
 }
 
-#[cfg(slow_benchmarks)]
 criterion_group! {
-    name = bench_cyclotomic_multiplication_iris;
-    // This can be any expression that returns a `Criterion` object.
-    config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(50));
-    // List iris-length polynomial multiplication implementations here.
-    targets = bench_naive_cyclotomic_mul_iris, bench_rec_karatsuba_mul_iris, bench_flat_karatsuba_mul_iris
-}
-
-#[cfg(slow_benchmarks)]
-criterion_group! {
-    name = bench_inverse_iris;
+    name = bench_inverse_mid;
     // This can be any expression that returns a `Criterion` object.
     config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(120));
     // List iris-length polynomial inverse implementations here.
-    targets = bench_inv_iris
+    targets = bench_inv_mid
 }
 
-#[cfg(slow_benchmarks)]
 criterion_group! {
-    name = bench_key_generation_iris;
+    name = bench_key_generation_mid;
     // This can be any expression that returns a `Criterion` object.
     config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(230));
     // List key generation implementations here.
-    targets = bench_keygen_iris
+    targets = bench_keygen_mid
 }
 
 // List groups here.
-#[cfg(not(slow_benchmarks))]
 criterion_main!(
     bench_full_match,
     bench_cyclotomic_multiplication,
@@ -156,23 +140,9 @@ criterion_main!(
     bench_encryption,
     bench_decryption,
     bench_yashe_mul,
-    bench_cyclotomic_multiplication_iris,
-);
-
-#[cfg(slow_benchmarks)]
-criterion_main!(
-    bench_full_match,
-    bench_cyclotomic_multiplication,
-    bench_poly_split_karatsuba,
-    bench_polynomial_modulus,
-    bench_inverse,
-    bench_key_generation,
-    bench_encryption,
-    bench_decryption,
-    bench_yashe_mul,
-    bench_cyclotomic_multiplication_iris,
-    bench_inverse_iris,
-    bench_key_generation_iris
+    bench_cyclotomic_multiplication_mid,
+    bench_inverse_mid,
+    bench_key_generation_mid
 );
 
 /// The name used for slow benchmark groups.
@@ -186,6 +156,8 @@ pub const SMALL_RANDOM_NAME: &str = "small rand";
 
 /// Run [`plaintext::is_iris_match()`] as a Criterion benchmark with random data.
 fn bench_plaintext_full_match(settings: &mut Criterion) {
+    use eyelid_match_ops::IrisBits;
+
     // Setup: generate different random iris codes and masks
     let eye_new = random_iris_code();
     let mask_new = random_iris_mask();
@@ -223,25 +195,24 @@ pub fn bench_naive_cyclotomic_mul(settings: &mut Criterion) {
     );
 }
 
-/// Run [`poly::naive_cyclotomic_mul()`] as a Criterion benchmark with random data on the full number of iris bits.
-#[cfg(slow_benchmarks)]
-pub fn bench_naive_cyclotomic_mul_iris(settings: &mut Criterion) {
+/// Run [`poly::naive_cyclotomic_mul()`] as a Criterion benchmark with random data on middle resolution.
+pub fn bench_naive_cyclotomic_mul_mid(settings: &mut Criterion) {
     // Tweak configuration for a long-running test
     let mut settings = settings.benchmark_group(SLOW_BENCH_NAME);
     // We can override the configuration on a per-group level
     settings.sampling_mode(Flat);
 
     // Setup: generate random cyclotomic polynomials
-    let p1: Poly<IrisBits> = rand_poly(IrisBits::MAX_POLY_DEGREE);
-    let p2: Poly<IrisBits> = rand_poly(IrisBits::MAX_POLY_DEGREE);
+    let p1: Poly<MiddleRes> = rand_poly(MiddleRes::MAX_POLY_DEGREE);
+    let p2: Poly<MiddleRes> = rand_poly(MiddleRes::MAX_POLY_DEGREE);
 
     settings.bench_with_input(
-        BenchmarkId::new("Naive mul full poly", RANDOM_BITS_NAME),
+        BenchmarkId::new("Naive mul mid poly", RANDOM_BITS_NAME),
         &(p1, p2),
         |benchmark, (p1, p2)| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
             benchmark
-                .iter_with_large_drop(|| -> Poly<IrisBits> { poly::naive_cyclotomic_mul(p1, p2) })
+                .iter_with_large_drop(|| -> Poly<MiddleRes> { poly::naive_cyclotomic_mul(p1, p2) })
         },
     );
 }
@@ -262,23 +233,24 @@ pub fn bench_rec_karatsuba_mul(settings: &mut Criterion) {
     );
 }
 
-/// Run [`poly::rec_karatsuba_mul()`] as a Criterion benchmark with random data on the full number of iris bits.
-pub fn bench_rec_karatsuba_mul_iris(settings: &mut Criterion) {
+/// Run [`poly::rec_karatsuba_mul()`] as a Criterion benchmark with random data on middle resolution.
+pub fn bench_rec_karatsuba_mul_mid(settings: &mut Criterion) {
     // Tweak configuration for a long-running test
     let mut settings = settings.benchmark_group(SLOW_BENCH_NAME);
     // We can override the configuration on a per-group level
     settings.sampling_mode(Flat);
 
     // Setup: generate random cyclotomic polynomials
-    let p1: Poly<IrisBits> = rand_poly(IrisBits::MAX_POLY_DEGREE);
-    let p2: Poly<IrisBits> = rand_poly(IrisBits::MAX_POLY_DEGREE);
+    let p1: Poly<MiddleRes> = rand_poly(MiddleRes::MAX_POLY_DEGREE);
+    let p2: Poly<MiddleRes> = rand_poly(MiddleRes::MAX_POLY_DEGREE);
 
     settings.bench_with_input(
-        BenchmarkId::new("Rec karatsuba mul full poly", RANDOM_BITS_NAME),
+        BenchmarkId::new("Rec karatsuba mul mid poly", RANDOM_BITS_NAME),
         &(p1, p2),
         |benchmark, (p1, p2)| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
-            benchmark.iter_with_large_drop(|| -> Poly<IrisBits> { poly::rec_karatsuba_mul(p1, p2) })
+            benchmark
+                .iter_with_large_drop(|| -> Poly<MiddleRes> { poly::rec_karatsuba_mul(p1, p2) })
         },
     );
 }
@@ -299,16 +271,16 @@ pub fn bench_flat_karatsuba_mul(settings: &mut Criterion) {
     );
 }
 
-/// Run [`poly::flat_karatsuba_mul()`] as a Criterion benchmark with random data on the full number of iris bits.
-pub fn bench_flat_karatsuba_mul_iris(settings: &mut Criterion) {
+/// Run [`poly::flat_karatsuba_mul()`] as a Criterion benchmark with random data on middle resolution.
+pub fn bench_flat_karatsuba_mul_mid(settings: &mut Criterion) {
     // Tweak configuration for a long-running test
     let mut settings = settings.benchmark_group(SLOW_BENCH_NAME);
     // We can override the configuration on a per-group level
     settings.sampling_mode(Flat);
 
     // Setup: generate random cyclotomic polynomials
-    let p1: Poly<IrisBits> = rand_poly(IrisBits::MAX_POLY_DEGREE);
-    let p2: Poly<IrisBits> = rand_poly(IrisBits::MAX_POLY_DEGREE);
+    let p1: Poly<MiddleRes> = rand_poly(MiddleRes::MAX_POLY_DEGREE);
+    let p2: Poly<MiddleRes> = rand_poly(MiddleRes::MAX_POLY_DEGREE);
 
     settings.bench_with_input(
         BenchmarkId::new("Flat karatsuba mul full poly", RANDOM_BITS_NAME),
@@ -316,7 +288,7 @@ pub fn bench_flat_karatsuba_mul_iris(settings: &mut Criterion) {
         |benchmark, (p1, p2)| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
             benchmark
-                .iter_with_large_drop(|| -> Poly<IrisBits> { poly::flat_karatsuba_mul(p1, p2) })
+                .iter_with_large_drop(|| -> Poly<MiddleRes> { poly::flat_karatsuba_mul(p1, p2) })
         },
     );
 }
@@ -415,9 +387,8 @@ pub fn bench_inv(settings: &mut Criterion) {
     );
 }
 
-/// Run [`poly::inverse()`] as a Criterion benchmark with gaussian random data on the full number of iris bits.
-#[cfg(slow_benchmarks)]
-pub fn bench_inv_iris(settings: &mut Criterion) {
+/// Run [`poly::inverse()`] as a Criterion benchmark with gaussian random data on middle resolution.
+pub fn bench_inv_mid(settings: &mut Criterion) {
     // Tweak configuration for a long-running test
     let mut settings = settings.benchmark_group(SLOW_BENCH_NAME);
     // We can override the configuration on a per-group level
@@ -427,9 +398,9 @@ pub fn bench_inv_iris(settings: &mut Criterion) {
 
     let mut rng = rand::thread_rng();
 
-    let ctx: Yashe<IrisBits> = Yashe::new();
+    let ctx: Yashe<MiddleRes> = Yashe::new();
 
-    let p = ctx.sample_gaussian(params.delta, &mut rng);
+    let p = ctx.sample_key(&mut rng);
 
     settings.bench_with_input(
         BenchmarkId::new("Inverse full poly", SMALL_RANDOM_NAME),
@@ -437,7 +408,7 @@ pub fn bench_inv_iris(settings: &mut Criterion) {
         |benchmark, p| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
             benchmark
-                .iter_with_large_drop(|| -> Result<Poly<IrisBits>, &'static str> { p.inverse() })
+                .iter_with_large_drop(|| -> Result<Poly<MiddleRes>, &'static str> { p.inverse() })
         },
     );
 }
@@ -552,16 +523,15 @@ pub fn bench_yashe_cipher_mul(settings: &mut Criterion) {
     );
 }
 
-/// Run [`Yashe::keygen()`] as a Criterion benchmark with random data on the full number of iris bits.
-#[cfg(slow_benchmarks)]
-pub fn bench_keygen_iris(settings: &mut Criterion) {
+/// Run [`Yashe::keygen()`] as a Criterion benchmark with random data on middle resolution.
+pub fn bench_keygen_mid(settings: &mut Criterion) {
     // Tweak configuration for a long-running test
     let mut settings = settings.benchmark_group(SLOW_BENCH_NAME);
     // We can override the configuration on a per-group level
     settings.sampling_mode(Flat);
 
     // Setup parameters
-    let ctx: Yashe<IrisBits> = Yashe::new();
+    let ctx: Yashe<MiddleRes> = Yashe::new();
 
     settings.bench_with_input(
         BenchmarkId::new("YASHE full keygen", SMALL_RANDOM_NAME),
@@ -569,12 +539,10 @@ pub fn bench_keygen_iris(settings: &mut Criterion) {
         |benchmark, ctx| {
             // To avoid timing dropping the return value, we require it to be returned from the closure.
             benchmark.iter_with_large_drop(
-                || -> (yashe::PrivateKey<IrisBits>, yashe::PublicKey<IrisBits>) {
+                || -> (yashe::PrivateKey<MiddleRes>, yashe::PublicKey<MiddleRes>) {
                     ctx.keygen(&mut rand::thread_rng())
                 },
             )
         },
     );
 }
-
-// TODO: add iris-length encryption and decryption benchmarks

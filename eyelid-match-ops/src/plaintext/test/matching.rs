@@ -9,7 +9,7 @@ use crate::{
 };
 
 #[cfg(test)]
-use super::assert_iris_compare;
+use crate::{plaintext::test::assert_iris_compare, MiddleBits, TestBits};
 
 /// Returns a list of mask combinations which are always occluded.
 pub fn occluded<const STORE_ELEM_LEN: usize>(
@@ -160,12 +160,10 @@ pub fn different<C: IrisConf, const STORE_ELEM_LEN: usize>() -> Vec<(
 /// Check matching test cases.
 #[test]
 fn matching_codes() {
-    use crate::{IrisBits, TestRes};
-
     for (description, eye_a, mask_a, eye_b, mask_b) in
-        matching::<TestRes, { TestRes::STORE_ELEM_LEN }>().iter()
+        matching::<TestBits, { TestBits::STORE_ELEM_LEN }>().iter()
     {
-        assert_iris_compare::<TestRes, { TestRes::STORE_ELEM_LEN }>(
+        assert_iris_compare::<TestBits, { TestBits::STORE_ELEM_LEN }>(
             true,
             description,
             eye_a,
@@ -176,9 +174,9 @@ fn matching_codes() {
     }
 
     for (description, eye_a, mask_a, eye_b, mask_b) in
-        matching::<IrisBits, { IrisBits::STORE_ELEM_LEN }>().iter()
+        matching::<MiddleBits, { MiddleBits::STORE_ELEM_LEN }>().iter()
     {
-        assert_iris_compare::<IrisBits, { IrisBits::STORE_ELEM_LEN }>(
+        assert_iris_compare::<MiddleBits, { MiddleBits::STORE_ELEM_LEN }>(
             true,
             description,
             eye_a,
@@ -192,12 +190,10 @@ fn matching_codes() {
 /// Check different (non-matching) test cases.
 #[test]
 fn different_codes() {
-    use crate::{IrisBits, TestRes};
-
     for (description, eye_a, mask_a, eye_b, mask_b) in
-        different::<TestRes, { TestRes::STORE_ELEM_LEN }>().iter()
+        different::<TestBits, { TestBits::STORE_ELEM_LEN }>().iter()
     {
-        assert_iris_compare::<TestRes, { TestRes::STORE_ELEM_LEN }>(
+        assert_iris_compare::<TestBits, { TestBits::STORE_ELEM_LEN }>(
             false,
             description,
             eye_a,
@@ -208,9 +204,9 @@ fn different_codes() {
     }
 
     for (description, eye_a, mask_a, eye_b, mask_b) in
-        different::<IrisBits, { IrisBits::STORE_ELEM_LEN }>().iter()
+        different::<MiddleBits, { MiddleBits::STORE_ELEM_LEN }>().iter()
     {
-        assert_iris_compare::<IrisBits, { IrisBits::STORE_ELEM_LEN }>(
+        assert_iris_compare::<MiddleBits, { MiddleBits::STORE_ELEM_LEN }>(
             false,
             description,
             eye_a,

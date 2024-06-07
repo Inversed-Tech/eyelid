@@ -22,10 +22,16 @@ pub mod iris;
 pub mod plaintext;
 pub mod primitives;
 
-pub use conf::{FullRes, IrisBits, MiddleRes};
+pub use conf::{IrisBits, MiddleBits};
+pub use encoded::{EncodeConf, FullRes, MiddleRes};
+pub use iris::conf::IrisConf;
+pub use primitives::{poly::PolyConf, yashe::YasheConf};
 
 #[cfg(any(test, feature = "benchmark"))]
-pub use conf::TestRes;
+pub use conf::TestBits;
+
+#[cfg(any(test, feature = "benchmark"))]
+pub use encoded::TestRes;
 
 #[cfg(tiny_poly)]
 pub use conf::TinyTest;

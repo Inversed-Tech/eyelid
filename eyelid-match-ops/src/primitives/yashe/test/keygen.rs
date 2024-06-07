@@ -8,7 +8,7 @@ use crate::{
         poly::Poly,
         yashe::{Yashe, YasheConf},
     },
-    TestRes,
+    MiddleRes, TestRes,
 };
 
 /// Auxiliary function for testing key generation
@@ -38,4 +38,5 @@ where
 #[test]
 fn test_keygen() {
     keygen_helper::<TestRes>();
+    keygen_helper::<MiddleRes>();
 }
