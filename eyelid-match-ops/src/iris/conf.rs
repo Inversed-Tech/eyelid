@@ -13,13 +13,13 @@ use crate::TinyTest;
 
 /// The dimensions and matching rules for the entire iris code.
 pub trait IrisConf {
+    /// The number of columns in an iris code or mask, `k`.
+    const COLUMNS: usize;
+
     /// The number of rows in an iris code or iris mask.
     //
     // TODO: rename to `ROWS`
     const COLUMN_LEN: usize;
-
-    /// The number of columns in an iris code or mask, `k`.
-    const COLUMNS: usize;
 
     /// The length of an iris code or mask.
     const DATA_BIT_LEN: usize = Self::COLUMN_LEN * Self::COLUMNS;
@@ -70,8 +70,8 @@ pub type IrisCode<const STORE_ELEM_LEN: usize> = BitArray<[IrisStore; STORE_ELEM
 pub type IrisMask<const STORE_ELEM_LEN: usize> = BitArray<[IrisStore; STORE_ELEM_LEN]>;
 
 impl IrisConf for IrisBits {
-    const COLUMN_LEN: usize = 80;
-    const COLUMNS: usize = 160;
+    const COLUMNS: usize = 200;
+    const COLUMN_LEN: usize = 16 * 2 * 2;
     const ROTATION_LIMIT: usize = 15;
 }
 // TODO: work out how to automatically apply these assertions to every trait impl.
@@ -87,8 +87,8 @@ const_assert!(IrisBits::MATCH_NUMERATOR <= IrisBits::MATCH_DENOMINATOR);
 const_assert!(IrisBits::MATCH_DENOMINATOR > 0);
 
 impl IrisConf for FullRes {
-    const COLUMN_LEN: usize = 10;
-    const COLUMNS: usize = 160;
+    const COLUMNS: usize = 200;
+    const COLUMN_LEN: usize = 16 * 2 * 2;
     const ROTATION_LIMIT: usize = IrisBits::ROTATION_LIMIT;
 }
 const_assert!(FullRes::DATA_BIT_LEN >= FullRes::COLUMN_LEN * FullRes::COLUMNS);
@@ -98,8 +98,8 @@ const_assert!(FullRes::MATCH_NUMERATOR <= FullRes::MATCH_DENOMINATOR);
 const_assert!(FullRes::MATCH_DENOMINATOR > 0);
 
 impl IrisConf for MiddleRes {
-    const COLUMN_LEN: usize = 5;
-    const COLUMNS: usize = 80;
+    const COLUMNS: usize = 100;
+    const COLUMN_LEN: usize = 8 * 2 * 2;
     const ROTATION_LIMIT: usize = IrisBits::ROTATION_LIMIT;
 }
 const_assert!(MiddleRes::DATA_BIT_LEN >= MiddleRes::COLUMN_LEN * MiddleRes::COLUMNS);
@@ -110,8 +110,8 @@ const_assert!(MiddleRes::MATCH_DENOMINATOR > 0);
 
 #[cfg(tiny_poly)]
 impl IrisConf for TinyTest {
-    const COLUMN_LEN: usize = 2;
     const COLUMNS: usize = 3;
+    const COLUMN_LEN: usize = 2;
     const ROTATION_LIMIT: usize = 1;
 }
 

@@ -21,7 +21,7 @@ pub trait EncodeConf {
 
     /// Divide iris codes into blocks that can each fit into a polynomial.
     /// The number of rows in each block: `s`
-    const ROWS_PER_BLOCK: usize = 10;
+    const ROWS_PER_BLOCK: usize;
 
     /// The number of iris bits in each block.
     const BLOCK_BIT_LEN: usize = Self::EyeConf::COLUMN_LEN * Self::ROWS_PER_BLOCK;
@@ -95,7 +95,7 @@ impl EncodeConf for FullRes {
     type EyeConf = FullRes;
     type PlainConf = FullRes;
 
-    const ROWS_PER_BLOCK: usize = 10;
+    const ROWS_PER_BLOCK: usize = 16;
 }
 const_assert!(FullRes::ROWS_PER_BLOCK <= FullRes::COLUMN_LEN);
 const_assert_eq!(
@@ -111,7 +111,7 @@ impl EncodeConf for MiddleRes {
     type EyeConf = MiddleRes;
     type PlainConf = MiddleRes;
 
-    const ROWS_PER_BLOCK: usize = 5;
+    const ROWS_PER_BLOCK: usize = 8;
 }
 const_assert!(MiddleRes::ROWS_PER_BLOCK <= MiddleRes::COLUMN_LEN);
 const_assert_eq!(

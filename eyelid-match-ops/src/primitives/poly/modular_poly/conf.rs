@@ -7,7 +7,6 @@ use lazy_static::lazy_static;
 
 use crate::{
     encoded::EncodeConf,
-    iris::conf::IrisConf,
     primitives::poly::{Fq66, Fq66bn, Fq79, Fq79bn},
     FullRes, IrisBits, MiddleRes,
 };
@@ -53,7 +52,7 @@ impl PolyConf for IrisBits {
     }
 }
 // The polynomial must have enough coefficients to store the underlying iris data.
-const_assert!(IrisBits::MAX_POLY_DEGREE >= IrisBits::DATA_BIT_LEN);
+const_assert!(IrisBits::MAX_POLY_DEGREE >= IrisBits::BLOCK_AND_PADS_BIT_LEN);
 // The degree must be a power of two.
 const_assert!(IrisBits::MAX_POLY_DEGREE.count_ones() == 1);
 
@@ -68,7 +67,7 @@ impl PolyConf for IrisBitsBN {
     }
 }
 // The polynomial must have enough coefficients to store the underlying iris data.
-const_assert!(IrisBitsBN::MAX_POLY_DEGREE >= IrisBits::DATA_BIT_LEN);
+const_assert!(IrisBitsBN::MAX_POLY_DEGREE >= IrisBits::BLOCK_AND_PADS_BIT_LEN);
 // The degree must be a power of two.
 const_assert!(IrisBitsBN::MAX_POLY_DEGREE.count_ones() == 1);
 
@@ -97,7 +96,7 @@ impl PolyConf for FullRes {
         &FQ79_ZERO
     }
 }
-const_assert!(FullRes::MAX_POLY_DEGREE >= FullRes::DATA_BIT_LEN);
+const_assert!(FullRes::MAX_POLY_DEGREE >= FullRes::BLOCK_AND_PADS_BIT_LEN);
 const_assert!(FullRes::MAX_POLY_DEGREE.count_ones() == 1);
 
 impl PolyConf for FullResBN {
@@ -109,7 +108,7 @@ impl PolyConf for FullResBN {
         &FQ79_BN_ZERO
     }
 }
-const_assert!(FullResBN::MAX_POLY_DEGREE >= FullRes::DATA_BIT_LEN);
+const_assert!(FullResBN::MAX_POLY_DEGREE >= FullRes::BLOCK_AND_PADS_BIT_LEN);
 const_assert!(FullResBN::MAX_POLY_DEGREE.count_ones() == 1);
 
 impl PolyConf for MiddleRes {
@@ -121,7 +120,7 @@ impl PolyConf for MiddleRes {
         &FQ66_ZERO
     }
 }
-const_assert!(MiddleRes::MAX_POLY_DEGREE >= MiddleRes::DATA_BIT_LEN);
+const_assert!(MiddleRes::MAX_POLY_DEGREE >= MiddleRes::BLOCK_AND_PADS_BIT_LEN);
 const_assert!(MiddleRes::MAX_POLY_DEGREE.count_ones() == 1);
 
 impl PolyConf for MiddleResBN {
@@ -133,7 +132,7 @@ impl PolyConf for MiddleResBN {
         &FQ66_BN_ZERO
     }
 }
-const_assert!(MiddleResBN::MAX_POLY_DEGREE >= MiddleRes::DATA_BIT_LEN);
+const_assert!(MiddleResBN::MAX_POLY_DEGREE >= MiddleRes::BLOCK_AND_PADS_BIT_LEN);
 const_assert!(MiddleResBN::MAX_POLY_DEGREE.count_ones() == 1);
 
 #[cfg(tiny_poly)]
@@ -163,9 +162,9 @@ impl PolyConf for TinyTestBN {
 #[cfg(tiny_poly)]
 mod tiny_test_asserts {
     use super::*;
-    const_assert!(TinyTest::MAX_POLY_DEGREE >= TinyTest::DATA_BIT_LEN);
+    const_assert!(TinyTest::MAX_POLY_DEGREE >= TinyTest::BLOCK_AND_PADS_BIT_LEN);
     const_assert!(TinyTest::MAX_POLY_DEGREE.count_ones() == 1);
-    const_assert!(TinyTestBN::MAX_POLY_DEGREE >= TinyTest::DATA_BIT_LEN);
+    const_assert!(TinyTestBN::MAX_POLY_DEGREE >= TinyTest::BLOCK_AND_PADS_BIT_LEN);
     const_assert!(TinyTestBN::MAX_POLY_DEGREE.count_ones() == 1);
 }
 
