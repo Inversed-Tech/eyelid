@@ -11,11 +11,11 @@ use num_bigint::{BigInt, BigUint, Sign};
 use num_traits::ToPrimitive;
 
 use crate::{
+    encoded::conf::{FullRes, MiddleRes},
     primitives::poly::{
-        modular_poly::conf::{FullResBN, IrisBitsBN, MiddleResBN},
+        modular_poly::conf::{FullResBN, MiddleResBN},
         Poly, PolyConf,
     },
-    FullRes, IrisBits, MiddleRes,
 };
 
 #[cfg(tiny_poly)]
@@ -296,23 +296,15 @@ where
     };
 }
 
-/// Iris bit length polynomial parameters.
-///
-/// This uses the full number of iris bits, which gives an upper bound on benchmarks.
-impl YasheConf for IrisBits {
-    type PolyBN = IrisBitsBN;
-
-    const T: u64 = 2048;
-}
-
 /// Full resolution polynomial parameters.
 ///
 /// These are the parameters for full resolution, according to the Inversed Tech report.
 impl YasheConf for FullRes {
     type PolyBN = FullResBN;
 
-    // VERIFY: max T should be 2^15, not 2^11
-    const T: u64 = 2048;
+    // VERIFY: max T should be 2^15, not 2^12
+    // Larger values cause failures in the positive_multiplication_test().
+    const T: u64 = 4096;
 }
 
 /// Middle resolution polynomial parameters.
@@ -322,16 +314,17 @@ impl YasheConf for MiddleRes {
     type PolyBN = MiddleResBN;
 
     // VERIFY: max T should be 2^12, not 2^8
+    // Larger values cause failures in the positive_multiplication_test().
     const T: u64 = 256;
 }
 
 /// Tiny test polynomials, used for finding edge cases in tests.
 ///
 /// The test parameters are specifically chosen to make failing tests easy to read and diagnose.
+///
 /// TODO: these parameters don't work for encryption and decryption, find some that do.
 #[cfg(tiny_poly)]
 impl YasheConf for TinyTest {
-    // TODO: find a coefficient that works here
     type PolyBN = TinyTestBN;
 
     /// Limited to the modulus of the underlying `Coeff` type.

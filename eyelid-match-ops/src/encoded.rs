@@ -10,7 +10,10 @@ use crate::{
     primitives::poly::{Poly, PolyConf},
 };
 
-pub use conf::EncodeConf;
+pub use conf::{EncodeConf, FullRes, MiddleRes};
+
+#[cfg(any(test, feature = "benchmark"))]
+pub use conf::TestRes;
 
 pub mod conf;
 

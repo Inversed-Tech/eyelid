@@ -1,5 +1,7 @@
 //! Tests for polynomial inverse.
 
+use std::any::type_name;
+
 use ark_ff::{One, Zero};
 use ark_poly::Polynomial;
 
@@ -12,7 +14,7 @@ use crate::{
         },
         yashe::Yashe,
     },
-    TestRes,
+    MiddleRes, TestRes,
 };
 
 fn inverse_test_helper<C: PolyConf>(f: &Poly<C>) {
@@ -26,7 +28,12 @@ fn inverse_test_helper<C: PolyConf>(f: &Poly<C>) {
     let expect_msg = "just checked ok";
 
     if !cfg!(tiny_poly) || out.is_ok() {
-        assert_eq!(f * out.expect(expect_msg), Poly::one());
+        assert_eq!(
+            f * out.expect(expect_msg),
+            Poly::one(),
+            "{}",
+            type_name::<C>()
+        );
     } else {
         // For small degree and coefficient modulus, non-invertible polynomials are more likely.
 
@@ -38,11 +45,17 @@ fn inverse_test_helper<C: PolyConf>(f: &Poly<C>) {
         assert_ne!(
             fy,
             Poly::one(),
-            "incorrect inverse() impl: the inverse of f was y, because f * y == 1"
+            "{}: incorrect inverse() impl: the inverse of f was y, because f * y == 1",
+            type_name::<C>()
         );
         // Since all non-zero `C::Coeff` values *are* invertible in the integer field, `f * y` can't be a constant, either.
         if fy != Poly::zero() {
-            assert_ne!(fy.degree(), 0, "incorrect inverse() impl: the inverse of f was y*(c^1), because f * y is a non-zero constant c");
+            assert_ne!(
+                fy.degree(),
+                0,
+                "{}: incorrect inverse() impl: the inverse of f was y*(c^1), because f * y is a non-zero constant c",
+                type_name::<C>()
+            );
         }
     }
 }
@@ -57,11 +70,21 @@ fn test_key_generation_and_inverse() {
     // REMARK: For our parameter choices it is very likely to find
     // the inverse in the first attempt.
     inverse_test_helper(&f);
+
+    let ctx: Yashe<MiddleRes> = Yashe::new();
+    let f = ctx.sample_key(&mut rng);
+
+    // REMARK: For our parameter choices it is very likely to find
+    // the inverse in the first attempt.
+    inverse_test_helper(&f);
 }
 
 #[test]
 fn test_inverse_with_random_coefficients() {
     let f: Poly<TestRes> = rand_poly(TestRes::MAX_POLY_DEGREE);
+    inverse_test_helper(&f);
+
+    let f: Poly<MiddleRes> = rand_poly(MiddleRes::MAX_POLY_DEGREE);
     inverse_test_helper(&f);
 }
 
@@ -74,12 +97,26 @@ fn test_edge_cases() {
 
     // Inverse of minus one is minus one
     let zero_poly: Poly<TestRes> = Poly::zero();
-    let minus_one_poly = zero_poly - one_poly.clone();
+    let minus_one_poly = &zero_poly - one_poly.clone();
     out = inverse(&minus_one_poly.clone());
     assert_eq!(out, Ok(minus_one_poly));
 
     // Inverse of zero is error
-    let zero_poly: Poly<TestRes> = Poly::zero();
-    out = inverse(&zero_poly.clone());
+    out = inverse(&zero_poly);
+    assert!(out.is_err());
+
+    // Inverse of one is one
+    let one_poly: Poly<MiddleRes> = Poly::one();
+    let mut out = inverse(&one_poly.clone());
+    assert_eq!(out, Ok(one_poly.clone()));
+
+    // Inverse of minus one is minus one
+    let zero_poly: Poly<MiddleRes> = Poly::zero();
+    let minus_one_poly = &zero_poly - one_poly.clone();
+    out = inverse(&minus_one_poly.clone());
+    assert_eq!(out, Ok(minus_one_poly));
+
+    // Inverse of zero is error
+    out = inverse(&zero_poly);
     assert!(out.is_err());
 }

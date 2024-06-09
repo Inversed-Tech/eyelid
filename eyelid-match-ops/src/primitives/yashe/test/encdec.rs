@@ -1,8 +1,10 @@
 //! Unit tests for Encryption and Decryption
 
+use std::any::type_name;
+
 use crate::{
     primitives::yashe::{Yashe, YasheConf},
-    FullRes, IrisBits,
+    FullRes, MiddleRes,
 };
 
 fn encrypt_decrypt_helper<C: YasheConf>()
@@ -17,16 +19,13 @@ where
     let c = ctx.encrypt(m.clone(), &public_key, &mut rng);
     let m_dec = ctx.decrypt(c.clone(), &private_key);
 
-    assert_eq!(m, m_dec);
+    assert_eq!(m, m_dec, "{}", type_name::<C>());
 }
 
 #[test]
 fn encrypt_decrypt_test() {
-    // The TinyTest config doesn't work for encryption, so we test full resolution,
-    // and a large polynomial with the same number of terms as the number of iris bits.
     // Testing multiple configs is important for code coverage, and to check for hard-coded assumptions.
-    //
-    // TODO: find a config that does work and use it for TestRes/TinyPoly.
+    // TODO: get TinyTest working here
+    encrypt_decrypt_helper::<MiddleRes>();
     encrypt_decrypt_helper::<FullRes>();
-    encrypt_decrypt_helper::<IrisBits>();
 }

@@ -1,5 +1,7 @@
 //! Unit tests for homomorphic operations
 
+use std::any::type_name;
+
 use crate::{
     primitives::yashe::{Yashe, YasheConf},
     FullRes, MiddleRes,
@@ -22,7 +24,7 @@ where
     // Additions can be regularly decrypted using the private key
     let m_dec = ctx.decrypt(c.clone(), &private_key);
 
-    assert_eq!(m, m_dec);
+    assert_eq!(m, m_dec, "addition test failed for {}", type_name::<C>());
 }
 
 fn homomorphic_multiplication_helper_negative<C: YasheConf>()
@@ -42,7 +44,12 @@ where
     // Multiplications can't be regularly decrypted using the private key
     let m_dec = ctx.decrypt(c.clone(), &private_key);
 
-    assert_ne!(m, m_dec);
+    assert_ne!(
+        m,
+        m_dec,
+        "negative multiplication test failed for {}",
+        type_name::<C>()
+    );
 }
 
 fn homomorphic_multiplication_helper_positive<C: YasheConf>()
@@ -61,19 +68,32 @@ where
     let c = ctx.ciphertext_mul(c1, c2);
     let m_dec = ctx.decrypt_mul(c.clone(), &private_key);
 
-    assert_eq!(m, m_dec);
+    assert_eq!(
+        m,
+        m_dec,
+        "positive multiplication test failed for {}",
+        type_name::<C>()
+    );
 }
+
+// TODO: get these tests working with TestRes
 
 #[test]
 fn homomorphic_addition_test() {
-    homomorphic_addition_helper::<FullRes>();
+    // Testing multiple configs is important for code coverage, and to check for hard-coded assumptions.
+    // TODO: get TinyTest working in this module
     homomorphic_addition_helper::<MiddleRes>();
+    homomorphic_addition_helper::<FullRes>();
 }
 
 #[test]
-fn homomorphic_multiplication_test() {
-    homomorphic_multiplication_helper_negative::<FullRes>();
-    homomorphic_multiplication_helper_positive::<FullRes>();
+fn homomorphic_negative_multiplication_test() {
     homomorphic_multiplication_helper_negative::<MiddleRes>();
+    homomorphic_multiplication_helper_negative::<FullRes>();
+}
+
+#[test]
+fn homomorphic_positive_multiplication_test() {
     homomorphic_multiplication_helper_positive::<MiddleRes>();
+    homomorphic_multiplication_helper_positive::<FullRes>();
 }
