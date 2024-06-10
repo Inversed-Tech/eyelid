@@ -273,6 +273,13 @@ where
         res
     }
 
+    /// Sample from binary message space
+    pub fn sample_binary_message(&self, rng: &mut ThreadRng) -> Message<C> {
+        // TODO: this might be implemented more efficiently using `Rng::gen_bool()`
+        let m = self.sample_uniform_range(0..=1_u64, rng);
+        Message { m }
+    }
+
     /// Plaintext addition is trivial
     pub fn plaintext_add(&self, m1: Message<C>, m2: Message<C>) -> Message<C> {
         let mut res = m1.m + m2.m;

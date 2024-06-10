@@ -14,6 +14,7 @@ pub mod encdec;
 #[cfg(test)]
 pub mod hom;
 
+mod hamming;
 #[cfg(test)]
 pub mod keygen;
 
@@ -45,13 +46,6 @@ where
     /// "Sample" zero
     pub fn sample_zero(&self) -> Message<C> {
         let m = Poly::<C>::zero();
-        Message { m }
-    }
-
-    /// Sample from binary message space
-    pub fn sample_binary_message(&self, rng: &mut ThreadRng) -> Message<C> {
-        // TODO: this might be implemented more efficiently using `Rng::gen_bool()`
-        let m = self.sample_uniform_range(0..=1_u64, rng);
         Message { m }
     }
 }
