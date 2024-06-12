@@ -273,6 +273,21 @@ where
         res
     }
 
+    /// Sample a polynomial with random ternary coefficients, i.e. -1, 0, 1, such that -1 is represented as C::T - 1
+    pub fn sample_ternary_message(&self, rng: &mut ThreadRng) -> Message<C> {
+        let mut m = self.sample_uniform_range(0..=2_u64, rng);
+        
+        for i in 0..C::MAX_POLY_DEGREE {
+            m[i] = if m[i] == C::Coeff::from(2u64) {
+                C::t_as_coeff() - C::Coeff::one()
+            } else {
+                m[i].into()
+            };
+        }
+
+        Message { m }
+    } 
+
     /// Plaintext addition is trivial
     pub fn plaintext_add(&self, m1: Message<C>, m2: Message<C>) -> Message<C> {
         let mut res = m1.m + m2.m;
@@ -293,6 +308,7 @@ where
 
     /// Plaintext multiplication must center lift before reduction
     pub fn plaintext_mul(&self, m1: Message<C>, m2: Message<C>) -> Message<C> {
+        // FIXME: it doesn't work for ternary messages
         let mut res = m1.m * m2.m;
 
         // TODO: use Poly::coeffs_modify_non_zero() here and benchmark

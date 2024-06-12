@@ -24,18 +24,18 @@ pub mod test;
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PolyCode<C: EncodeConf> {
     /// The polynomials, encoding one block of rows each. Storage variant.
-    polys: Vec<Poly<C::PlainConf>>,
+    pub polys: Vec<Poly<C::PlainConf>>,
     /// The mask polynomials.
-    masks: Vec<Poly<C::PlainConf>>,
+    pub masks: Vec<Poly<C::PlainConf>>,
 }
 
 /// An Iris code, encoded in polynomials. To be matched against PolyCode.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PolyQuery<C: EncodeConf> {
     /// The polynomials, encoding one block of rows each. Query variant.
-    polys: Vec<Poly<C::PlainConf>>,
+    pub polys: Vec<Poly<C::PlainConf>>,
     /// The mask polynomials.
-    masks: Vec<Poly<C::PlainConf>>,
+    pub masks: Vec<Poly<C::PlainConf>>,
 }
 
 /// Errors that can happen during matching.
@@ -216,6 +216,7 @@ impl<C: EncodeConf> PolyQuery<C> {
         Ok(counts)
     }
 }
+
 
 /// Create a mask polynomial from a polynomial of encoded bits.
 fn poly_bits_to_masks<C: EncodeConf>(bits: &Poly<C::PlainConf>) -> Poly<C::PlainConf> {
