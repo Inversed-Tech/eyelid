@@ -3,7 +3,7 @@
 use std::any::type_name;
 
 use crate::{
-    primitives::yashe::{Yashe, YasheConf}, FullRes, MiddleRes
+    encoded::conf::LargeRes, primitives::yashe::{Yashe, YasheConf}, FullRes, MiddleRes
 };
 
 fn homomorphic_addition_helper<C: YasheConf>()
@@ -109,12 +109,14 @@ fn homomorphic_addition_test() {
     // TODO: get TinyTest working in this module
     homomorphic_addition_helper::<MiddleRes>();
     homomorphic_addition_helper::<FullRes>();
+    homomorphic_addition_helper::<LargeRes>();
 }
 
 #[test]
 fn homomorphic_negative_multiplication_test() {
     homomorphic_multiplication_helper_negative::<MiddleRes>();
     homomorphic_multiplication_helper_negative::<FullRes>();
+    homomorphic_multiplication_helper_negative::<LargeRes>();
 }
 
 #[test]

@@ -6,7 +6,7 @@
 //! RUSTFLAGS="--cfg tiny_poly" cargo bench --features benchmark
 //! ```
 
-use ark_ff::PrimeField;
+use ark_ff::{PrimeField};
 use num_bigint::{BigInt, BigUint, Sign};
 use num_traits::ToPrimitive;
 
@@ -74,6 +74,11 @@ where
         BigInt::from(Self::T)
     }
 
+    /// A convenience method to convert [`T`](Self::T) to [`BigUint`].
+    fn t_as_big_uint() -> BigUint {
+        BigUint::from(Self::T)
+    }
+
     /// A convenience method to convert the base 2 logarithm of `MAX_POLY_DEGREE` to BigUInt
     fn log_max_poly_degree_as_big_uint() -> BigUint {
         let log_max_poly_degree = usize::ilog2(Self::MAX_POLY_DEGREE);
@@ -119,6 +124,14 @@ where
         let coeff: BigUint = coeff.into();
 
         coeff.into()
+    }
+
+    /// A convenience method to convert a [`Coeff`](PolyConf::Coeff) to `BigInt`.
+    /// TODO: take a reference?
+    fn coeff_as_big_int(coeff: Self::Coeff) -> BigInt {
+        let coeff: BigUint = coeff.into();
+
+        BigInt::from(coeff)
     }
 
     /// A convenience method to convert a [`BigInt`] to [`Coeff`](PolyConf::Coeff).
@@ -170,15 +183,16 @@ where
     /// A convenience method to convert [`Coeff::MODULUS`](PrimeField::MODULUS) to [`BigInt`].
     fn modulus_as_big_int() -> BigInt {
         let modulus: BigUint = Self::Coeff::MODULUS.into();
-
+    
         BigInt::from(modulus)
     }
+    
 
     /// A convenience method to convert [`CoeffBN::MODULUS`](PrimeField::MODULUS) to [`BigInt`].
     fn bn_modulus_as_big_int() -> BigInt {
-        let modulus: BigUint = <Self::PolyBN as PolyConf>::Coeff::MODULUS.into();
+         let val: BigUint = Self::Coeff::MODULUS.into();
 
-        BigInt::from(modulus)
+        BigInt::from(val)
     }
 
     /// A convenience method to convert `Coeff::MODULUS` to [`BigUint`].
@@ -204,11 +218,19 @@ where
             .expect("constant modulus is small enough for i128")
     }
 
-    /// A convenience method to convert [`Coeff::MODULUS_MINUS_ONE_DIV_TWO`](PrimeField::MODULUS_MINUS_ONE_DIV_TWO) to [`BigInt`].
-    fn modulus_minus_one_div_two_as_big_int() -> BigInt {
-        let modulus: BigUint = Self::Coeff::MODULUS_MINUS_ONE_DIV_TWO.into();
 
-        BigInt::from(modulus)
+    /// A convenience method to convert a [`Coeff`](PolyConf::Coeff) to `BigInt`.
+    /// TODO: take a reference?
+    fn modulus_minus_one_div_two_as_big_int() -> BigInt {
+        let val: BigUint = Self::Coeff::MODULUS_MINUS_ONE_DIV_TWO.into();
+
+        BigInt::from(val)
+    }
+
+    /// A convenience method to convert [`Coeff::MODULUS_MINUS_ONE_DIV_TWO`](PrimeField::MODULUS_MINUS_ONE_DIV_TWO) to [`BigUint`].
+    fn modulus_minus_one_div_two_as_big_uint() -> BigUint {
+        Self::Coeff::MODULUS_MINUS_ONE_DIV_TWO.into()
+
     }
 
     /// A convenience method to convert [`CoeffBN::MODULUS_MINUS_ONE_DIV_TWO`](PrimeField::MODULUS_MINUS_ONE_DIV_TWO) to [`BigInt`].

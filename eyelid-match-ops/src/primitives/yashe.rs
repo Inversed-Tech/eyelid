@@ -1,10 +1,10 @@
 //! Implementation of YASHE cryptosystem
 //! `<https://eprint.iacr.org/2013/075.pdf>`
 
-use std::marker::PhantomData;
+use std::{marker::PhantomData};
 
 use ark_ff::{One, UniformRand};
-use num_bigint::Sign;
+use num_bigint::{BigInt, BigUint, Sign};
 use rand::{
     distributions::uniform::{SampleRange, SampleUniform},
     rngs::ThreadRng,
@@ -182,15 +182,15 @@ where
         #[allow(unused_mut)]
         for mut coeff in res.coeffs_mut() {
             // Convert coefficient to a primitive integer
-            let mut coeff_res = C::coeff_as_u128(*coeff);
+            let mut coeff_res: BigUint = (*coeff).into();
             // Multiply by T
-            coeff_res *= C::t_as_u128();
+            coeff_res *= C::t_as_big_uint();
             // Add (Q - 1)/2 to implement rounding rather than truncation
-            coeff_res += C::modulus_minus_one_div_two_as_u128();
+            coeff_res += C::modulus_minus_one_div_two_as_big_uint();
             // Divide by Q
-            coeff_res /= C::modulus_as_u128();
+            coeff_res /= C::modulus_as_big_uint();
             // Modulo T
-            coeff_res %= C::t_as_u128();
+            coeff_res %= C::t_as_big_uint();
             // And update the coefficient
             *coeff = coeff_res.into();
         }
@@ -310,18 +310,28 @@ where
     /// Plaintext multiplication must center lift before reduction
     pub fn plaintext_mul(self, m1: Message<C>, m2: Message<C>) -> Message<C> {
         let mut res = m1.m * m2.m;
+        dbg!(res.clone());
 
         // TODO: use Poly::coeffs_modify_non_zero() here and benchmark
         #[allow(unused_mut)]
         for mut coeff in res.coeffs_mut() {
-            let mut coeff_res = C::coeff_as_i128(*coeff);
-            // center lift mod q
-            if coeff_res > C::modulus_minus_one_div_two_as_i128() {
-                coeff_res -= C::modulus_as_i128();
-            }
-            coeff_res = coeff_res.rem_euclid(C::t_as_i128());
+            let mut coeff_res = C::coeff_as_big_int(*coeff);
 
-            *coeff = C::i128_as_coeff(coeff_res);
+            dbg!(coeff_res.clone());
+            // center lift mod q
+            if coeff_res > C::modulus_minus_one_div_two_as_big_int() {
+                coeff_res -= C::modulus_as_big_int();
+                dbg!(coeff_res.clone());
+            }
+            coeff_res %= C::T;
+            dbg!(coeff_res.clone());
+            // if negative, add T
+            if coeff_res < BigInt::from(0) {
+                coeff_res += C::T;
+            }
+
+            *coeff = C::big_int_as_coeff(coeff_res);
+            dbg!(coeff.clone());
         }
         res.truncate_to_canonical_form();
 

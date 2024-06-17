@@ -45,21 +45,16 @@ pub trait EncodeConf {
     where
         BigUint: From<<Self::PlainConf as PolyConf>::Coeff>,
     {
-        dbg!(c);
+        //dbg!(c);
         let res = if c
             <= <Self::PlainConf as PolyConf>::Coeff::from(Self::EyeConf::DATA_BIT_LEN as u64)
-        //TODO: generalize
-        //      <= <Self::PlainConf as PolyConf>::Coeff::from(2048u64)
         {
-            dbg!("IF");
             i64::try_from(BigUint::from(c)).map_err(|_| err)?
         } else {
-            dbg!("ELSE");
             -i64::try_from(BigUint::from(-c)).map_err(|_| err)?
-            //i64::try_from(BigUint::from(c)).map_err(|_| err)?
         };
 
-        dbg!(res.clone());
+        //dbg!(res.clone());
         Ok(res)
     }
 
