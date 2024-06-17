@@ -284,6 +284,7 @@ where
                 m[i].into()
             };
         }
+        m.truncate_to_canonical_form();
 
         Message { m }
     } 
@@ -307,8 +308,7 @@ where
     }
 
     /// Plaintext multiplication must center lift before reduction
-    pub fn plaintext_mul(&self, m1: Message<C>, m2: Message<C>) -> Message<C> {
-        // FIXME: it doesn't work for ternary messages
+    pub fn plaintext_mul(self, m1: Message<C>, m2: Message<C>) -> Message<C> {
         let mut res = m1.m * m2.m;
 
         // TODO: use Poly::coeffs_modify_non_zero() here and benchmark

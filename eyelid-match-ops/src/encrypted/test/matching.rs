@@ -78,12 +78,12 @@ where
 
 /// Check different (non-matching) test cases.
 #[test]
-fn test_different_codes() {
-    different_codes::<FullBits>();
+fn test_different_hom_codes() {
+    different_hom_codes::<FullBits>();
     //matching_codes::<MiddleBits>();
 }
 
-fn different_codes<C: EncodeConf<PlainConf = FullRes>>()
+fn different_hom_codes<C: EncodeConf<PlainConf = FullRes>>()
 where
     C::PlainConf: YasheConf,
     <C::PlainConf as PolyConf>::Coeff: From<u128> + From<u64> + From<i64>,
@@ -106,7 +106,6 @@ where
         // to get a value in the range [0, T-1], otherwise do nothing
         for i in 0..poly_query.polys.len() {
             //let mut poly_query_polys = poly_query.polys[i].clone();
-            //for j in 0..poly_query.polys.len() {
             #[allow(unused_mut)]
             for mut coeff in poly_query.polys[i].coeffs_mut() {
                 let mut coeff_res: u128 = C::PlainConf::coeff_as_u128(*coeff);
@@ -115,10 +114,11 @@ where
                     *coeff = coeff_res.into();
                 }
             }
+            poly_query.polys[i].truncate_to_canonical_form();
         }
-        // do the same  for poly_code
+
+        // do the same for poly_code
         for i in 0..poly_code.polys.len() {
-            //let mut poly_code_polys = poly_code.polys[i].clone();
             #[allow(unused_mut)]
             for mut coeff in poly_code.polys[i].coeffs_mut() {
                 let mut coeff_res: u128 = C::PlainConf::coeff_as_u128(*coeff);
@@ -127,10 +127,11 @@ where
                     *coeff = coeff_res.into();
                 }
             }
+            poly_code.polys[i].truncate_to_canonical_form();
         }
 
-        //dbg!(poly_query.clone());
-        //dbg!(poly_code.clone());
+        dbg!(poly_query.clone());
+        dbg!(poly_code.clone());
 
         let encrypted_poly_query = EncryptedPolyQuery::encrypt_query(ctx, poly_query.clone(), &public_key, &mut rng);
         let encrypted_poly_code = EncryptedPolyCode::encrypt_code(ctx, poly_code.clone(), &public_key, &mut rng);

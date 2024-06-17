@@ -3,8 +3,7 @@
 use std::any::type_name;
 
 use crate::{
-    primitives::yashe::{Yashe, YasheConf},
-    FullRes, MiddleRes,
+    primitives::yashe::{Yashe, YasheConf}, FullRes, MiddleRes
 };
 
 fn homomorphic_addition_helper<C: YasheConf>()
@@ -90,7 +89,6 @@ where
     let m2 = ctx.sample_ternary_message(&mut rng);
     let c1 = ctx.encrypt(m1.clone(), &public_key.clone(), &mut rng);
     let c2 = ctx.encrypt(m2.clone(), &public_key, &mut rng);
-    // FIXME: this is failing
     let m = ctx.plaintext_mul(m1, m2);
     let c = ctx.ciphertext_mul(c1, c2);
     let m_dec = ctx.decrypt_mul(c.clone(), &private_key);
@@ -122,7 +120,9 @@ fn homomorphic_negative_multiplication_test() {
 #[test]
 fn homomorphic_positive_multiplication_test() {
     homomorphic_multiplication_helper_positive::<MiddleRes>();
+    homomorphic_multiplication_helper_positive_ternary::<MiddleRes>();
     homomorphic_multiplication_helper_positive::<FullRes>();
-    //homomorphic_multiplication_helper_positive_ternary::<MiddleRes>();
     homomorphic_multiplication_helper_positive_ternary::<FullRes>();
+    //homomorphic_multiplication_helper_positive::<LargeRes>();
+    //homomorphic_multiplication_helper_positive_ternary::<LargeRes>();
 }

@@ -11,9 +11,9 @@ use num_bigint::{BigInt, BigUint, Sign};
 use num_traits::ToPrimitive;
 
 use crate::{
-    encoded::conf::{FullRes, MiddleRes},
+    encoded::conf::{FullRes, LargeRes, MiddleRes},
     primitives::poly::{
-        modular_poly::conf::{FullResBN, MiddleResBN},
+        modular_poly::conf::{FullResBN, LargeResBN, MiddleResBN},
         Poly, PolyConf,
     },
 };
@@ -296,6 +296,18 @@ where
     };
 }
 
+/// Large resolution polynomial parameters.
+///
+/// These are the parameters for large resolution, since full resolution wasn't enough.
+impl YasheConf for LargeRes {
+    type PolyBN = LargeResBN;
+
+    // VERIFY: max T should be 2^15, not 2^12
+    // Larger values cause failures in the positive_multiplication_test().
+    //const T: u64 = 131072;
+    const T: u64 = 4096;
+}
+
 /// Full resolution polynomial parameters.
 ///
 /// These are the parameters for full resolution, according to the Inversed Tech report.
@@ -304,6 +316,7 @@ impl YasheConf for FullRes {
 
     // VERIFY: max T should be 2^15, not 2^12
     // Larger values cause failures in the positive_multiplication_test().
+    //const T: u64 = 131072;
     const T: u64 = 4096;
 }
 

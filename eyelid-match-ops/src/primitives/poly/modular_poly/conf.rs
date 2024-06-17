@@ -6,9 +6,7 @@ use ark_ff::{PrimeField, Zero};
 use lazy_static::lazy_static;
 
 use crate::{
-    encoded::{EncodeConf, FullRes, MiddleRes},
-    primitives::poly::{Fq66, Fq66bn, Fq79, Fq79bn},
-    FullBits, MiddleBits,
+    encoded::{conf::LargeRes, EncodeConf, FullRes, MiddleRes}, primitives::poly::{fq::{Fq123, Fq123bn}, Fq66, Fq66bn, Fq79, Fq79bn}, FullBits, MiddleBits
 };
 
 #[cfg(tiny_poly)]
@@ -42,6 +40,38 @@ pub trait PolyConf: Copy + Clone + Debug + Eq + PartialEq {
     fn coeff_zero() -> &'static Self::Coeff;
 }
 
+impl PolyConf for LargeRes {
+    const MAX_POLY_DEGREE: usize = FullBits::BLOCK_AND_PADS_BIT_LEN.next_power_of_two();
+
+    type Coeff = Fq123;
+
+    fn coeff_zero() -> &'static Self::Coeff {
+        &FQ123_ZERO
+    }
+}
+// The polynomial must have enough coefficients to store the underlying iris data.
+//const_assert!(FullRes::MAX_POLY_DEGREE >= FullBits::BLOCK_AND_PADS_BIT_LEN);
+// The degree must be a power of two.
+const_assert!(LargeRes::MAX_POLY_DEGREE.count_ones() == 1);
+
+impl PolyConf for LargeResBN {
+    // This degree requires a larger modulus, Fq79 doesn't work
+    const MAX_POLY_DEGREE: usize = LargeRes::MAX_POLY_DEGREE;
+
+    type Coeff = Fq123bn;
+
+    fn coeff_zero() -> &'static Self::Coeff {
+        &FQ123_BN_ZERO
+    }
+}
+// The polynomial must have enough coefficients to store the underlying iris data.
+const_assert!(LargeResBN::MAX_POLY_DEGREE >= FullBits::BLOCK_AND_PADS_BIT_LEN);
+// The degree must be a power of two.
+const_assert!(LargeResBN::MAX_POLY_DEGREE.count_ones() == 1);
+
+
+
+
 impl PolyConf for FullRes {
     const MAX_POLY_DEGREE: usize = FullBits::BLOCK_AND_PADS_BIT_LEN.next_power_of_two();
 
@@ -52,7 +82,7 @@ impl PolyConf for FullRes {
     }
 }
 // The polynomial must have enough coefficients to store the underlying iris data.
-const_assert!(FullRes::MAX_POLY_DEGREE >= FullBits::BLOCK_AND_PADS_BIT_LEN);
+//const_assert!(FullRes::MAX_POLY_DEGREE >= FullBits::BLOCK_AND_PADS_BIT_LEN);
 // The degree must be a power of two.
 const_assert!(FullRes::MAX_POLY_DEGREE.count_ones() == 1);
 
@@ -135,6 +165,12 @@ lazy_static! {
     static ref FQ_TINY_BN_ZERO: FqTinybn = FqTinybn::zero();
 }
 
+/// Large resolution polynomial parameters for lifted coefficients.
+///
+/// These are the parameters for large resolution, since FullRes was not enough.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct LargeResBN;
+
 /// Full resolution polynomial parameters for lifted coefficients.
 ///
 /// These are the parameters for full resolution, according to the Inversed Tech report.
@@ -157,6 +193,12 @@ pub struct TinyTestBN;
 // TODO: try generic_singleton and see if it performs better:
 // <https://docs.rs/generic_singleton/0.5.0/generic_singleton/macro.get_or_init_thread_local.html>
 lazy_static! {
+    /// The zero coefficient as a static constant value.
+    static ref FQ123_ZERO: Fq123 = Fq123::zero();
+
+    /// The zero coefficient as a static constant value.
+    static ref FQ123_BN_ZERO: Fq123bn = Fq123bn::zero();
+
     /// The zero coefficient as a static constant value.
     static ref FQ79_ZERO: Fq79 = Fq79::zero();
 

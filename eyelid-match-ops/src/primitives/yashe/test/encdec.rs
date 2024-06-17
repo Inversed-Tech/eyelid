@@ -3,8 +3,7 @@
 use std::any::type_name;
 
 use crate::{
-    primitives::yashe::{Yashe, YasheConf},
-    FullRes, MiddleRes,
+    primitives::yashe::{Yashe, YasheConf}, FullRes, MiddleRes
 };
 
 fn encrypt_decrypt_helper<C: YasheConf>()
@@ -28,4 +27,5 @@ fn encrypt_decrypt_test() {
     // TODO: get TinyTest working here
     encrypt_decrypt_helper::<MiddleRes>();
     encrypt_decrypt_helper::<FullRes>();
+    //encrypt_decrypt_helper::<LargeRes>();
 }
