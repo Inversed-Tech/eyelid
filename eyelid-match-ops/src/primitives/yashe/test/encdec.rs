@@ -3,7 +3,9 @@
 use std::any::type_name;
 
 use crate::{
-    encoded::conf::LargeRes, primitives::yashe::{Yashe, YasheConf}, FullRes, MiddleRes
+    encoded::conf::LargeRes,
+    primitives::yashe::{Yashe, YasheConf},
+    FullRes, MiddleRes,
 };
 
 fn encrypt_decrypt_helper<C: YasheConf>()

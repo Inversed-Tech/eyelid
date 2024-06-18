@@ -186,11 +186,11 @@ impl<C: EncodeConf> PolyQuery<C> {
         b_polys: &[Poly<C::PlainConf>],
     ) -> Result<Vec<i64>, MatchError>
     where
-        BigUint: From<<C::PlainConf as PolyConf>::Coeff>
+        BigUint: From<<C::PlainConf as PolyConf>::Coeff>,
     {
         let mut counts = vec![0; C::EyeConf::ROTATION_COMPARISONS];
 
-        for (a, b) in a_polys.iter().zip_eq(b_polys.iter()) {            
+        for (a, b) in a_polys.iter().zip_eq(b_polys.iter()) {
             // Multiply the polynomials, which will yield inner products.
             let product = a * b;
 
@@ -216,7 +216,6 @@ impl<C: EncodeConf> PolyQuery<C> {
         Ok(counts)
     }
 }
-
 
 /// Create a mask polynomial from a polynomial of encoded bits.
 fn poly_bits_to_masks<C: EncodeConf>(bits: &Poly<C::PlainConf>) -> Poly<C::PlainConf> {

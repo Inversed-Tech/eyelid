@@ -1,7 +1,10 @@
 //! Tests for plaintext iris code matching.
 
 use crate::{
-    encoded::{PolyCode, PolyQuery}, iris::conf::IrisConf, plaintext::test::matching::{different, matching}, FullBits, MiddleBits, TestBits,
+    encoded::{PolyCode, PolyQuery},
+    iris::conf::IrisConf,
+    plaintext::test::matching::{different, matching},
+    FullBits, MiddleBits, TestBits,
 };
 
 /// Check matching test cases.

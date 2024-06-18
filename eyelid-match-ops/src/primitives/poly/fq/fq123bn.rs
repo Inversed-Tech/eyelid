@@ -5,7 +5,7 @@ use ark_ff::{Fp320, MontBackend, MontConfig};
 /// The configuration of the modular field used for polynomial coefficients.
 //
 // Sage commands:
-// size_q = 123 
+// size_q = 123
 // size_n = 11
 // size_bn = 2*size_q + size_n + 1
 // q = random_prime(2**(2*size_q + size_n + 1))

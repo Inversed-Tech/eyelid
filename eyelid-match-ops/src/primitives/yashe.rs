@@ -1,7 +1,7 @@
 //! Implementation of YASHE cryptosystem
 //! `<https://eprint.iacr.org/2013/075.pdf>`
 
-use std::{marker::PhantomData};
+use std::marker::PhantomData;
 
 use ark_ff::{One, UniformRand};
 use num_bigint::{BigInt, BigUint, Sign};
@@ -286,18 +286,18 @@ where
     /// Sample a polynomial with random ternary coefficients, i.e. -1, 0, 1, such that -1 is represented as C::T - 1
     pub fn sample_ternary_message(&self, rng: &mut ThreadRng) -> Message<C> {
         let mut m = self.sample_uniform_range(0..=2_u64, rng);
-        
+
         for i in 0..C::MAX_POLY_DEGREE {
             m[i] = if m[i] == C::Coeff::from(2u64) {
                 C::t_as_coeff() - C::Coeff::one()
             } else {
-                m[i].into()
+                m[i]
             };
         }
         m.truncate_to_canonical_form();
 
         Message { m }
-    } 
+    }
 
     /// Plaintext addition is trivial
     pub fn plaintext_add(&self, m1: Message<C>, m2: Message<C>) -> Message<C> {

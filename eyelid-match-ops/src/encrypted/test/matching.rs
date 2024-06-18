@@ -1,11 +1,11 @@
 //! Encrypted iris matching tests.
 
 use crate::encoded::conf::LargeRes;
-use crate::iris::conf::IrisConf;
 use crate::encoded::{PolyCode, PolyQuery};
 use crate::encrypted::{EncryptedPolyCode, EncryptedPolyQuery};
-use crate::primitives::yashe::Yashe; 
+use crate::iris::conf::IrisConf;
 use crate::plaintext::test::matching::{different, matching};
+use crate::primitives::yashe::Yashe;
 use crate::{EncodeConf, FullBits, PolyConf, YasheConf};
 
 #[test]
@@ -18,7 +18,6 @@ where
     C::PlainConf: YasheConf,
     <C::PlainConf as PolyConf>::Coeff: From<u128> + From<u64> + From<i64>,
 {
-    
     let mut rng = rand::thread_rng();
     let ctx: Yashe<C::PlainConf> = Yashe::new();
     let (private_key, public_key) = ctx.keygen(&mut rng);
@@ -53,10 +52,14 @@ where
             }
         }
 
-        let encrypted_poly_query = EncryptedPolyQuery::encrypt_query(ctx, poly_query.clone(), &public_key, &mut rng);
-        let encrypted_poly_code = EncryptedPolyCode::encrypt_code(ctx, poly_code.clone(), &public_key, &mut rng);
+        let encrypted_poly_query =
+            EncryptedPolyQuery::encrypt_query(ctx, poly_query.clone(), &public_key, &mut rng);
+        let encrypted_poly_code =
+            EncryptedPolyCode::encrypt_code(ctx, poly_code.clone(), &public_key, &mut rng);
 
-        let res = encrypted_poly_query.is_match(ctx, private_key.clone(), &encrypted_poly_code).expect("encrypted matching must work");
+        let res = encrypted_poly_query
+            .is_match(ctx, private_key.clone(), &encrypted_poly_code)
+            .expect("encrypted matching must work");
         assert!(
             res,
             "{description} must match:\n\
@@ -77,7 +80,6 @@ where
     C::PlainConf: YasheConf,
     <C::PlainConf as PolyConf>::Coeff: From<u128> + From<u64> + From<i64>,
 {
-    
     let mut rng = rand::thread_rng();
     let ctx: Yashe<C::PlainConf> = Yashe::new();
     let (private_key, public_key) = ctx.keygen(&mut rng);
@@ -112,10 +114,14 @@ where
             }
         }
 
-        let encrypted_poly_query = EncryptedPolyQuery::encrypt_query(ctx, poly_query.clone(), &public_key, &mut rng);
-        let encrypted_poly_code = EncryptedPolyCode::encrypt_code(ctx, poly_code.clone(), &public_key, &mut rng);
+        let encrypted_poly_query =
+            EncryptedPolyQuery::encrypt_query(ctx, poly_query.clone(), &public_key, &mut rng);
+        let encrypted_poly_code =
+            EncryptedPolyCode::encrypt_code(ctx, poly_code.clone(), &public_key, &mut rng);
 
-        let res = encrypted_poly_query.is_match(ctx, private_key.clone(), &encrypted_poly_code).expect("matching must work");
+        let res = encrypted_poly_query
+            .is_match(ctx, private_key.clone(), &encrypted_poly_code)
+            .expect("matching must work");
         assert!(
             !res,
             "{description} must not match:\n\

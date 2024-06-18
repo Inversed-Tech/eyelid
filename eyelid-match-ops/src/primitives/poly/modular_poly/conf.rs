@@ -6,7 +6,12 @@ use ark_ff::{PrimeField, Zero};
 use lazy_static::lazy_static;
 
 use crate::{
-    encoded::{conf::LargeRes, EncodeConf, FullRes, MiddleRes}, primitives::poly::{fq::{Fq123, Fq123bn}, Fq66, Fq66bn, Fq79, Fq79bn}, FullBits, MiddleBits
+    encoded::{conf::LargeRes, EncodeConf, FullRes, MiddleRes},
+    primitives::poly::{
+        fq::{Fq123, Fq123bn},
+        Fq66, Fq66bn, Fq79, Fq79bn,
+    },
+    FullBits, MiddleBits,
 };
 
 #[cfg(tiny_poly)]
@@ -68,9 +73,6 @@ impl PolyConf for LargeResBN {
 const_assert!(LargeResBN::MAX_POLY_DEGREE >= FullBits::BLOCK_AND_PADS_BIT_LEN);
 // The degree must be a power of two.
 const_assert!(LargeResBN::MAX_POLY_DEGREE.count_ones() == 1);
-
-
-
 
 impl PolyConf for FullRes {
     const MAX_POLY_DEGREE: usize = FullBits::BLOCK_AND_PADS_BIT_LEN.next_power_of_two();

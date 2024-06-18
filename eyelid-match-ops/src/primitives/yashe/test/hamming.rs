@@ -6,7 +6,7 @@ mod tests {
     use crate::FullRes;
     use crate::{
         primitives::yashe::{Yashe, YasheConf},
-//        FullRes,
+        //        FullRes,
     };
 
     #[test]
@@ -35,7 +35,7 @@ mod tests {
         let hd = v1.hamming_distance(v2, size);
         assert_eq!(m.m[size - 1], hd);
     }
-    
+
     /*#[test]
     fn test_hamming_distance_below_threshold() {
         hamming_distance_below_threshold_helper::<FullRes>();
@@ -81,5 +81,4 @@ mod tests {
         assert_eq!(m_res, hd_res.into());
         //assert_eq!(m.m[size - 1], hd_res.into());
     }*/
-
 }

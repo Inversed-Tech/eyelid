@@ -6,7 +6,7 @@
 //! RUSTFLAGS="--cfg tiny_poly" cargo bench --features benchmark
 //! ```
 
-use ark_ff::{PrimeField};
+use ark_ff::PrimeField;
 use num_bigint::{BigInt, BigUint, Sign};
 use num_traits::ToPrimitive;
 
@@ -183,10 +183,9 @@ where
     /// A convenience method to convert [`Coeff::MODULUS`](PrimeField::MODULUS) to [`BigInt`].
     fn modulus_as_big_int() -> BigInt {
         let modulus: BigUint = Self::Coeff::MODULUS.into();
-    
+
         BigInt::from(modulus)
     }
-    
 
     /// A convenience method to convert [`CoeffBN::MODULUS`](PrimeField::MODULUS) to [`BigInt`].
     fn bn_modulus_as_big_int() -> BigInt {
@@ -218,7 +217,6 @@ where
             .expect("constant modulus is small enough for i128")
     }
 
-
     /// A convenience method to convert a [`Coeff`](PolyConf::Coeff) to `BigInt`.
     /// TODO: take a reference?
     fn modulus_minus_one_div_two_as_big_int() -> BigInt {
@@ -230,7 +228,6 @@ where
     /// A convenience method to convert [`Coeff::MODULUS_MINUS_ONE_DIV_TWO`](PrimeField::MODULUS_MINUS_ONE_DIV_TWO) to [`BigUint`].
     fn modulus_minus_one_div_two_as_big_uint() -> BigUint {
         Self::Coeff::MODULUS_MINUS_ONE_DIV_TWO.into()
-
     }
 
     /// A convenience method to convert [`CoeffBN::MODULUS_MINUS_ONE_DIV_TWO`](PrimeField::MODULUS_MINUS_ONE_DIV_TWO) to [`BigInt`].
