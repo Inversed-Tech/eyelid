@@ -157,12 +157,12 @@ where
                         coeff_res = C::PlainConf::T - coeff_res;
                         let result =
                             i64::try_from(BigUint::from(C::PlainConf::big_int_as_coeff(coeff_res)))
-                                .unwrap();
+                                .expect("Could not convert a negative element to i64");
                         Ok(-result)
                     } else {
                         let result =
                             i64::try_from(BigUint::from(C::PlainConf::big_int_as_coeff(coeff_res)))
-                                .unwrap();
+                                .expect("Could not convert a positive from big int to i64");
                         Ok(result)
                     }
                 })

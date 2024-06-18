@@ -1,3 +1,5 @@
+//! Implementation of the simple encoding
+
 use crate::primitives::poly::Poly;
 use ark_ff::Zero;
 use std::ops::{AddAssign, Sub};
@@ -7,11 +9,15 @@ use rand::rngs::ThreadRng;
 use super::yashe::Yashe;
 use super::yashe::{Ciphertext, Message, PrivateKey, PublicKey, YasheConf};
 
+/// Contains the message to be encoded such that
+/// the Hamming distance can be computed later.
 pub struct SimpleHammingEncoding<C: YasheConf>
 where
     C::Coeff: From<u128> + From<u64> + From<i64>,
 {
+    /// The message to be encoded
     m: Message<C>,
+    /// The reverse of the message to be encoded
     m_rev: Message<C>,
 }
 
@@ -22,7 +28,9 @@ pub struct SimpleHammingEncodingCiphertext<C: YasheConf>
 where
     C::Coeff: From<u128> + From<u64> + From<i64>,
 {
+    /// The ciphertext of the message m
     c: Ciphertext<C>,
+    /// The ciphertext of the message m_rev
     c_rev: Ciphertext<C>,
 }
 
