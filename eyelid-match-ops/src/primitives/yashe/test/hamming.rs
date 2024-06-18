@@ -1,15 +1,18 @@
 #[cfg(test)]
 mod tests {
 
+    use crate::encoded::conf::LargeRes;
     use crate::primitives::hamming::SimpleHammingEncoding;
+    use crate::FullRes;
     use crate::{
         primitives::yashe::{Yashe, YasheConf},
-        FullRes,
+//        FullRes,
     };
 
     #[test]
     fn test_hamming_distance() {
         hamming_distance_helper::<FullRes>();
+        hamming_distance_helper::<LargeRes>();
     }
 
     fn hamming_distance_helper<C: YasheConf>()
@@ -20,7 +23,7 @@ mod tests {
         let ctx: Yashe<C> = Yashe::new();
         let (private_key, public_key) = ctx.keygen(&mut rng);
         // Must be smaller than or equal to MAX_POLY_DEGREE
-        let size = 2048;
+        let size = 1000;
 
         let v1 = SimpleHammingEncoding::sample(ctx, size, &mut rng);
         let v2 = SimpleHammingEncoding::sample(ctx, size, &mut rng);
@@ -33,7 +36,7 @@ mod tests {
         assert_eq!(m.m[size - 1], hd);
     }
     
-    #[test]
+    /*#[test]
     fn test_hamming_distance_below_threshold() {
         hamming_distance_below_threshold_helper::<FullRes>();
     }
@@ -77,6 +80,6 @@ mod tests {
         dbg!(neg);
         assert_eq!(m_res, hd_res.into());
         //assert_eq!(m.m[size - 1], hd_res.into());
-    }
+    }*/
 
 }

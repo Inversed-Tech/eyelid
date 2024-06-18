@@ -1,7 +1,7 @@
 //! Iris matching operations on fully homomorphic encrypted, polynomial-encoded bit vectors.
 
 use itertools::Itertools;
-use num_bigint::BigUint;
+use num_bigint::{BigInt, BigUint};
 use rand::rngs::ThreadRng;
 
 use crate::{
@@ -109,11 +109,6 @@ where
         for (d, t) in match_counts.into_iter().zip_eq(mask_counts.into_iter()) {
             // Match if the Hamming distance is less than a percentage threshold:
             // (t - d) / 2t <= x%
-            //dbg!(d);
-            //dbg!(t);
-            //dbg!(t-d);
-            //dbg!((t - d) * (C::EyeConf::MATCH_DENOMINATOR as i64));
-            //dbg!(2 * t * (C::EyeConf::MATCH_NUMERATOR as i64));
             #[allow(clippy::cast_possible_wrap)]
             if (t - d) * (C::EyeConf::MATCH_DENOMINATOR as i64)
                 <= 2 * t * (C::EyeConf::MATCH_NUMERATOR as i64)
@@ -132,15 +127,19 @@ where
         private_key: PrivateKey<C::PlainConf>,
         a_polys: &[Ciphertext<C::PlainConf>],
         b_polys: &[Ciphertext<C::PlainConf>],
-    ) -> Result<Vec<i64>, MatchError> {
+    ) -> Result<Vec<i64>, MatchError> 
+    where
+        BigUint: From<<C::PlainConf as PolyConf>::Coeff>,
+    {
         
         let mut counts = vec![0; C::EyeConf::ROTATION_COMPARISONS];
+        // compute T/2 as a big int
+        let t_div_2 = BigInt::from(C::PlainConf::T / 2);
         
         for (a, b) in a_polys.iter().zip_eq(b_polys.iter()) {
             // Multiply the polynomials, which will yield inner products.
             let product = ctx.ciphertext_mul(a.clone(), b.clone());
             let decrypted_product = ctx.decrypt_mul(product, &private_key);
-            //dbg!(&decrypted_product.m);
 
             // Extract the inner products from particular coefficients.
             // Left-most rotation:              sδ - (v - u) - 1
@@ -149,7 +148,19 @@ where
                 .iter()
                 .skip(C::ROWS_PER_BLOCK * C::NUM_COLS_AND_PADS - C::EyeConf::ROTATION_COMPARISONS)
                 .take(C::EyeConf::ROTATION_COMPARISONS)
-                .map(|c| C::coeff_to_int(*c, MatchError::PlaintextOutOfRange))
+                .map(|c| 
+                    {
+                        let mut coeff_res = C::PlainConf::coeff_as_big_int(*c);
+                        let cout = if coeff_res > t_div_2 {
+                            coeff_res = C::PlainConf::T - coeff_res;
+                            let result = i64::try_from(BigUint::from(C::PlainConf::big_int_as_coeff(coeff_res))).unwrap();
+                            Ok(-result)
+                        } else {
+                            let result = i64::try_from(BigUint::from(C::PlainConf::big_int_as_coeff(coeff_res))).unwrap();
+                            Ok(result)
+                        };
+                        cout
+                })
                 .collect::<Result<Vec<_>, _>>()?;
 
             // Accumulate the counts from all blocks, grouped by rotation.

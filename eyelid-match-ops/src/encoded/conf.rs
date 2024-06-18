@@ -45,7 +45,6 @@ pub trait EncodeConf {
     where
         BigUint: From<<Self::PlainConf as PolyConf>::Coeff>,
     {
-        //dbg!(c);
         let res = if c
             <= <Self::PlainConf as PolyConf>::Coeff::from(Self::EyeConf::DATA_BIT_LEN as u64)
         {
@@ -54,7 +53,6 @@ pub trait EncodeConf {
             -i64::try_from(BigUint::from(-c)).map_err(|_| err)?
         };
 
-        //dbg!(res.clone());
         Ok(res)
     }
 
@@ -71,7 +69,7 @@ pub trait EncodeConf {
 
 impl EncodeConf for FullBits {
     type EyeConf = FullBits;
-    type PlainConf = FullRes;
+    type PlainConf = LargeRes;
 
     const ROWS_PER_BLOCK: usize = 8;
 }

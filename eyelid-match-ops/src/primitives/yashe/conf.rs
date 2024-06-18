@@ -326,7 +326,7 @@ impl YasheConf for LargeRes {
 
     // VERIFY: max T should be 2^15, not 2^12
     // Larger values cause failures in the positive_multiplication_test().
-    const T: u64 = 4096;
+    const T: u64 = 524288;
 }
 
 /// Full resolution polynomial parameters.
