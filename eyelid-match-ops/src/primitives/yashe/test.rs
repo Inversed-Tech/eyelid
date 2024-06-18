@@ -17,6 +17,9 @@ pub mod hom;
 #[cfg(test)]
 pub mod keygen;
 
+#[cfg(test)]
+pub mod hamming;
+
 // Test-only data generation methods.
 impl<C: YasheConf> Yashe<C>
 where
@@ -49,7 +52,7 @@ where
     }
 
     /// Sample from binary message space
-    pub fn sample_binary_message(&self, rng: &mut ThreadRng) -> Message<C> {
+    pub fn sample_binary(&self, rng: &mut ThreadRng) -> Message<C> {
         // TODO: this might be implemented more efficiently using `Rng::gen_bool()`
         let m = self.sample_uniform_range(0..=1_u64, rng);
         Message { m }

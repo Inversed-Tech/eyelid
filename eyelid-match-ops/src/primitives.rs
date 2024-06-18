@@ -4,3 +4,4 @@
 
 pub mod poly;
 pub mod yashe;
+pub mod hamming;

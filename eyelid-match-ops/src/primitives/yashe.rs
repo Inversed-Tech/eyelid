@@ -277,6 +277,12 @@ where
         res
     }
 
+    /// Sample a polynomial with random binnary coefficients, i.e. 0, 1
+    pub fn sample_binary_message(&self, rng: &mut ThreadRng) -> Message<C> {
+        let m = self.sample_uniform_range(0..=1_u64, rng);
+        Message { m }
+    }
+
     /// Sample a polynomial with random ternary coefficients, i.e. -1, 0, 1, such that -1 is represented as C::T - 1
     pub fn sample_ternary_message(&self, rng: &mut ThreadRng) -> Message<C> {
         let mut m = self.sample_uniform_range(0..=2_u64, rng);
