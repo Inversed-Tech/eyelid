@@ -82,7 +82,7 @@ impl PolyConf for FullRes {
     }
 }
 // The polynomial must have enough coefficients to store the underlying iris data.
-//const_assert!(FullRes::MAX_POLY_DEGREE >= FullBits::BLOCK_AND_PADS_BIT_LEN);
+const_assert!(FullRes::MAX_POLY_DEGREE >= FullBits::BLOCK_AND_PADS_BIT_LEN);
 // The degree must be a power of two.
 const_assert!(FullRes::MAX_POLY_DEGREE.count_ones() == 1);
 

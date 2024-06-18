@@ -125,6 +125,6 @@ fn homomorphic_positive_multiplication_test() {
     homomorphic_multiplication_helper_positive_ternary::<MiddleRes>();
     homomorphic_multiplication_helper_positive::<FullRes>();
     homomorphic_multiplication_helper_positive_ternary::<FullRes>();
-    //homomorphic_multiplication_helper_positive::<LargeRes>();
-    //homomorphic_multiplication_helper_positive_ternary::<LargeRes>();
+    homomorphic_multiplication_helper_positive::<LargeRes>();
+    homomorphic_multiplication_helper_positive_ternary::<LargeRes>();
 }

@@ -130,8 +130,8 @@ where
             poly_code.polys[i].truncate_to_canonical_form();
         }
 
-        dbg!(poly_query.clone());
-        dbg!(poly_code.clone());
+        //dbg!(poly_query.clone());
+        //dbg!(poly_code.clone());
 
         let encrypted_poly_query = EncryptedPolyQuery::encrypt_query(ctx, poly_query.clone(), &public_key, &mut rng);
         let encrypted_poly_code = EncryptedPolyCode::encrypt_code(ctx, poly_code.clone(), &public_key, &mut rng);

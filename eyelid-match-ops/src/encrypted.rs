@@ -140,7 +140,7 @@ where
             // Multiply the polynomials, which will yield inner products.
             let product = ctx.ciphertext_mul(a.clone(), b.clone());
             let decrypted_product = ctx.decrypt_mul(product, &private_key);
-            dbg!(&decrypted_product.m);
+            //dbg!(&decrypted_product.m);
 
             // Extract the inner products from particular coefficients.
             // Left-most rotation:              sδ - (v - u) - 1

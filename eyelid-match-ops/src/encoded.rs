@@ -168,11 +168,6 @@ impl<C: EncodeConf> PolyQuery<C> {
         for (d, t) in match_counts.into_iter().zip_eq(mask_counts.into_iter()) {
             // Match if the Hamming distance is less than a percentage threshold:
             // (t - d) / 2t <= x%
-            dbg!(d);
-            dbg!(t);
-            dbg!(t-d);
-            dbg!((t - d) * (C::EyeConf::MATCH_DENOMINATOR as i64));
-            dbg!(2 * t * (C::EyeConf::MATCH_NUMERATOR as i64));
             #[allow(clippy::cast_possible_wrap)]
             if (t - d) * (C::EyeConf::MATCH_DENOMINATOR as i64)
                 <= 2 * t * (C::EyeConf::MATCH_NUMERATOR as i64)
@@ -198,34 +193,6 @@ impl<C: EncodeConf> PolyQuery<C> {
         for (a, b) in a_polys.iter().zip_eq(b_polys.iter()) {            
             // Multiply the polynomials, which will yield inner products.
             let product = a * b;
-            //dbg!(a.clone());
-            //dbg!(b.clone());
-            //dbg!(product.clone());
-            // for each coefficient of product, reduce modulo C::PlainfConf::T
-            //#[allow(unused_mut)]
-            //for mut coeff in product.coeffs_mut() {
-            //     let coeff_bn: BigUint = (*coeff).into();
-            //     let mut coeff_res = coeff_bn
-            //         .to_i128()
-            //         .expect("coefficients are small enough for i128");
-
-                // center lift mod q
-                // TODO: generalize it
-                //if coeff_res > 1588488791824584864708940558339355343 {
-                //    coeff_res -= 3176977583649169729417881116678710686;
-                //}
-            //    if coeff_res > 247962966545369604190208 {
-            //        coeff_res -= 495925933090739208380416;
-            //    }
-
-            //    coeff_res = coeff_res.rem_euclid(4096);
-
-
-            //    *coeff = <C::PlainConf as PolyConf>::Coeff::from(coeff_res as u128);
-                //*coeff = <C::PlainConf as YasheConf>::i128_as_coeff(coeff_res);
-            //}
-            //product.truncate_to_canonical_form();
-            //dbg!(product.clone());
 
             // Extract the inner products from particular coefficients.
             // Left-most rotation:              sδ - (v - u) - 1

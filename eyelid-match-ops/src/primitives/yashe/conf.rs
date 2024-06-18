@@ -190,7 +190,7 @@ where
 
     /// A convenience method to convert [`CoeffBN::MODULUS`](PrimeField::MODULUS) to [`BigInt`].
     fn bn_modulus_as_big_int() -> BigInt {
-         let val: BigUint = Self::Coeff::MODULUS.into();
+        let val: BigUint = <Self::PolyBN as PolyConf>::Coeff::MODULUS.into();
 
         BigInt::from(val)
     }
@@ -326,7 +326,6 @@ impl YasheConf for LargeRes {
 
     // VERIFY: max T should be 2^15, not 2^12
     // Larger values cause failures in the positive_multiplication_test().
-    //const T: u64 = 131072;
     const T: u64 = 4096;
 }
 
@@ -338,7 +337,6 @@ impl YasheConf for FullRes {
 
     // VERIFY: max T should be 2^15, not 2^12
     // Larger values cause failures in the positive_multiplication_test().
-    //const T: u64 = 131072;
     const T: u64 = 4096;
 }
 

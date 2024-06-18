@@ -140,9 +140,13 @@ where
     ) -> Ciphertext<C> {
         // Create the ciphertext by sampling error polynomials and applying them to the public key.
         let s = self.sample_err(rng);
+        //let s = Poly::<C>::zero();
         let e = self.sample_err(rng);
+        //let e = Poly::<C>::zero();
 
-        let mut c = s * &public_key.h + e;
+        //let mut c = s * &public_key.h + e;
+        let mut c = s * &public_key.h + e.clone();
+        //let mut c = e;
 
         // Divide the polynomial coefficient modulus by T, using primitive integer arithmetic.
         let qdt = C::modulus_as_u128() / C::t_as_u128();
@@ -181,7 +185,7 @@ where
         // TODO: use Poly::coeffs_modify_non_zero() here and benchmark
         #[allow(unused_mut)]
         for mut coeff in res.coeffs_mut() {
-            // Convert coefficient to a primitive integer
+            // Convert coefficient to a big integer
             let mut coeff_res: BigUint = (*coeff).into();
             // Multiply by T
             coeff_res *= C::t_as_big_uint();
@@ -310,28 +314,23 @@ where
     /// Plaintext multiplication must center lift before reduction
     pub fn plaintext_mul(self, m1: Message<C>, m2: Message<C>) -> Message<C> {
         let mut res = m1.m * m2.m;
-        dbg!(res.clone());
 
         // TODO: use Poly::coeffs_modify_non_zero() here and benchmark
         #[allow(unused_mut)]
         for mut coeff in res.coeffs_mut() {
             let mut coeff_res = C::coeff_as_big_int(*coeff);
 
-            dbg!(coeff_res.clone());
             // center lift mod q
             if coeff_res > C::modulus_minus_one_div_two_as_big_int() {
                 coeff_res -= C::modulus_as_big_int();
-                dbg!(coeff_res.clone());
             }
             coeff_res %= C::T;
-            dbg!(coeff_res.clone());
             // if negative, add T
             if coeff_res < BigInt::from(0) {
                 coeff_res += C::T;
             }
 
             *coeff = C::big_int_as_coeff(coeff_res);
-            dbg!(coeff.clone());
         }
         res.truncate_to_canonical_form();
 
@@ -370,15 +369,17 @@ where
             if coeff > half_modulus_bn {
                 coeff -= &modulus_bn;
             }
+
             // * T
             coeff *= &t;
             // Round to nearest integer after division
             // + (Q - 1) / 2
-            if coeff.sign() == Sign::Plus {
+            if coeff.sign() == Sign::Plus || coeff.sign() == Sign::NoSign {
                 coeff += &half_modulus;
             } else {
                 coeff -= &half_modulus;
             }
+
             // / Q
             coeff /= &modulus;
             // reduce mod q
