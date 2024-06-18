@@ -105,7 +105,7 @@ where
 
     /// In order to homomorphically compute the hamming distance between two
     /// SimpleHammingEncodingCiphertexts, we need to subtract each
-    /// component respectivelly. Namely, given c1 and c2, we need to compute
+    /// component respectively. Namely, given c1 and c2, we need to compute
     /// a SimpleHammingEncodingCiphertext c, such that c.c = c1.c - c2.c,
     /// and c.c_rev = c1.c_rev - c2.c_rev. Then we multiply c.c by c.c_rev
     /// and return the result as a regular Yashe Ciphertext.

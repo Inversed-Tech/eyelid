@@ -78,7 +78,7 @@ where
     );
 }
 
-// Positive muiltiplication test for ternary messages, i.e. using sample_ternary_message
+// Positive multiplication test for ternary messages, i.e. using sample_ternary_message
 fn homomorphic_multiplication_helper_positive_ternary<C: YasheConf>()
 where
     C::Coeff: From<u128> + From<u64> + From<i64>,
