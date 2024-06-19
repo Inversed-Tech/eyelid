@@ -178,6 +178,37 @@ fn bench_plaintext_full_match(settings: &mut Criterion) {
     );
 }
 
+/// Run [`ciphertext::is_iris_match()`] as a Criterion benchmark with random data.
+fn bench_ciphertext_full_match(settings: &mut Criterion) {
+    use eyelid_match_ops::FullBits;
+
+    let mut rng = rand::thread_rng();
+    let ctx: Yashe<C::PlainConf> = Yashe::new();
+    let (private_key, public_key) = ctx.keygen(&mut rng);
+
+    // Setup: generate different random iris codes and masks
+    let eye_new = random_iris_code();
+    let mask_new = random_iris_mask();
+    let eye_store = random_iris_code();
+    let mask_store = random_iris_mask();
+
+    settings.bench_with_input(
+        BenchmarkId::new("Plaintext full match", RANDOM_BITS_NAME),
+        &(eye_new, mask_new, eye_store, mask_store),
+        |benchmark, (eye_new, mask_new, eye_store, mask_store)| {
+            benchmark.iter_with_large_drop(|| {
+                // To avoid timing dropping the return value, this line must not end in ';'
+                //plaintext::is_iris_match::<FullBits, { FullBits::STORE_ELEM_LEN }>(
+                //    eye_new, mask_new, eye_store, mask_store,
+                //)
+
+                let mut poly_query: PolyQuery<FullBits> = PolyQuery::from_plaintext(eye_a, mask_a);
+                let mut poly_code = PolyCode::from_plaintext(eye_b, mask_b);
+            })
+        },
+    );
+}
+
 /// Run [`poly::naive_cyclotomic_mul()`] as a Criterion benchmark with random data.
 pub fn bench_naive_cyclotomic_mul(settings: &mut Criterion) {
     // Setup: generate random cyclotomic polynomials
