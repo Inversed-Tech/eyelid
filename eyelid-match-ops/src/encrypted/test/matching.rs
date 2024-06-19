@@ -12,11 +12,11 @@ use crate::{EncodeConf, FullBits, PolyConf, YasheConf};
 // Given a vector of polynomails, for each coefficient, if it is larger than Q-1/2 then add T.
 // Otherwise do nothing.
 fn convert_negative_coefficients<C: EncodeConf<PlainConf = LargeRes>>(
-    poly_vec: &mut Vec<Poly<C::PlainConf>>,
+    polys: &mut [Poly<C::PlainConf>],
 ) {
-    for i in 0..poly_vec.len() {
+    for mut poly in polys {
         Poly::coeffs_modify_non_zero(
-            &mut poly_vec[i],
+            &mut poly,
             |coeff: &mut <C::PlainConf as PolyConf>::Coeff| {
                 let mut coeff_res = C::PlainConf::coeff_as_big_int(*coeff);
                 if coeff_res > <C::PlainConf as YasheConf>::modulus_minus_one_div_two_as_big_int() {
