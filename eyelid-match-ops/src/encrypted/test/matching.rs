@@ -14,9 +14,10 @@ use crate::{EncodeConf, FullBits, PolyConf, YasheConf};
 fn convert_negative_coefficients<C: EncodeConf<PlainConf = LargeRes>>(
     polys: &mut [Poly<C::PlainConf>],
 ) {
+    #[allow(unused_mut)]
     for mut poly in polys {
         Poly::coeffs_modify_non_zero(
-            &mut poly,
+            poly,
             |coeff: &mut <C::PlainConf as PolyConf>::Coeff| {
                 let mut coeff_res = C::PlainConf::coeff_as_big_int(*coeff);
                 if coeff_res > <C::PlainConf as YasheConf>::modulus_minus_one_div_two_as_big_int() {
