@@ -179,7 +179,7 @@ fn bench_plaintext_full_match(settings: &mut Criterion) {
 }
 
 /// Run [`ciphertext::is_iris_match()`] as a Criterion benchmark with random data.
-fn bench_ciphertext_full_match(settings: &mut Criterion) {
+/*fn bench_ciphertext_full_match(settings: &mut Criterion) {
     use eyelid_match_ops::FullBits;
 
     let mut rng = rand::thread_rng();
@@ -207,7 +207,7 @@ fn bench_ciphertext_full_match(settings: &mut Criterion) {
             })
         },
     );
-}
+}*/
 
 /// Run [`poly::naive_cyclotomic_mul()`] as a Criterion benchmark with random data.
 pub fn bench_naive_cyclotomic_mul(settings: &mut Criterion) {

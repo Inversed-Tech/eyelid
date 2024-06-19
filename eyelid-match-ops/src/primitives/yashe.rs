@@ -89,7 +89,7 @@ where
         loop {
             let f = self.sample_key(rng);
 
-            // TODO: document the equation that is being implemented here
+            // priv_key = f * T + 1
             let mut priv_key = f.clone();
             priv_key *= C::t_as_coeff();
 
@@ -117,7 +117,7 @@ where
     ) -> PublicKey<C> {
         let mut h = self.sample_key(rng);
 
-        // TODO: document the equation that is being implemented here
+        // h = T * priv_keyˆ-1 * h
         h *= C::t_as_coeff();
         h = h * &private_key.priv_key_inv;
 
