@@ -66,9 +66,11 @@ where
         );
         println!(
             "{} {description} {} {}",
-            "Encrypted encoding of matching iris codes indeed matches:".cyan().bold(),
+            "Encrypted encoding of matching iris codes indeed matches:"
+                .cyan()
+                .bold(),
             "OK".bright_blue().bold(),
-            "✅", 
+            "✅",
         );
     }
 }
@@ -113,9 +115,11 @@ where
         );
         println!(
             "{} {description} {} {}",
-            "Encrypted encoding of different iris codes indeed doesn't match:".cyan().bold(),
+            "Encrypted encoding of different iris codes indeed doesn't match:"
+                .cyan()
+                .bold(),
             "OK".bright_blue().bold(),
-            "✅", 
+            "✅",
         );
     }
 }
