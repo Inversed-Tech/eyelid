@@ -181,10 +181,7 @@ where
 
         // Since this equation always results in zero for a zero coefficient, we don't need to
         // calculate leading zero terms.
-        //
-        // TODO: use Poly::coeffs_modify_non_zero() here and benchmark
-        #[allow(unused_mut)]
-        for mut coeff in res.coeffs_mut() {
+        Poly::coeffs_modify_non_zero(&mut res, |coeff: &mut <C as PolyConf>::Coeff| {
             // Convert coefficient to a big integer
             let mut coeff_res: BigUint = (*coeff).into();
             // Multiply by T
@@ -197,10 +194,7 @@ where
             coeff_res %= C::t_as_big_uint();
             // And update the coefficient
             *coeff = coeff_res.into();
-        }
-
-        // Raw coefficient access must be followed by a truncation check.
-        res.truncate_to_canonical_form();
+        });
 
         Message { m: res }
     }
@@ -258,15 +252,12 @@ where
         R: SampleRange<T> + Clone,
         C::Coeff: From<T>,
     {
-        // TODO: use Poly::coeffs_modify_include_zero() here and benchmark
         let mut res = Poly::non_canonical_zeroes(C::MAX_POLY_DEGREE);
-        for i in 0..C::MAX_POLY_DEGREE {
+        Poly::coeffs_modify_include_zero(&mut res, |coeff: &mut <C as PolyConf>::Coeff| {
             let coeff_rand = rng.gen_range(range.clone());
-            res[i] = coeff_rand.into();
-        }
+            *coeff = coeff_rand.into();
+        });
 
-        // Raw coefficient access must be followed by a truncation check.
-        res.truncate_to_canonical_form();
         res
     }
 
@@ -292,20 +283,15 @@ where
         Message { m }
     }
 
-    /// Plaintext addition is trivial
+    /// Plaintext addition is trivial, just reduce mod T
     pub fn plaintext_add(&self, m1: Message<C>, m2: Message<C>) -> Message<C> {
         let mut res = m1.m + m2.m;
 
-        // TODO: use Poly::coeffs_modify_non_zero() here and benchmark
-        //
-        // It does actually need to be mutable to compile.
-        #[allow(unused_mut)]
-        for mut coeff in res.coeffs_mut() {
+        Poly::coeffs_modify_non_zero(&mut res, |coeff: &mut <C as PolyConf>::Coeff| {
             let mut coeff_res = C::coeff_as_u128(*coeff);
             coeff_res %= C::t_as_u128();
             *coeff = coeff_res.into();
-        }
-        res.truncate_to_canonical_form();
+        });
 
         Message { m: res }
     }
@@ -314,9 +300,7 @@ where
     pub fn plaintext_mul(self, m1: Message<C>, m2: Message<C>) -> Message<C> {
         let mut res = m1.m * m2.m;
 
-        // TODO: use Poly::coeffs_modify_non_zero() here and benchmark
-        #[allow(unused_mut)]
-        for mut coeff in res.coeffs_mut() {
+        Poly::coeffs_modify_non_zero(&mut res, |coeff: &mut <C as PolyConf>::Coeff| {
             let mut coeff_res = C::coeff_as_big_int(*coeff);
 
             // center lift mod q
@@ -330,8 +314,7 @@ where
             }
 
             *coeff = C::big_int_as_coeff(coeff_res);
-        }
-        res.truncate_to_canonical_form();
+        });
 
         Message { m: res }
     }
