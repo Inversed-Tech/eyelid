@@ -8,6 +8,7 @@ use crate::plaintext::test::matching::{different, matching};
 use crate::primitives::poly::Poly;
 use crate::primitives::yashe::Yashe;
 use crate::{EncodeConf, FullBits, PolyConf, YasheConf};
+use colored::Colorize;
 
 // Given a vector of polynomails, for each coefficient, if it is larger than Q-1/2 then add T.
 // Otherwise do nothing.
@@ -63,6 +64,12 @@ where
             query: {poly_query:?}\n\
             code: {poly_code:?}"
         );
+        println!(
+            "{} {description} {} {}",
+            "Encrypted encoding of matching iris codes indeed matches:".cyan().bold(),
+            "OK".bright_blue().bold(),
+            "✅", 
+        );
     }
 }
 
@@ -103,6 +110,12 @@ where
             "{description} must not match:\n\
             query: {poly_query:?}\n\
             code: {poly_code:?}"
+        );
+        println!(
+            "{} {description} {} {}",
+            "Encrypted encoding of different iris codes indeed doesn't match:".cyan().bold(),
+            "OK".bright_blue().bold(),
+            "✅", 
         );
     }
 }

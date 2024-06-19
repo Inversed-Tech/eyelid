@@ -24,3 +24,17 @@ Produce different benchmark outputs from `criterion` by enabling the [`html_repo
 Benchmark using different tools:
 - instruction counts with [`iai`](https://bheisler.github.io/criterion.rs/book/iai/getting_started.html) or [`criterion-perf-events`](https://crates.io/crates/criterion-perf-events), or
 - heaviest functions using [`flamegraph`](https://github.com/flamegraph-rs/flamegraph).
+
+# Demo
+
+In order to run the unit test that exercises the matching of homomorphically encrypted encodings do the following:
+
+```sh
+cargo test --release -- --nocapture encrypted::test::matching::test_matching_homomorphic_codes
+```
+
+To see that a different query indeed doesn't match, run the following:
+
+```sh
+cargo test --release -- --nocapture encrypted::test::matching::test_different_homomorphic_codes
+```
