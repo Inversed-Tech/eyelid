@@ -5,6 +5,7 @@ use num_bigint::{BigInt, BigUint};
 use rand::rngs::ThreadRng;
 
 use crate::iris::conf::IrisConf;
+use crate::primitives::poly::Poly;
 use crate::{
     encoded::{MatchError, PolyCode, PolyQuery},
     primitives::yashe::{Ciphertext, Message, PrivateKey, PublicKey, Yashe},
@@ -37,6 +38,25 @@ where
     data: Vec<Ciphertext<C::PlainConf>>,
     /// The mask polynomials.
     masks: Vec<Ciphertext<C::PlainConf>>,
+}
+
+/// Given a vector of polynomails, for each coefficient, if it is larger than Q-1/2 then add T.
+/// Otherwise do nothing.
+pub fn convert_negative_coefficients<C: EncodeConf>(polys: &mut [Poly<C::PlainConf>])
+where
+    <C as EncodeConf>::PlainConf: YasheConf,
+    <<C as EncodeConf>::PlainConf as PolyConf>::Coeff: From<i64>,
+{
+    #[allow(unused_mut)]
+    for mut poly in polys {
+        Poly::coeffs_modify_non_zero(poly, |coeff: &mut <C::PlainConf as PolyConf>::Coeff| {
+            let mut coeff_res = C::PlainConf::coeff_as_big_int(*coeff);
+            if coeff_res > <C::PlainConf as YasheConf>::modulus_minus_one_div_two_as_big_int() {
+                coeff_res += C::PlainConf::T;
+                *coeff = C::PlainConf::big_int_as_coeff(coeff_res);
+            }
+        });
+    }
 }
 
 impl<C: EncodeConf> EncryptedPolyCode<C>

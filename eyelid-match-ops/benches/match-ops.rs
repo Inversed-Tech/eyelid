@@ -19,6 +19,8 @@ use std::time::Duration;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 
 use eyelid_match_ops::{
+    encoded::{PolyCode, PolyQuery},
+    encrypted::{convert_negative_coefficients, EncryptedPolyCode, EncryptedPolyQuery},
     plaintext::{
         self,
         test::gen::{random_iris_code, random_iris_mask},
@@ -27,7 +29,7 @@ use eyelid_match_ops::{
         poly::{self, test::gen::rand_poly, Poly, PolyConf},
         yashe::{self, Ciphertext, Message, Yashe},
     },
-    IrisConf, MiddleRes, TestRes,
+    EncodeConf, IrisConf, MiddleRes, TestRes,
 };
 
 // Configure Criterion:
@@ -37,7 +39,7 @@ criterion_group! {
     // This can be any expression that returns a `Criterion` object.
     config = Criterion::default().sample_size(50);
     // List full match implementations here.
-    targets = bench_plaintext_full_match
+    targets = bench_plaintext_full_match, bench_ciphertext_full_match
 }
 
 criterion_group! {
@@ -178,36 +180,43 @@ fn bench_plaintext_full_match(settings: &mut Criterion) {
     );
 }
 
-/// Run [`ciphertext::is_iris_match()`] as a Criterion benchmark with random data.
-/*fn bench_ciphertext_full_match(settings: &mut Criterion) {
+/// Run [`encrypterd_poly_query::is_match()`] as a Criterion benchmark with random data.
+fn bench_ciphertext_full_match(settings: &mut Criterion) {
     use eyelid_match_ops::FullBits;
 
     let mut rng = rand::thread_rng();
-    let ctx: Yashe<C::PlainConf> = Yashe::new();
+    let ctx: Yashe<<FullBits as EncodeConf>::PlainConf> = Yashe::new();
     let (private_key, public_key) = ctx.keygen(&mut rng);
 
-    // Setup: generate different random iris codes and masks
-    let eye_new = random_iris_code();
-    let mask_new = random_iris_mask();
-    let eye_store = random_iris_code();
-    let mask_store = random_iris_mask();
+    let eye_new: bitvec::array::BitArray<[usize; FullBits::STORE_ELEM_LEN]> = random_iris_code();
+    let mask_new: bitvec::array::BitArray<[usize; FullBits::STORE_ELEM_LEN]> = random_iris_mask();
+    let eye_store: bitvec::array::BitArray<[usize; FullBits::STORE_ELEM_LEN]> = random_iris_code();
+    let mask_store: bitvec::array::BitArray<[usize; FullBits::STORE_ELEM_LEN]> = random_iris_mask();
+
+    let mut poly_query: PolyQuery<FullBits> = PolyQuery::from_plaintext(&eye_new, &mask_new);
+    let mut poly_code = PolyCode::from_plaintext(&eye_store, &mask_store);
+
+    convert_negative_coefficients::<FullBits>(&mut poly_query.polys);
+    convert_negative_coefficients::<FullBits>(&mut poly_code.polys);
+
+    let encrypted_poly_query =
+        EncryptedPolyQuery::encrypt_query(ctx, poly_query.clone(), &public_key, &mut rng);
+    let encrypted_poly_code =
+        EncryptedPolyCode::encrypt_code(ctx, poly_code.clone(), &public_key, &mut rng);
 
     settings.bench_with_input(
-        BenchmarkId::new("Plaintext full match", RANDOM_BITS_NAME),
-        &(eye_new, mask_new, eye_store, mask_store),
-        |benchmark, (eye_new, mask_new, eye_store, mask_store)| {
+        BenchmarkId::new("Ciphertext full match", RANDOM_BITS_NAME),
+        &(encrypted_poly_query, private_key, encrypted_poly_code),
+        |benchmark, (encrypted_poly_query, private_key, encrypted_poly_code)| {
             benchmark.iter_with_large_drop(|| {
                 // To avoid timing dropping the return value, this line must not end in ';'
-                //plaintext::is_iris_match::<FullBits, { FullBits::STORE_ELEM_LEN }>(
-                //    eye_new, mask_new, eye_store, mask_store,
-                //)
-
-                let mut poly_query: PolyQuery<FullBits> = PolyQuery::from_plaintext(eye_a, mask_a);
-                let mut poly_code = PolyCode::from_plaintext(eye_b, mask_b);
+                encrypted_poly_query
+                    .is_match(ctx, private_key.clone(), &encrypted_poly_code)
+                    .expect("encrypted matching must work")
             })
         },
     );
-}*/
+}
 
 /// Run [`poly::naive_cyclotomic_mul()`] as a Criterion benchmark with random data.
 pub fn bench_naive_cyclotomic_mul(settings: &mut Criterion) {
