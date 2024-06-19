@@ -9,11 +9,6 @@ use crate::primitives::poly::Poly;
 use crate::primitives::yashe::Yashe;
 use crate::{EncodeConf, FullBits, PolyConf, YasheConf};
 
-#[test]
-fn test_matching_homomorphic_codes() {
-    matching_codes::<FullBits>();
-}
-
 // Given a vector of polynomails, for each coefficient, if it is larger than Q-1/2 then add T.
 // Otherwise do nothing.
 fn convert_negative_coefficients<C: EncodeConf<PlainConf = LargeRes>>(
@@ -31,6 +26,11 @@ fn convert_negative_coefficients<C: EncodeConf<PlainConf = LargeRes>>(
             },
         );
     }
+}
+
+#[test]
+fn test_matching_homomorphic_codes() {
+    matching_codes::<FullBits>();
 }
 
 fn matching_codes<C: EncodeConf<PlainConf = LargeRes>>()
