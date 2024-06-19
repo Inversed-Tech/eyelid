@@ -12,7 +12,7 @@ use rand::{
 };
 use rand_distr::{Distribution, Normal};
 
-use crate::primitives::poly::Poly;
+use crate::{primitives::poly::Poly, PolyConf};
 
 pub use conf::YasheConf;
 
@@ -220,9 +220,8 @@ where
     /// Sample a polynomial with small random coefficients using a gaussian distribution.
     #[allow(clippy::cast_possible_truncation)]
     pub fn sample_gaussian(&self, delta: f64, rng: &mut ThreadRng) -> Poly<C> {
-        // TODO: use Poly::coeffs_modify_include_zero() here and benchmark
         let mut res = Poly::non_canonical_zeroes(C::MAX_POLY_DEGREE);
-        for i in 0..C::MAX_POLY_DEGREE {
+        Poly::coeffs_modify_include_zero(&mut res, |coeff: &mut <C as PolyConf>::Coeff| {
             // TODO SECURITY: check that the generated integers are secure:
             // <https://github.com/Inversed-Tech/eyelid/issues/70>
             let normal = Normal::new(0.0, delta).expect("constant parameters are valid");
@@ -235,26 +234,20 @@ where
             // This is ok because the C::Coeff modulus is smaller than MIN/MAX.
             //
             // `as` truncates by default, but we want to round to the nearest integer.
-            res[i] = C::Coeff::from(v.round() as i64);
-        }
-
-        // Raw coefficient access must be followed by a truncation check.
-        res.truncate_to_canonical_form();
+            *coeff = C::Coeff::from(v.round() as i64);
+        });
 
         res
     }
 
     /// Sample a polynomial with unlimited size random coefficients using a uniform distribution.
     pub fn sample_uniform_coeff(&self, mut rng: &mut ThreadRng) -> Poly<C> {
-        // TODO: use Poly::coeffs_modify_include_zero() here and benchmark
         let mut res = Poly::non_canonical_zeroes(C::MAX_POLY_DEGREE);
-        for i in 0..C::MAX_POLY_DEGREE {
+        Poly::coeffs_modify_include_zero(&mut res, |coeff: &mut <C as PolyConf>::Coeff| {
             let coeff_rand = C::Coeff::rand(&mut rng);
-            res[i] = coeff_rand;
-        }
+            *coeff = coeff_rand;
+        });
 
-        // Raw coefficient access must be followed by a truncation check.
-        res.truncate_to_canonical_form();
         res
     }
 
