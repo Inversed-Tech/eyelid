@@ -65,12 +65,11 @@ where
             code: {poly_code:?}"
         );
         println!(
-            "{} {description} {} {}",
+            "{} {description} {} ✅",
             "Encrypted encoding of matching iris codes indeed matches:"
                 .cyan()
                 .bold(),
             "OK".bright_blue().bold(),
-            "✅",
         );
     }
 }
@@ -114,12 +113,11 @@ where
             code: {poly_code:?}"
         );
         println!(
-            "{} {description} {} {}",
+            "{} {description} {} ✅",
             "Encrypted encoding of different iris codes indeed doesn't match:"
                 .cyan()
                 .bold(),
             "OK".bright_blue().bold(),
-            "✅",
         );
     }
 }
