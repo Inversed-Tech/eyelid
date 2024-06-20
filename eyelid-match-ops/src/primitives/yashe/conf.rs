@@ -321,10 +321,10 @@ where
 impl YasheConf for LargeRes {
     type PolyBN = LargeResBN;
 
-    // TODO: max T now is more than enough, but on the other hand we lost a few bits of security. 
+    // TODO: max T now is more than enough, but on the other hand we lost a few bits of security.
     // Fixing it would require changing the max degree or increasing the initial noise.
     // Either way first we want to fine tune this parameter and minimize the size of T
-    // while keeping the encrypted encoding working. 
+    // while keeping the encrypted encoding working.
     // Larger values cause failures in the positive_multiplication_test().
     const T: u64 = 524288;
 }
