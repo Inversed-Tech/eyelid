@@ -176,7 +176,7 @@ where
                     let mut coeff_res = C::PlainConf::coeff_as_big_int(*c);
                     // When the coefficient is negative, we need to convert it to work modulo T.
                     // Concretely, we temporarily negate the coefficient in order to get a small value
-                    // (since negative element modulo Q are bug and can't be converted to i64), then we 
+                    // (since negative element modulo Q are bug and can't be converted to i64), then we
                     // negate again to return the output.
                     if coeff_res > t_div_2 {
                         coeff_res = C::PlainConf::T - coeff_res;
