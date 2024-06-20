@@ -1,4 +1,4 @@
-//! Iris matching operations on fully homomorphic encrypted, polynomial-encoded bit vectors.
+//! Iris matching operations on homomorphic encrypted, polynomial-encoded bit vectors.
 
 use itertools::Itertools;
 use num_bigint::{BigInt, BigUint};
@@ -40,7 +40,8 @@ where
     masks: Vec<Ciphertext<C::PlainConf>>,
 }
 
-/// Given a vector of polynomails, for each coefficient, if it is larger than Q-1/2 then add T.
+/// -1 is encoded as Q-1, so we need to convert it to work modulo T.
+/// Given a vector of polynomials, for each coefficient, if it is larger than Q-1/2 then add T.
 /// Otherwise do nothing.
 pub fn convert_negative_coefficients<C: EncodeConf>(polys: &mut [Poly<C::PlainConf>])
 where
@@ -173,6 +174,10 @@ where
                 .take(C::EyeConf::ROTATION_COMPARISONS)
                 .map(|c| {
                     let mut coeff_res = C::PlainConf::coeff_as_big_int(*c);
+                    // When the coefficient is negative, we need to convert it to work modulo T.
+                    // Concretely, we temporarily negate the coefficient in order to get a small value
+                    // (since negative element modulo Q are bug and can't be converted to i64), then we 
+                    // negate again to return the output.
                     if coeff_res > t_div_2 {
                         coeff_res = C::PlainConf::T - coeff_res;
                         let result =

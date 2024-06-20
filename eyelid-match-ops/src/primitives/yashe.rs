@@ -140,13 +140,10 @@ where
     ) -> Ciphertext<C> {
         // Create the ciphertext by sampling error polynomials and applying them to the public key.
         let s = self.sample_err(rng);
-        //let s = Poly::<C>::zero();
         let e = self.sample_err(rng);
-        //let e = Poly::<C>::zero();
 
-        //let mut c = s * &public_key.h + e;
+        // Initialize the ciphertext with an encryption of zero: s * h + e
         let mut c = s * &public_key.h + e.clone();
-        //let mut c = e;
 
         // Divide the polynomial coefficient modulus by T, using primitive integer arithmetic.
         let qdt = C::modulus_as_u128() / C::t_as_u128();

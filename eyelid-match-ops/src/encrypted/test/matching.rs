@@ -10,8 +10,6 @@ use crate::primitives::yashe::Yashe;
 use crate::{EncodeConf, FullBits, PolyConf, YasheConf};
 use colored::Colorize;
 
-// Given a vector of polynomials, for each coefficient, if it is larger than Q-1/2 then add T.
-// Otherwise do nothing.
 fn convert_negative_coefficients<C: EncodeConf<PlainConf = LargeRes>>(
     polys: &mut [Poly<C::PlainConf>],
 ) {

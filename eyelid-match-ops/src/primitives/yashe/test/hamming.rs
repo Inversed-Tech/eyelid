@@ -37,6 +37,9 @@ mod tests {
     }
 
     /*#[test]
+    /// Next test is disabled because it is not working. 
+    /// It is a beginning of an experimentation to homomorphically
+    /// compute the bit extraction by dividing by small powers of 2.
     fn test_hamming_distance_below_threshold() {
         hamming_distance_below_threshold_helper::<FullRes>();
     }
