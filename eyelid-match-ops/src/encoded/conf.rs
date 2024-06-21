@@ -69,15 +69,15 @@ pub trait EncodeConf {
 
 impl EncodeConf for FullBits {
     type EyeConf = FullBits;
-    type PlainConf = LargeRes;
+    type PlainConf = FullRes;
 
     const ROWS_PER_BLOCK: usize = 8;
 }
 // As in the report
-//const_assert_eq!(
-//    <<FullBits as EncodeConf>::PlainConf as PolyConf>::MAX_POLY_DEGREE,
-//    2048
-//);
+const_assert_eq!(
+    <<FullBits as EncodeConf>::PlainConf as PolyConf>::MAX_POLY_DEGREE,
+    2048
+);
 
 // TODO: work out how to automatically apply these assertions to every trait impl.
 // (Or every config type.)
@@ -90,10 +90,10 @@ const_assert_eq!(
     FullBits::COLUMN_LEN
 );
 // Each block must be able to be encoded into the configured polynomial.
-//const_assert!(
-//    FullBits::NUM_COLS_AND_PADS * FullBits::ROWS_PER_BLOCK
-//        <= <<FullBits as EncodeConf>::PlainConf as PolyConf>::MAX_POLY_DEGREE
-//);
+const_assert!(
+    FullBits::NUM_COLS_AND_PADS * FullBits::ROWS_PER_BLOCK
+        <= <<FullBits as EncodeConf>::PlainConf as PolyConf>::MAX_POLY_DEGREE
+);
 
 impl EncodeConf for MiddleBits {
     type EyeConf = MiddleBits;

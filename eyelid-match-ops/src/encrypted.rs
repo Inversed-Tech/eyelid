@@ -21,9 +21,9 @@ where
     C::PlainConf: YasheConf,
     <C::PlainConf as PolyConf>::Coeff: From<u128> + From<u64> + From<i64>,
 {
-    /// The polynomials, encoding data, one block of rows each. Storage variant.
+    /// The encrypted polynomials, encoding data, one block of rows each. Storage variant.
     data: Vec<Ciphertext<C::PlainConf>>,
-    /// The mask polynomials.
+    /// The encrypted mask polynomials.
     masks: Vec<Ciphertext<C::PlainConf>>,
 }
 
@@ -34,9 +34,9 @@ where
     C::PlainConf: YasheConf,
     <C::PlainConf as PolyConf>::Coeff: From<u128> + From<u64> + From<i64>,
 {
-    /// The polynomials, encoding data, one block of rows each. Query variant.
+    /// The encrypted polynomials, encoding data, one block of rows each. Query variant.
     data: Vec<Ciphertext<C::PlainConf>>,
-    /// The mask polynomials.
+    /// The encrypted mask polynomials.
     masks: Vec<Ciphertext<C::PlainConf>>,
 }
 
@@ -160,8 +160,10 @@ where
         let t_div_2 = BigInt::from(C::PlainConf::T / 2);
 
         for (a, b) in a_polys.iter().zip_eq(b_polys.iter()) {
-            // Multiply the polynomials, which will yield inner products.
+            // Multiply the encrypted polynomials, which will yield encrypted inner products
+            // by the homomorphic property of the scheme.
             let product = ctx.ciphertext_mul(a.clone(), b.clone());
+            // Decrypt to get the inner products.
             let decrypted_product = ctx.decrypt_mul(product, &private_key);
 
             // Extract the inner products from particular coefficients.
@@ -176,7 +178,7 @@ where
                     let mut coeff_res = C::PlainConf::coeff_as_big_int(*c);
                     // When the coefficient is negative, we need to convert it to work modulo T.
                     // Concretely, we temporarily negate the coefficient in order to get a small value
-                    // (since negative element modulo Q are bug and can't be converted to i64), then we
+                    // (since negative elements modulo Q are big and can't be converted to i64), then we
                     // negate again to return the output.
                     if coeff_res > t_div_2 {
                         coeff_res = C::PlainConf::T - coeff_res;

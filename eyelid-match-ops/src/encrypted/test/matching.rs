@@ -7,10 +7,10 @@ use crate::iris::conf::IrisConf;
 use crate::plaintext::test::matching::{different, matching};
 use crate::primitives::poly::Poly;
 use crate::primitives::yashe::Yashe;
-use crate::{EncodeConf, FullBits, PolyConf, YasheConf};
+use crate::{EncodeConf, FullBits, FullRes, PolyConf, YasheConf};
 use colored::Colorize;
 
-fn convert_negative_coefficients<C: EncodeConf<PlainConf = LargeRes>>(
+fn convert_negative_coefficients<C: EncodeConf<PlainConf = FullRes>>(
     polys: &mut [Poly<C::PlainConf>],
 ) {
     for poly in polys {
@@ -29,7 +29,7 @@ fn test_matching_homomorphic_codes() {
     matching_codes::<FullBits>();
 }
 
-fn matching_codes<C: EncodeConf<PlainConf = LargeRes>>()
+fn matching_codes<C: EncodeConf<PlainConf = FullRes>>()
 where
     C::PlainConf: YasheConf,
     <C::PlainConf as PolyConf>::Coeff: From<u128> + From<u64> + From<i64>,
@@ -77,7 +77,7 @@ fn test_different_homomorphic_codes() {
     different_hom_codes::<FullBits>();
 }
 
-fn different_hom_codes<C: EncodeConf<PlainConf = LargeRes>>()
+fn different_hom_codes<C: EncodeConf<PlainConf = FullRes>>()
 where
     C::PlainConf: YasheConf,
     <C::PlainConf as PolyConf>::Coeff: From<u128> + From<u64> + From<i64>,
