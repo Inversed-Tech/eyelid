@@ -58,6 +58,15 @@ ark-serialize = { git = "https://github.com/arkworks-rs/algebra", rev = "8233e9a
 ark-serialize-derive = { git = "https://github.com/arkworks-rs/algebra", rev = "8233e9a3fc63370aef65ed24e0c7f6e07dac43e6" }
 
 # Compilation settings for performance
+
+# Optimise dev and test to speed up test runtimes
+[profile.dev]
+opt-level = 3
+
+[profile.test]
+opt-level = 3
+
+# Extra optimisations for release and benchmarks
 [profile.release]
 panic = "abort"
 lto = true
