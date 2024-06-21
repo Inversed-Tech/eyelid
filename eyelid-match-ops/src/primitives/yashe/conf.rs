@@ -317,7 +317,7 @@ where
 
 /// Large resolution polynomial parameters.
 ///
-/// These are the parameters for large resolution, since full resolution wasn't enough.
+/// These are the parameters for large resolution, which can be used for experimentation.
 impl YasheConf for LargeRes {
     type PolyBN = LargeResBN;
 

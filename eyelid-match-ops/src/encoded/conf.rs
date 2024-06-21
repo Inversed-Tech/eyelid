@@ -143,7 +143,7 @@ mod tiny_test_asserts {
 
 /// Large resolution polynomial parameters.
 ///
-/// These are the parameters for large resolution, since FullRes was not enough.
+/// These are the parameters for large resolution, which can be used for experimentation.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct LargeRes;
 

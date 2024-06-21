@@ -175,15 +175,14 @@ where
                 .skip(C::ROWS_PER_BLOCK * C::NUM_COLS_AND_PADS - C::EyeConf::ROTATION_COMPARISONS)
                 .take(C::EyeConf::ROTATION_COMPARISONS)
                 .map(|c| {
-                    let mut coeff_res = C::PlainConf::coeff_as_big_int(*c);
+                    let coeff_res = C::PlainConf::coeff_as_big_int(*c);
                     // When the coefficient is negative, we need to convert it to work modulo T.
                     // Concretely, we temporarily negate the coefficient in order to get a small value
                     // (since negative elements modulo Q are big and can't be converted to i64), then we
                     // negate again to return the output.
                     if coeff_res > t_div_2 {
-                        coeff_res = C::PlainConf::T - coeff_res;
                         let result =
-                            i64::try_from(BigUint::from(C::PlainConf::big_int_as_coeff(coeff_res)))
+                            i64::try_from(BigUint::from(C::PlainConf::big_int_as_coeff(C::PlainConf::T - coeff_res)))
                                 .expect("Could not convert a negative element to i64");
                         Ok(-result)
                     } else {
