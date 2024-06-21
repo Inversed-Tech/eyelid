@@ -181,9 +181,10 @@ where
                     // (since negative elements modulo Q are big and can't be converted to i64), then we
                     // negate again to return the output.
                     if coeff_res > t_div_2 {
-                        let result =
-                            i64::try_from(BigUint::from(C::PlainConf::big_int_as_coeff(C::PlainConf::T - coeff_res)))
-                                .expect("Could not convert a negative element to i64");
+                        let result = i64::try_from(BigUint::from(C::PlainConf::big_int_as_coeff(
+                            C::PlainConf::T - coeff_res,
+                        )))
+                        .expect("Could not convert a negative element to i64");
                         Ok(-result)
                     } else {
                         let result =
