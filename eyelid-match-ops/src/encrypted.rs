@@ -166,6 +166,7 @@ where
             // Decrypt to get the inner products.
             let decrypted_product = ctx.decrypt_mul(product, &private_key);
 
+            // TODO: make the comparisons private
             // Extract the inner products from particular coefficients.
             // Left-most rotation:              sδ - (v - u) - 1
             // Right-most rotation (inclusive): sδ - 1
