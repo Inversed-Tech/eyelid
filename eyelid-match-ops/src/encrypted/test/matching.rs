@@ -1,6 +1,5 @@
 //! Encrypted iris matching tests.
 
-use crate::encoded::conf::LargeRes;
 use crate::encoded::{PolyCode, PolyQuery};
 use crate::encrypted::{EncryptedPolyCode, EncryptedPolyQuery};
 use crate::iris::conf::IrisConf;
