@@ -211,7 +211,7 @@ fn bench_ciphertext_full_match(settings: &mut Criterion) {
             benchmark.iter_with_large_drop(|| {
                 // There aren't any large drops here, but we use the same benchmark method for consistency
                 encrypted_poly_query
-                    .is_match(ctx, private_key.clone(), encrypted_poly_code)
+                    .is_match(ctx, &private_key, encrypted_poly_code)
                     .expect("encrypted matching must work")
             })
         },
