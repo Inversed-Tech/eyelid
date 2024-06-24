@@ -53,15 +53,11 @@ where
     /// is done by calling function sample_binary_message, and returning a new SimpleHammingEncoding,
     /// which sets m to the sampled message, and m_rev to the reverse of m.
     pub fn sample(ctx: Yashe<C>, size: usize, rng: &mut ThreadRng) -> SimpleHammingEncoding<C> {
-        let mut m = ctx.sample_binary_message(rng);
-        for i in size..m.m.len() {
-            m.m[i] = C::Coeff::zero();
-        }
-        SimpleHammingEncoding::new(m, size)
+        SimpleHammingEncoding::new(ctx.sample_binary_message(rng), size)
     }
 
-    /// Compute the Hamming distance between two SimpleHammingEncoding v1 and v2. In order to do this,
-    /// we subtract each component of the encoding, namely v1.m from v2.m and v1.m_rev from v2.m_rev,
+    /// Compute the Hamming distance between self and v2. In order to do this,
+    /// we subtract each component of the encoding, namely self.m from v2.m and self.m_rev from v2.m_rev,
     /// and multiply the obtained Messages, returning a regular Yashe Message as output.
     pub fn hamming_distance(&self, v2: SimpleHammingEncoding<C>, size: usize) -> C::Coeff {
         let res: &mut C::Coeff = &mut C::Coeff::zero();
