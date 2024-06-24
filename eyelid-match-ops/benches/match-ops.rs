@@ -209,7 +209,7 @@ fn bench_ciphertext_full_match(settings: &mut Criterion) {
         &(encrypted_poly_query, private_key, encrypted_poly_code),
         |benchmark, (encrypted_poly_query, private_key, encrypted_poly_code)| {
             benchmark.iter_with_large_drop(|| {
-                // To avoid timing dropping the return value, this line must not end in ';'
+                // There aren't any large drops here, but we use the same benchmark method for consistency
                 encrypted_poly_query
                     .is_match(ctx, private_key.clone(), encrypted_poly_code)
                     .expect("encrypted matching must work")
