@@ -50,11 +50,4 @@ where
         let m = Poly::<C>::zero();
         Message { m }
     }
-
-    /// Sample from binary message space
-    pub fn sample_binary(&self, rng: &mut ThreadRng) -> Message<C> {
-        // TODO: this might be implemented more efficiently using `Rng::gen_bool()`
-        let m = self.sample_uniform_range(0..=1_u64, rng);
-        Message { m }
-    }
 }
