@@ -143,7 +143,7 @@ where
         let e = self.sample_err(rng);
 
         // Initialize the ciphertext with an encryption of zero: s * h + e
-        let mut c = s * &public_key.h + e.clone();
+        let mut c = s * &public_key.h + e;
 
         // Divide the polynomial coefficient modulus by T, using primitive integer arithmetic.
         let qdt = C::modulus_as_u128() / C::t_as_u128();
