@@ -1,7 +1,7 @@
 //! Encrypted iris matching tests.
 
 use crate::encoded::{PolyCode, PolyQuery};
-use crate::encrypted::{convert_negative_coefficients, EncryptedPolyCode, EncryptedPolyQuery};
+use crate::encrypted::{EncryptedPolyCode, EncryptedPolyQuery};
 use crate::iris::conf::IrisConf;
 use crate::plaintext::test::matching::{different, matching};
 use crate::primitives::yashe::Yashe;
@@ -25,16 +25,21 @@ where
     for (description, eye_a, mask_a, eye_b, mask_b) in
         matching::<FullBits, { FullBits::STORE_ELEM_LEN }>().iter()
     {
-        let mut poly_query: PolyQuery<FullBits> = PolyQuery::from_plaintext(eye_a, mask_a);
-        let mut poly_code = PolyCode::from_plaintext(eye_b, mask_b);
+        let poly_query: PolyQuery<FullBits> = PolyQuery::from_plaintext(eye_a, mask_a);
+        let poly_code = PolyCode::from_plaintext(eye_b, mask_b);
 
-        convert_negative_coefficients::<C>(&mut poly_query.polys);
-        convert_negative_coefficients::<C>(&mut poly_code.polys);
-
-        let encrypted_poly_query =
-            EncryptedPolyQuery::encrypt_query(ctx, poly_query.clone(), &public_key, &mut rng);
-        let encrypted_poly_code =
-            EncryptedPolyCode::encrypt_code(ctx, poly_code.clone(), &public_key, &mut rng);
+        let encrypted_poly_query = EncryptedPolyQuery::convert_and_encrypt_query(
+            ctx,
+            poly_query.clone(),
+            &public_key,
+            &mut rng,
+        );
+        let encrypted_poly_code = EncryptedPolyCode::convert_and_encrypt_code(
+            ctx,
+            poly_code.clone(),
+            &public_key,
+            &mut rng,
+        );
 
         let res = encrypted_poly_query
             .is_match(ctx, private_key.clone(), &encrypted_poly_code)
@@ -73,16 +78,21 @@ where
     for (description, eye_a, mask_a, eye_b, mask_b) in
         different::<FullBits, { FullBits::STORE_ELEM_LEN }>().iter()
     {
-        let mut poly_query: PolyQuery<FullBits> = PolyQuery::from_plaintext(eye_a, mask_a);
-        let mut poly_code: PolyCode<FullBits> = PolyCode::from_plaintext(eye_b, mask_b);
+        let poly_query: PolyQuery<FullBits> = PolyQuery::from_plaintext(eye_a, mask_a);
+        let poly_code: PolyCode<FullBits> = PolyCode::from_plaintext(eye_b, mask_b);
 
-        convert_negative_coefficients::<C>(&mut poly_query.polys);
-        convert_negative_coefficients::<C>(&mut poly_code.polys);
-
-        let encrypted_poly_query =
-            EncryptedPolyQuery::encrypt_query(ctx, poly_query.clone(), &public_key, &mut rng);
-        let encrypted_poly_code =
-            EncryptedPolyCode::encrypt_code(ctx, poly_code.clone(), &public_key, &mut rng);
+        let encrypted_poly_query = EncryptedPolyQuery::convert_and_encrypt_query(
+            ctx,
+            poly_query.clone(),
+            &public_key,
+            &mut rng,
+        );
+        let encrypted_poly_code = EncryptedPolyCode::convert_and_encrypt_code(
+            ctx,
+            poly_code.clone(),
+            &public_key,
+            &mut rng,
+        );
 
         let res = encrypted_poly_query
             .is_match(ctx, private_key.clone(), &encrypted_poly_code)

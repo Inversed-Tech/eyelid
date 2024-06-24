@@ -65,7 +65,22 @@ where
     C::PlainConf: YasheConf,
     <C::PlainConf as PolyConf>::Coeff: From<u128> + From<u64> + From<i64>,
 {
-    /// Encrypt a PolyCode by encrypting each polynomial.
+    /// Convert and Encrypt a PolyCode by encrypting each polynomial.
+    pub fn convert_and_encrypt_code(
+        ctx: Yashe<C::PlainConf>,
+        mut code: PolyCode<C>,
+        public_key: &PublicKey<C::PlainConf>,
+        rng: &mut ThreadRng,
+    ) -> Self
+    where
+        C: EncodeConf,
+    {
+        convert_negative_coefficients::<C>(&mut code.polys);
+        EncryptedPolyCode::encrypt_code(ctx, code, public_key, rng)
+    }
+
+    /// Encrypts the message m encoded as a SimpleHammingEncoding, which is done by encrypting
+    /// each component of the encoding separately, and returning a SimpleHammingEncodingCiphertext.
     pub fn encrypt_code(
         ctx: Yashe<C::PlainConf>,
         code: PolyCode<C>,
@@ -96,12 +111,27 @@ where
     BigUint: From<<<C as EncodeConf>::PlainConf as PolyConf>::Coeff>,
 {
     /// Encrypt a PolyQuery by encrypting each polynomial.
+    pub fn convert_and_encrypt_query(
+        ctx: Yashe<C::PlainConf>,
+        mut query: PolyQuery<C>,
+        public_key: &PublicKey<C::PlainConf>,
+        rng: &mut ThreadRng,
+    ) -> Self {
+        convert_negative_coefficients::<C>(&mut query.polys);
+        EncryptedPolyQuery::encrypt_query(ctx, query, public_key, rng)
+    }
+
+    /// Encrypts the message m encoded as a SimpleHammingEncoding, which is done by encrypting
+    /// each component of the encoding separately, and returning a SimpleHammingEncodingCiphertext.
     pub fn encrypt_query(
         ctx: Yashe<C::PlainConf>,
         query: PolyQuery<C>,
         public_key: &PublicKey<C::PlainConf>,
         rng: &mut ThreadRng,
-    ) -> Self {
+    ) -> Self
+    where
+        C: EncodeConf,
+    {
         let data = query
             .polys
             .into_iter()
