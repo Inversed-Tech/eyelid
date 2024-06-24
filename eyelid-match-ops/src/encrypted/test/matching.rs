@@ -42,7 +42,7 @@ where
         );
 
         let res = encrypted_poly_query
-            .is_match(ctx, private_key.clone(), &encrypted_poly_code)
+            .is_match(ctx, &private_key, &encrypted_poly_code)
             .expect("encrypted matching must work");
         assert!(
             res,
@@ -95,7 +95,7 @@ where
         );
 
         let res = encrypted_poly_query
-            .is_match(ctx, private_key.clone(), &encrypted_poly_code)
+            .is_match(ctx, &private_key, &encrypted_poly_code)
             .expect("matching must work");
         assert!(
             !res,

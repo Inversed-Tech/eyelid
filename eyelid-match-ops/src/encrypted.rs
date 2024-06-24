@@ -79,7 +79,7 @@ where
         EncryptedPolyCode::encrypt_code(ctx, code, public_key, rng)
     }
 
-    /// Encrypts the message m encoded as a SimpleHammingEncoding, which is done by encrypting
+    /// Encrypts the message m encoded as a PolyCode, which is done by encrypting
     /// each component of the encoding separately, and returning a SimpleHammingEncodingCiphertext.
     pub fn encrypt_code(
         ctx: Yashe<C::PlainConf>,
@@ -121,7 +121,7 @@ where
         EncryptedPolyQuery::encrypt_query(ctx, query, public_key, rng)
     }
 
-    /// Encrypts the message m encoded as a SimpleHammingEncoding, which is done by encrypting
+    /// Encrypts the message m encoded as a PolyQuery, which is done by encrypting
     /// each component of the encoding separately, and returning a SimpleHammingEncodingCiphertext.
     pub fn encrypt_query(
         ctx: Yashe<C::PlainConf>,
@@ -149,14 +149,14 @@ where
     pub fn is_match(
         &self,
         ctx: Yashe<C::PlainConf>,
-        private_key: PrivateKey<C::PlainConf>,
+        private_key: &PrivateKey<C::PlainConf>,
         code: &EncryptedPolyCode<C>,
     ) -> Result<bool, MatchError>
     where
         BigUint: From<<C::PlainConf as PolyConf>::Coeff>,
     {
         let match_counts =
-            Self::accumulate_inner_products(ctx, private_key.clone(), &self.data, &code.data)?;
+            Self::accumulate_inner_products(ctx, private_key, &self.data, &code.data)?;
         let mask_counts =
             Self::accumulate_inner_products(ctx, private_key, &self.masks, &code.masks)?;
 
@@ -178,7 +178,7 @@ where
     /// we can extract inner products later.
     fn accumulate_inner_products(
         ctx: Yashe<C::PlainConf>,
-        private_key: PrivateKey<C::PlainConf>,
+        private_key: &PrivateKey<C::PlainConf>,
         a_polys: &[Ciphertext<C::PlainConf>],
         b_polys: &[Ciphertext<C::PlainConf>],
     ) -> Result<Vec<i64>, MatchError>
@@ -194,7 +194,7 @@ where
             // by the homomorphic property of the scheme.
             let product = ctx.ciphertext_mul(a.clone(), b.clone());
             // Decrypt to get the inner products.
-            let decrypted_product = ctx.decrypt_mul(product, &private_key);
+            let decrypted_product = ctx.decrypt_mul(product, private_key);
 
             // TODO: make the comparisons private
             // Extract the inner products from particular coefficients.
