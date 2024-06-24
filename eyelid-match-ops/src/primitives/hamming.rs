@@ -2,7 +2,7 @@
 
 use crate::primitives::poly::Poly;
 use ark_ff::Zero;
-use std::ops::{AddAssign, Sub};
+use std::ops::AddAssign;
 
 use rand::rngs::ThreadRng;
 
@@ -111,10 +111,10 @@ where
         c2: SimpleHammingEncodingCiphertext<C>,
     ) -> Ciphertext<C> {
         let c = Ciphertext {
-            c: self.c.c.clone().sub(&c2.c.c),
+            c: &self.c.c - &c2.c.c,
         };
         let c_rev = Ciphertext {
-            c: self.c_rev.c.clone().sub(&c2.c_rev.c),
+            c: &self.c_rev.c - &c2.c_rev.c,
         };
         ctx.ciphertext_mul(c, c_rev)
     }
