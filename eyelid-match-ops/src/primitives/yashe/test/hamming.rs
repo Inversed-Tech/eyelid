@@ -2,8 +2,8 @@ mod tests {
 
     use crate::encoded::conf::LargeRes;
     use crate::primitives::hamming::SimpleHammingEncoding;
-    use crate::FullRes;
     use crate::primitives::yashe::{Yashe, YasheConf};
+    use crate::FullRes;
 
     #[test]
     fn test_hamming_distance() {
