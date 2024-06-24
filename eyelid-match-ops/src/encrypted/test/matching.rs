@@ -1,27 +1,12 @@
 //! Encrypted iris matching tests.
 
 use crate::encoded::{PolyCode, PolyQuery};
-use crate::encrypted::{EncryptedPolyCode, EncryptedPolyQuery};
+use crate::encrypted::{convert_negative_coefficients, EncryptedPolyCode, EncryptedPolyQuery};
 use crate::iris::conf::IrisConf;
 use crate::plaintext::test::matching::{different, matching};
-use crate::primitives::poly::Poly;
 use crate::primitives::yashe::Yashe;
 use crate::{EncodeConf, FullBits, FullRes, PolyConf, YasheConf};
 use colored::Colorize;
-
-fn convert_negative_coefficients<C: EncodeConf<PlainConf = FullRes>>(
-    polys: &mut [Poly<C::PlainConf>],
-) {
-    for poly in polys {
-        Poly::coeffs_modify_non_zero(poly, |coeff: &mut <C::PlainConf as PolyConf>::Coeff| {
-            let mut coeff_res = C::PlainConf::coeff_as_big_int(*coeff);
-            if coeff_res > <C::PlainConf as YasheConf>::modulus_minus_one_div_two_as_big_int() {
-                coeff_res += C::PlainConf::T;
-                *coeff = C::PlainConf::big_int_as_coeff(coeff_res);
-            }
-        });
-    }
-}
 
 #[test]
 fn test_matching_homomorphic_codes() {
