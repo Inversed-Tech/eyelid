@@ -2,7 +2,7 @@
 
 ## Private iris matching using Homomorphic Encryption
 
-In this repository, we implement the Homomorphic Encryption (HE) scheme called [YASHE](https://eprint.iacr.org/2013/075). The iris codes are encoded into polynomials, which can be encrypted using YASHE. Multiplying these polynomials gives us a result polynomial whose coefficients correspond to the Hamming distance we wish to compute.
+In this repository, we implement the Homomorphic Encryption (HE) scheme called [YASHE](https://eprint.iacr.org/2013/075). The iris codes are encoded into polynomials, which can be encrypted using YASHE. Multiplying these polynomials gives us a result polynomial whose coefficients correspond to the Hamming distance we wish to compute. In particular, no expensive XOR operation is required, which allows to obtain the Hamming distance only using algebraic operations.
 
 The negacyclic ring structure of YASHE allows us to compute the Hamming distance of the expected rotations of the iris codes. By using this encoding, we can encrypt the query and the database containing the registered iris codes, ensuring that the computation of all the Hamming distances occurs privately, protected by the HE scheme.
 
