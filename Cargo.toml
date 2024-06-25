@@ -40,7 +40,7 @@ colored = "2.0"
 derive_more = { version = "0.99.18", default-features = false, features = ["as_ref", "deref", "deref_mut", "into", "mul"] }
 
 # Static constants
-lazy_static = "1.4.0"
+lazy_static = "1.5.0"
 
 # Compile-time checks of production code
 static_assertions = "1.1.0"
