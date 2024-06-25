@@ -1,3 +1,6 @@
+//! Tests for the hamming distance calculation.
+
+// TODO: remove the redundant tests module
 mod tests {
 
     use crate::encoded::conf::LargeRes;

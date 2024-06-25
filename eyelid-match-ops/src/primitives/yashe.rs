@@ -258,6 +258,8 @@ where
         res
     }
 
+    // TODO: move test-only methods to a test module (removing unused production code improves performance)
+
     /// Sample a polynomial with random binnary coefficients, i.e. 0, 1
     pub fn sample_binary_message(&self, rng: &mut ThreadRng) -> Message<C> {
         let m = self.sample_uniform_range(0..=1_u64, rng);

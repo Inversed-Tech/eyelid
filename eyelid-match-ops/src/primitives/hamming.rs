@@ -39,7 +39,14 @@ where
     C::Coeff: From<u128> + From<u64> + From<i64>,
 {
     /// Creates a new `SimpleHammingEncoding` with the given message `m` and size `size`.
+    ///
+    /// `size` can be any value less than MAX_POLY_DEGREE. This allows vectors to be embedded
+    /// in any polynomial configuration, possibly wasting some coefficients that are not used.
+    /// The encoding depends on this value of size. When the coefficient is reverted, this happens
+    /// inside the sub-vector that has `size` elements, which is different from reverting all the
+    /// coefficients of the polynomial.
     pub fn new(m: Message<C>, size: usize) -> Self {
+        // TODO: replace this with coeffs().clone(), Vec resize()/revert(), then truncate_to_canonical_form()
         let mut m_rev = Message {
             m: Poly::<C>::zero(),
         };

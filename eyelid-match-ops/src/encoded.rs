@@ -24,6 +24,8 @@ pub mod test;
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PolyCode<C: EncodeConf> {
     /// The polynomials, encoding one block of rows each. Storage variant.
+    //
+    // TODO: use read-only accessor methods instead of `pub` for all 4 fields in these 2 structs.
     pub polys: Vec<Poly<C::PlainConf>>,
     /// The mask polynomials.
     pub masks: Vec<Poly<C::PlainConf>>,

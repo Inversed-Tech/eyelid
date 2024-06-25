@@ -51,6 +51,7 @@ where
     #[allow(unused_mut)]
     for mut poly in polys {
         Poly::coeffs_modify_non_zero(poly, |coeff: &mut <C::PlainConf as PolyConf>::Coeff| {
+            // TODO: benchmark comparing `Coeff`s and putting `coeff_res` inside the `if`, it should be faster
             let mut coeff_res = C::PlainConf::coeff_as_big_int(*coeff);
             if coeff_res > <C::PlainConf as YasheConf>::modulus_minus_one_div_two_as_big_int() {
                 coeff_res += C::PlainConf::T;
@@ -211,6 +212,8 @@ where
                     // Concretely, we temporarily negate the coefficient in order to get a small value
                     // (since negative elements modulo Q are big and can't be converted to i64), then we
                     // negate again to return the output.
+                    //
+                    // TODO: return a new MatchError variant rather than panicking using expect()
                     if coeff_res > t_div_2 {
                         let result = i64::try_from(BigUint::from(C::PlainConf::big_int_as_coeff(
                             C::PlainConf::T - coeff_res,
