@@ -49,6 +49,7 @@ fn different_codes() {
     {
         let poly_query: PolyQuery<MiddleBits> = PolyQuery::from_plaintext(eye_a, mask_a);
         let poly_code = PolyCode::from_plaintext(eye_b, mask_b);
+
         let res = poly_query.is_match(&poly_code).expect("matching must work");
         assert!(
             !res,
@@ -63,6 +64,7 @@ fn different_codes() {
     {
         let poly_query: PolyQuery<FullBits> = PolyQuery::from_plaintext(eye_a, mask_a);
         let poly_code = PolyCode::from_plaintext(eye_b, mask_b);
+
         let res = poly_query.is_match(&poly_code).expect("matching must work");
         assert!(
             !res,

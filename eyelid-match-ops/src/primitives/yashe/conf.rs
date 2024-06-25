@@ -11,9 +11,9 @@ use num_bigint::{BigInt, BigUint, Sign};
 use num_traits::ToPrimitive;
 
 use crate::{
-    encoded::conf::{FullRes, MiddleRes},
+    encoded::conf::{FullRes, LargeRes, MiddleRes},
     primitives::poly::{
-        modular_poly::conf::{FullResBN, MiddleResBN},
+        modular_poly::conf::{FullResBN, LargeResBN, MiddleResBN},
         Poly, PolyConf,
     },
 };
@@ -74,6 +74,11 @@ where
         BigInt::from(Self::T)
     }
 
+    /// A convenience method to convert [`T`](Self::T) to [`BigUint`].
+    fn t_as_big_uint() -> BigUint {
+        BigUint::from(Self::T)
+    }
+
     /// A convenience method to convert the base 2 logarithm of `MAX_POLY_DEGREE` to BigUInt
     fn log_max_poly_degree_as_big_uint() -> BigUint {
         let log_max_poly_degree = usize::ilog2(Self::MAX_POLY_DEGREE);
@@ -119,6 +124,14 @@ where
         let coeff: BigUint = coeff.into();
 
         coeff.into()
+    }
+
+    /// A convenience method to convert a [`Coeff`](PolyConf::Coeff) to `BigInt`.
+    /// TODO: take a reference?
+    fn coeff_as_big_int(coeff: Self::Coeff) -> BigInt {
+        let coeff: BigUint = coeff.into();
+
+        BigInt::from(coeff)
     }
 
     /// A convenience method to convert a [`BigInt`] to [`Coeff`](PolyConf::Coeff).
@@ -176,9 +189,9 @@ where
 
     /// A convenience method to convert [`CoeffBN::MODULUS`](PrimeField::MODULUS) to [`BigInt`].
     fn bn_modulus_as_big_int() -> BigInt {
-        let modulus: BigUint = <Self::PolyBN as PolyConf>::Coeff::MODULUS.into();
+        let val: BigUint = <Self::PolyBN as PolyConf>::Coeff::MODULUS.into();
 
-        BigInt::from(modulus)
+        BigInt::from(val)
     }
 
     /// A convenience method to convert `Coeff::MODULUS` to [`BigUint`].
@@ -204,11 +217,17 @@ where
             .expect("constant modulus is small enough for i128")
     }
 
-    /// A convenience method to convert [`Coeff::MODULUS_MINUS_ONE_DIV_TWO`](PrimeField::MODULUS_MINUS_ONE_DIV_TWO) to [`BigInt`].
+    /// A convenience method to convert a [`Coeff`](PolyConf::Coeff) to `BigInt`.
+    /// TODO: take a reference?
     fn modulus_minus_one_div_two_as_big_int() -> BigInt {
-        let modulus: BigUint = Self::Coeff::MODULUS_MINUS_ONE_DIV_TWO.into();
+        let val: BigUint = Self::Coeff::MODULUS_MINUS_ONE_DIV_TWO.into();
 
-        BigInt::from(modulus)
+        BigInt::from(val)
+    }
+
+    /// A convenience method to convert [`Coeff::MODULUS_MINUS_ONE_DIV_TWO`](PrimeField::MODULUS_MINUS_ONE_DIV_TWO) to [`BigUint`].
+    fn modulus_minus_one_div_two_as_big_uint() -> BigUint {
+        Self::Coeff::MODULUS_MINUS_ONE_DIV_TWO.into()
     }
 
     /// A convenience method to convert [`CoeffBN::MODULUS_MINUS_ONE_DIV_TWO`](PrimeField::MODULUS_MINUS_ONE_DIV_TWO) to [`BigInt`].
@@ -294,6 +313,18 @@ where
     ) {
         panic!("YasheConf parameters are invalid")
     };
+}
+
+/// Large resolution polynomial parameters.
+///
+/// These are the parameters for large resolution, which can be used for experimentation.
+impl YasheConf for LargeRes {
+    type PolyBN = LargeResBN;
+
+    // TODO: max T now is more than enough, but on the other hand it loses a few bits of security.
+    // This is only used for debugging, since it allows us to see larger noise growth.
+    // Larger values cause failures in the positive_multiplication_test().
+    const T: u64 = 524288;
 }
 
 /// Full resolution polynomial parameters.

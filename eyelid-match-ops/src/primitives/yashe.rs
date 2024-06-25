@@ -4,7 +4,7 @@
 use std::marker::PhantomData;
 
 use ark_ff::{One, UniformRand};
-use num_bigint::Sign;
+use num_bigint::{BigInt, BigUint, Sign};
 use rand::{
     distributions::uniform::{SampleRange, SampleUniform},
     rngs::ThreadRng,
@@ -12,7 +12,7 @@ use rand::{
 };
 use rand_distr::{Distribution, Normal};
 
-use crate::primitives::poly::Poly;
+use crate::{primitives::poly::Poly, PolyConf};
 
 pub use conf::YasheConf;
 
@@ -89,7 +89,7 @@ where
         loop {
             let f = self.sample_key(rng);
 
-            // TODO: document the equation that is being implemented here
+            // priv_key = f * T + 1
             let mut priv_key = f.clone();
             priv_key *= C::t_as_coeff();
 
@@ -117,7 +117,7 @@ where
     ) -> PublicKey<C> {
         let mut h = self.sample_key(rng);
 
-        // TODO: document the equation that is being implemented here
+        // h = T * priv_keyˆ-1 * h
         h *= C::t_as_coeff();
         h = h * &private_key.priv_key_inv;
 
@@ -142,6 +142,7 @@ where
         let s = self.sample_err(rng);
         let e = self.sample_err(rng);
 
+        // Initialize the ciphertext with an encryption of zero: s * h + e
         let mut c = s * &public_key.h + e;
 
         // Divide the polynomial coefficient modulus by T, using primitive integer arithmetic.
@@ -177,26 +178,20 @@ where
 
         // Since this equation always results in zero for a zero coefficient, we don't need to
         // calculate leading zero terms.
-        //
-        // TODO: use Poly::coeffs_modify_non_zero() here and benchmark
-        #[allow(unused_mut)]
-        for mut coeff in res.coeffs_mut() {
-            // Convert coefficient to a primitive integer
-            let mut coeff_res = C::coeff_as_u128(*coeff);
+        Poly::coeffs_modify_non_zero(&mut res, |coeff: &mut <C as PolyConf>::Coeff| {
+            // Convert coefficient to a big integer
+            let mut coeff_res: BigUint = (*coeff).into();
             // Multiply by T
-            coeff_res *= C::t_as_u128();
+            coeff_res *= C::t_as_big_uint();
             // Add (Q - 1)/2 to implement rounding rather than truncation
-            coeff_res += C::modulus_minus_one_div_two_as_u128();
+            coeff_res += C::modulus_minus_one_div_two_as_big_uint();
             // Divide by Q
-            coeff_res /= C::modulus_as_u128();
+            coeff_res /= C::modulus_as_big_uint();
             // Modulo T
-            coeff_res %= C::t_as_u128();
+            coeff_res %= C::t_as_big_uint();
             // And update the coefficient
             *coeff = coeff_res.into();
-        }
-
-        // Raw coefficient access must be followed by a truncation check.
-        res.truncate_to_canonical_form();
+        });
 
         Message { m: res }
     }
@@ -216,9 +211,8 @@ where
     /// Sample a polynomial with small random coefficients using a gaussian distribution.
     #[allow(clippy::cast_possible_truncation)]
     pub fn sample_gaussian(&self, delta: f64, rng: &mut ThreadRng) -> Poly<C> {
-        // TODO: use Poly::coeffs_modify_include_zero() here and benchmark
         let mut res = Poly::non_canonical_zeroes(C::MAX_POLY_DEGREE);
-        for i in 0..C::MAX_POLY_DEGREE {
+        Poly::coeffs_modify_include_zero(&mut res, |coeff: &mut <C as PolyConf>::Coeff| {
             // TODO SECURITY: check that the generated integers are secure:
             // <https://github.com/Inversed-Tech/eyelid/issues/70>
             let normal = Normal::new(0.0, delta).expect("constant parameters are valid");
@@ -231,26 +225,20 @@ where
             // This is ok because the C::Coeff modulus is smaller than MIN/MAX.
             //
             // `as` truncates by default, but we want to round to the nearest integer.
-            res[i] = C::Coeff::from(v.round() as i64);
-        }
-
-        // Raw coefficient access must be followed by a truncation check.
-        res.truncate_to_canonical_form();
+            *coeff = C::Coeff::from(v.round() as i64);
+        });
 
         res
     }
 
     /// Sample a polynomial with unlimited size random coefficients using a uniform distribution.
     pub fn sample_uniform_coeff(&self, mut rng: &mut ThreadRng) -> Poly<C> {
-        // TODO: use Poly::coeffs_modify_include_zero() here and benchmark
         let mut res = Poly::non_canonical_zeroes(C::MAX_POLY_DEGREE);
-        for i in 0..C::MAX_POLY_DEGREE {
+        Poly::coeffs_modify_include_zero(&mut res, |coeff: &mut <C as PolyConf>::Coeff| {
             let coeff_rand = C::Coeff::rand(&mut rng);
-            res[i] = coeff_rand;
-        }
+            *coeff = coeff_rand;
+        });
 
-        // Raw coefficient access must be followed by a truncation check.
-        res.truncate_to_canonical_form();
         res
     }
 
@@ -261,53 +249,71 @@ where
         R: SampleRange<T> + Clone,
         C::Coeff: From<T>,
     {
-        // TODO: use Poly::coeffs_modify_include_zero() here and benchmark
         let mut res = Poly::non_canonical_zeroes(C::MAX_POLY_DEGREE);
-        for i in 0..C::MAX_POLY_DEGREE {
+        Poly::coeffs_modify_include_zero(&mut res, |coeff: &mut <C as PolyConf>::Coeff| {
             let coeff_rand = rng.gen_range(range.clone());
-            res[i] = coeff_rand.into();
-        }
+            *coeff = coeff_rand.into();
+        });
 
-        // Raw coefficient access must be followed by a truncation check.
-        res.truncate_to_canonical_form();
         res
     }
 
-    /// Plaintext addition is trivial
+    // TODO: move test-only methods to a test module (removing unused production code improves performance)
+
+    /// Sample a polynomial with random binnary coefficients, i.e. 0, 1
+    pub fn sample_binary_message(&self, rng: &mut ThreadRng) -> Message<C> {
+        let m = self.sample_uniform_range(0..=1_u64, rng);
+        Message { m }
+    }
+
+    /// Sample a polynomial with random ternary coefficients, i.e. -1, 0, 1, such that -1 is represented as C::T - 1
+    pub fn sample_ternary_message(&self, rng: &mut ThreadRng) -> Message<C> {
+        let mut m = self.sample_uniform_range(0..=2_u64, rng);
+
+        for i in 0..C::MAX_POLY_DEGREE {
+            m[i] = if m[i] == C::Coeff::from(2u64) {
+                C::t_as_coeff() - C::Coeff::one()
+            } else {
+                m[i]
+            };
+        }
+        m.truncate_to_canonical_form();
+
+        Message { m }
+    }
+
+    /// Plaintext addition is trivial, just reduce mod T
     pub fn plaintext_add(&self, m1: Message<C>, m2: Message<C>) -> Message<C> {
         let mut res = m1.m + m2.m;
 
-        // TODO: use Poly::coeffs_modify_non_zero() here and benchmark
-        //
-        // It does actually need to be mutable to compile.
-        #[allow(unused_mut)]
-        for mut coeff in res.coeffs_mut() {
+        Poly::coeffs_modify_non_zero(&mut res, |coeff: &mut <C as PolyConf>::Coeff| {
             let mut coeff_res = C::coeff_as_u128(*coeff);
             coeff_res %= C::t_as_u128();
             *coeff = coeff_res.into();
-        }
-        res.truncate_to_canonical_form();
+        });
 
         Message { m: res }
     }
 
     /// Plaintext multiplication must center lift before reduction
-    pub fn plaintext_mul(&self, m1: Message<C>, m2: Message<C>) -> Message<C> {
+    pub fn plaintext_mul(self, m1: Message<C>, m2: Message<C>) -> Message<C> {
         let mut res = m1.m * m2.m;
 
-        // TODO: use Poly::coeffs_modify_non_zero() here and benchmark
-        #[allow(unused_mut)]
-        for mut coeff in res.coeffs_mut() {
-            let mut coeff_res = C::coeff_as_i128(*coeff);
-            // center lift mod q
-            if coeff_res > C::modulus_minus_one_div_two_as_i128() {
-                coeff_res -= C::modulus_as_i128();
-            }
-            coeff_res = coeff_res.rem_euclid(C::t_as_i128());
+        Poly::coeffs_modify_non_zero(&mut res, |coeff: &mut <C as PolyConf>::Coeff| {
+            let mut coeff_res = C::coeff_as_big_int(*coeff);
 
-            *coeff = C::i128_as_coeff(coeff_res);
-        }
-        res.truncate_to_canonical_form();
+            // center lift mod q
+            if coeff_res > C::modulus_minus_one_div_two_as_big_int() {
+                coeff_res -= C::modulus_as_big_int();
+            }
+            coeff_res %= C::T;
+            // if negative, add T
+            if coeff_res < BigInt::from(0) {
+                coeff_res += C::T;
+            }
+
+            *coeff = C::big_int_as_coeff(coeff_res);
+        });
 
         Message { m: res }
     }
@@ -344,15 +350,17 @@ where
             if coeff > half_modulus_bn {
                 coeff -= &modulus_bn;
             }
+
             // * T
             coeff *= &t;
             // Round to nearest integer after division
             // + (Q - 1) / 2
-            if coeff.sign() == Sign::Plus {
+            if coeff.sign() == Sign::Plus || coeff.sign() == Sign::NoSign {
                 coeff += &half_modulus;
             } else {
                 coeff -= &half_modulus;
             }
+
             // / Q
             coeff /= &modulus;
             // reduce mod q

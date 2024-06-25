@@ -24,18 +24,20 @@ pub mod test;
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PolyCode<C: EncodeConf> {
     /// The polynomials, encoding one block of rows each. Storage variant.
-    polys: Vec<Poly<C::PlainConf>>,
+    //
+    // TODO: use read-only accessor methods instead of `pub` for all 4 fields in these 2 structs.
+    pub polys: Vec<Poly<C::PlainConf>>,
     /// The mask polynomials.
-    masks: Vec<Poly<C::PlainConf>>,
+    pub masks: Vec<Poly<C::PlainConf>>,
 }
 
 /// An Iris code, encoded in polynomials. To be matched against PolyCode.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PolyQuery<C: EncodeConf> {
     /// The polynomials, encoding one block of rows each. Query variant.
-    polys: Vec<Poly<C::PlainConf>>,
+    pub polys: Vec<Poly<C::PlainConf>>,
     /// The mask polynomials.
-    masks: Vec<Poly<C::PlainConf>>,
+    pub masks: Vec<Poly<C::PlainConf>>,
 }
 
 /// Errors that can happen during matching.

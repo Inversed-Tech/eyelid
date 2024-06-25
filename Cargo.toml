@@ -32,6 +32,7 @@ num-traits = "0.2.19"
 
 bitvec = "1.0.1"
 itertools = "0.10.5"
+colored = "2.0"
 
 # Automatically deriving trivial impls
 # Full list at <https://github.com/JelteF/derive_more/blob/v0.99.17/Cargo.toml#L42>

@@ -46,6 +46,7 @@ criterion = {workspace = true, optional = true}
 
 [dev-dependencies]
 eyelid-test.workspace = true
+colored.workspace = true
 
 [lib]
 bench = false
